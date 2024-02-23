@@ -1,14 +1,15 @@
 ﻿using Marten;
-using Playground.Application.Documents.Onboarding;
+using Playground.Presentation.Registration.Commands.CheckingClientType;
+using Playground.Presentation.Registration.Commands.EnrollingKYC;
 
 namespace Playground.Presentation.Registration;
 
 public static class RegistrationHandler
 {
-    public static Guid InitiateRegistarion(int personalNumber, IDocumentSession session)
+    public static Guid InitiateRegistarion(string personalNumber, IDocumentSession session)
     {
         var id = Guid.NewGuid();
-        session.Events.StartStream<Application.Documents.Registration.Registration>(id,
+        session.Events.StartStream<Registration>(id,
             new CheckedClientType(personalNumber, ClientType.FullCredo)
         );
         //some ifs and logic
@@ -24,18 +25,19 @@ public static class RegistrationHandler
 
     public static bool AddRegistrationParameter(Guid documentId, IDocumentSession session)
     {
-        var res = session.Events.AggregateStream<Application.Documents.Registration.Registration>(documentId);
+        var res = session.Events.AggregateStream<Registration>(documentId);
         //if(!2FAValid)
         //return null;
         //some ifs and logic   
         var regParameter = "KYCPArameter";
-        session.Events.Append(documentId, new KYCEnrolled(regParameter));
+
+        session.Events.Append(documentId, new EnrolledKYC("", true, "", 0));
         return true;
     }
 
-    public static Application.Documents.Registration.Registration? AggregateRegistrationStream(Guid id, IDocumentSession session)
+    public static Registration? AggregateRegistrationStream(Guid id, IDocumentSession session)
     {
-        var doc = session.Events.AggregateStream<Application.Documents.Registration.Registration>(id);
+        var doc = session.Events.AggregateStream<Registration>(id);
         //some ifs and logic
         return doc;
     }

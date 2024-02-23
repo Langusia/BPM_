@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Core.BPM.DependencyInjection;
+namespace Core.BPM.MediatR;
 
 public static class ServiceCollectionExtensions
 {

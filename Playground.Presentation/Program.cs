@@ -1,15 +1,9 @@
-using Core.BPM;
-using Core.BPM.DependencyInjection;
-using Core.BPM.Interfaces;
+using Core.BPM.MediatR;
 using Marten;
 using Marten.Events.Projections;
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Playground.Application;
-using Playground.Application.Documents;
-using Playground.Application.Documents.Onboarding;
-using Playground.Application.Documents.Registration;
 using Playground.Presentation;
+using Playground.Presentation.Registration;
 using Weasel.Core;
 
 
@@ -40,12 +34,9 @@ builder.Services.AddMarten(options =>
 
 builder.Services.AddBpm(x =>
 {
-    x.AddBpmDefinition<Register, RegisterDefinition>();
-    x.AddBpmDefinition<Register, RegisterDefinition>();
-    x.AddBpmDefinition<Register, RegisterDefinition>();
-    x.AddBpmDefinition<Register, RegisterDefinition>();
-    x.AddBpmDefinition<Register, RegisterDefinition>();
+    x.AddBpmDefinition<Registration, RegistrationDefinition>();
 });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

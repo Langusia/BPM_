@@ -14,8 +14,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Core.BPM.DependencyInjection\Core.BPM.DependencyInjection.csproj" />
+      <ProjectReference Include="..\Core.BPM.MediatR\Core.BPM.MediatR.csproj" />
       <ProjectReference Include="..\Core.Persistence\Core.Persistence.csproj" />
+      <ProjectReference Include="..\Credo.Core.Shared\Credo.Core.Shared.csproj" />
     </ItemGroup>
 
 </Project>

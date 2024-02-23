@@ -1,186 +1,90 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Linq.Expressions;
+﻿using Core.BPM;
+using Core.BPM.MediatR;
 using Marten.Events.Aggregation;
-using Playground.Application.Documents.Onboarding;
-using Playground.Presentation;
+using Playground.Presentation.Registration.Commands.CheckingClientType;
+using Playground.Presentation.Registration.Commands.EnrollingKYC;
 
-namespace Playground.Application.Documents.Registration;
+namespace Playground.Presentation.Registration;
 
-public class Registration
+public class KycParameters
 {
-    public Registration(CheckedClientType initEvent)
-    {
-        ClientType = initEvent.ClientType;
-    }
-
-    public Guid Id { get; set; }
-    public ClientType ClientType { get; set; }
-    public bool TwoFactorValidated { get; set; }
-    public bool RequestedPhoneChange { get; set; }
-
-    public string RegistrationParameter
-    {
-        get;
-        set
-        ;
-    }
-
-    public bool Registered { get; set; }
+    public bool KYCParam1 { get; set; }
+    public string KYCParam2 { get; set; }
+    public int KYCParam3 { get; set; }
 }
 
-public record RegistrationParameterAdded(string RegistrationParameter);
+public class Registration : Aggregate
+{
+    public static Registration Initiate(Guid id)
+    {
+        return new Registration
+        {
+            Id = id
+        };
+    }
 
-public record RegistrationFinished(bool registered);
+    public ClientType? ClientType { get; set; }
+
+    public KycParameters? KycParameters { get; set; }
+
+    public void EnrollKYC(string PersonId)
+    {
+        if (ClientType is null)
+            return;
+
+        var @event = new EnrolledKYC(PersonId, true, "", 0);
+        Enqueue(@event);
+        Apply(@event);
+    }
+
+    private void Apply(EnrolledKYC @event)
+    {
+        if (KycParameters is null)
+            KycParameters = new KycParameters();
+
+        KycParameters.KYCParam1 = @event.KYCParam1;
+        KycParameters.KYCParam2 = @event.KYCParam2;
+        KycParameters.KYCParam3 = @event.KYCParam3;
+    }
+
+
+    public void CheckClientType(string personId, ClientType clientType)
+    {
+        //logic
+        var @event = new CheckedClientType(personId, clientType);
+        Enqueue(@event);
+        Apply(@event);
+    }
+
+    private void Apply(CheckedClientType @event)
+    {
+        ClientType = @event.ClientType;
+    }
+}
 
 public class RegistrationProjection : SingleStreamProjection<Registration>
 {
-    public void Apply(Checked2FA @event, Registration snapshot)
-    {
-        snapshot.TwoFactorValidated = @event.IsValid;
-    }
-
     public void Apply(CheckedClientType @event, Registration snapshot)
     {
         snapshot.ClientType = @event.ClientType;
     }
 
-    public void Apply(RegistrationParameterAdded @event, Registration snapshot)
+    public void Apply(EnrolledKYC @event, Registration snapshot)
     {
-        snapshot.RegistrationParameter = @event.RegistrationParameter;
+        if (snapshot.KycParameters is null)
+            snapshot.KycParameters = new KycParameters();
+
+        snapshot.KycParameters.KYCParam1 = @event.KYCParam1;
+        snapshot.KycParameters.KYCParam2 = @event.KYCParam2;
+        snapshot.KycParameters.KYCParam3 = @event.KYCParam3;
     }
 }
 
-public class RegistrationProcessBuilder
+public class RegistrationDefinition : BpmProcessGraphDefinition<Registration>
 {
-    public void DoGraph()
+    public override void Define(BpmProcessGraphConfigurator<Registration> configurator)
     {
-        var pr = new ProcessMap<Registration>();
-        pr.Add(typeof(CheckedClientType), typeof(Checked2FA));
-    }
-
-
-    public class Node<TStep>
-    {
-        private string name = typeof(TStep).Name;
-    }
-
-    public class NodePath<TOriginiNode, TNextNode> : NodeMetadata
-    {
-        public NodePath() : base(typeof(TOriginiNode), typeof(TNextNode))
-        {
-        }
-
-//node<CheckClientType>.Following()
-        public Node<TOriginiNode> Origin;
-        public Node<TNextNode> Next;
-        public Expression<Func<TOriginiNode, bool>> Condition;
-    }
-
-    public class NodeMetadata
-    {
-        public NodeMetadata(Type fromType, Type toType)
-        {
-            FromType = fromType;
-            ToType = toType;
-        }
-
-        public Type FromType { get; set; }
-        public Type ToType { get; set; }
-    }
-
-    public class Node2
-    {
-        public Node2(Type nodeType)
-        {
-            name = nodeType.Name;
-        }
-
-        private string name;
-    }
-
-    public class Node2<TStep> : Node2
-    {
-        public Node2() : base(typeof(TStep))
-        {
-        }
-    }
-
-
-    public class Node2Path
-    {
-        public Node2Path(Node2 origin, Node2 next)
-        {
-            origin = this.origin;
-            nextNode = this.nextNode;
-        }
-
-        private Node2 origin;
-        private Node2 nextNode;
-    }
-
-    public class ProcessMap<TProcess>
-    {
-        private Dictionary<NodeMetadata, List<NodeMetadata>> map;
-        private Dictionary<Node2, List<Node2Path>> map2;
-        private Dictionary<Node2, Dictionary<Expression<Func<TProcess, bool>>, List<Node2Path>>> map3;
-
-        //public void Add(Type keyNode, Type nextNode, Expression<Func<TProcess, bool>> exp = null)
-        //{
-        //    if (map is null)
-        //    {
-        //        map = new Dictionary<NodeMetadata, List<NodeMetadata>>();
-        //    }
-        //
-        //    var keyMetaData = new NodeMetadata(keyNode, nextNode);
-        //    map.Add(keyMetaData);
-        //}
-
-        public void Add(Type keyNode, params Type[] nextNodes)
-        {
-            if (map is null)
-            {
-                map = new Dictionary<NodeMetadata, List<NodeMetadata>>();
-            }
-
-            if (map2 is null)
-            {
-                map2 = new Dictionary<Node2, List<Node2Path>>();
-            }
-
-            var currentNode = new Node2(keyNode);
-            var expectedNextNodes = new List<Node2Path>();
-            foreach (var nextNode in nextNodes)
-            {
-                expectedNextNodes.Add(new Node2Path(currentNode, new Node2(keyNode)));
-            }
-
-            map2.Add(currentNode, expectedNextNodes);
-        }
+        configurator.SetRootNode<Playground.Presentation.Registration.Commands.CheckingClientType.CheckClientType>()
+            .ThenAppendRight<EnrollKYC>(x => x.ClientType is not null);
     }
 }
-
-//public static class ProcessMapExtensions
-//{
-//    public static void AppendNodeMap<TOrigin, TNext>(this ProcessMap map, Node<TOrigin> node, Node<TNext> next)
-//    {
-//    }
-//}
-//
-//public RegistrationProcessBuilder()
-//{
-/*
-BusinessProcessBuilder.BusinessProcesss<RegisterUser>()
-    .Step<CheckClientType>() -> RegisterUser.ClientType
-    .Step<OTP>
-    .IfAggregateState(x=> x.ClientType == ClientType.FullMyCredo)
-        .Step<OTP>
-        .Step<RequestedPhoneChange>()
-            .IncludeStep<FR>
-            .IncludeStep<OTP>
-            .IncludeStep<ChangeMobile>
-        .Step<SecurityCheck>()
-    .ElseIfState(x=> x.ClientType == ClientType.NoMyCredo)
-
-*/
-//}
-//}

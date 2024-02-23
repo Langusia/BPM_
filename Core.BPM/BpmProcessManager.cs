@@ -11,7 +11,7 @@ public interface IEventOutput
 public class BpmProcessManager<TProcess, TEvent>
     where TProcess : class, IProcess
     where TEvent : IEvent
-    //where TOutput : IEventOutput
+//where TOutput : IEventOutput
 {
     private readonly IDocumentSession _session;
     private readonly IQuerySession _querySession;
@@ -24,21 +24,21 @@ public class BpmProcessManager<TProcess, TEvent>
 
     public async Task Handle(TEvent request)
     {
-        var cfg = BpmProcessGraphConfiguration.GetConfig<TProcess>();
-        if (cfg is null)
-            return;
+        // var cfg = BpmProcessGraphConfiguration.GetConfig<TProcess>();
+        // if (cfg is null)
+        //     return;
 
-        var aggregateSnapshot = await _session.Events.AggregateStreamAsync<TProcess>(request.DocumentId);
-        var events = await _querySession.Events.FetchStreamAsync(request.DocumentId);
-        var lastEvent = events.OrderDescending().FirstOrDefault();
-        if (lastEvent == null)
-            return;
+        // var aggregateSnapshot = await _session.Events.AggregateStreamAsync<TProcess>(request.DocumentId);
+        // var events = await _querySession.Events.FetchStreamAsync(request.DocumentId);
+        // var lastEvent = events.OrderDescending().FirstOrDefault();
+        // if (lastEvent == null)
+        //     return;
 
-        var nextEvents = cfg.RootNode.TraverseTo(lastEvent.GetType())?.NextSteps;
-        if (nextEvents is null)
-            return;
+        // var nextEvents = cfg.RootNode.TraverseTo(lastEvent.GetType())?.NextSteps;
+        // if (nextEvents is null)
+        //     return;
 
-        if (nextEvents.All(x => x.EventType != typeof(TEvent)))
-            return;
+        // if (nextEvents.All(x => x.EventType != typeof(TEvent)))
+        //     return;
     }
 }

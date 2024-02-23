@@ -2,11 +2,11 @@
 
 namespace Core.BPM;
 
-public class BpmNode<TProcess, TEvent> : INode<TProcess, TEvent> where TProcess : IProcess where TEvent : IEvent
+public class BpmNode<TProcess, TCommand> : INode<TProcess, TCommand> where TProcess : IProcess
 {
     public BpmNode()
     {
-        _eventType = typeof(TEvent);
+        _eventType = typeof(TCommand);
     }
 
     public BpmNode(Type eventType)
@@ -17,6 +17,14 @@ public class BpmNode<TProcess, TEvent> : INode<TProcess, TEvent> where TProcess 
     private Type _eventType;
 
     public Predicate<TProcess>? Condition { get; set; }
+
+    public INode<TProcess>? AvaiableNodes()
+    {
+        foreach (var nextStep in NextSteps)
+        {
+            nextStep.
+        }
+    }
 
     public Type EventType => _eventType;
 
@@ -36,7 +44,7 @@ public class BpmNode<TProcess, TEvent> : INode<TProcess, TEvent> where TProcess 
         PrevSteps.Add(node);
     }
 
-    public INode? TraverseTo<TTraverseToEvent>() where TTraverseToEvent : IEvent
+    public INode? TraverseTo<TTraverseToEvent>()
     {
         if (_eventType == typeof(TTraverseToEvent))
             return this;
@@ -67,22 +75,23 @@ public class BpmNode<TProcess, TEvent> : INode<TProcess, TEvent> where TProcess 
         return null;
     }
 
-    public INode<TProcess, TEvent> AppendRight<TTEvent>(Predicate<TProcess>? expr = null)
-        where TTEvent : IEvent
+    public INode<TProcess, TCommand> AppendRight<TCommandd>(Predicate<TProcess>? expr = null)
+        //where TTEvent : IEvent
     {
-        var newNode = new BpmNode<TProcess, TTEvent>() { Condition = expr };
+        var newNode = new BpmNode<TProcess, TCommandd>() { Condition = expr };
         AddNextStep(newNode);
         newNode.AddPrevStep(this);
         return this;
     }
 
-    public INode<TProcess, TTEvent> ThenAppendRight<TTEvent>(Predicate<TProcess>? expr = null)
-        where TTEvent : IEvent
+    public INode<TProcess, TCommandd> ThenAppendRight<TCommandd>(Predicate<TProcess>? expr = null)
+        //where TTEvent : IEvent
     {
-        var newNode = new BpmNode<TProcess, TTEvent>()
+        var newNode = new BpmNode<TProcess, TCommandd>()
         {
             Condition = expr,
         };
+
         newNode.AddPrevStep(this);
         foreach (var nextStep in NextSteps)
         {
@@ -90,5 +99,15 @@ public class BpmNode<TProcess, TEvent> : INode<TProcess, TEvent> where TProcess 
         }
 
         return newNode;
+    }
+
+    public void SetCondition<T>(Predicate<T> condition)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Predicate<T> GetCondition<T>()
+    {
+        throw new NotImplementedException();
     }
 }

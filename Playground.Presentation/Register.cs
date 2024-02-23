@@ -1,19 +1,22 @@
 ﻿using Core.BPM;
+using Core.BPM.Configuration;
 using Core.BPM.Interfaces;
+using Core.BPM.MediatR;
+using Credo.Core.Shared.Library;
 using MediatR;
 
 namespace Playground.Presentation;
 
-public class Register : IProcess
+public class Register : Aggregate
 {
     public int Age { get; set; }
 }
 
-public record CheckClientType(Guid DocumentId, int clientId) : IEvent, IRequest<bool>;
+public record CheckClientType(Guid DocumentId, int clientId) : IEvent, IRequest<Result<bool>>;
 
-public class CheckClientTypeHandler : IRequestHandler<CheckClientType, bool>
+public class CheckClientTypeHandler : IRequestHandler<CheckClientType, Result<bool>>
 {
-    public Task<bool> Handle(CheckClientType request, CancellationToken cancellationToken)
+    public Task<Result<bool>> Handle(CheckClientType request, CancellationToken cancellationToken)
     {
         //var process = getProcess
         //var events = process.events
@@ -36,10 +39,6 @@ public class RegisterDefinition : BpmProcessGraphDefinition<Register>
     public override void Define(BpmProcessGraphConfigurator<Register> configurator)
     {
         configurator.SetRootNode<CheckClientType>()
-            .AppendRight<CheckClientType2>(x => x.Age > 3)
-            .ThenAppendRight<CheckClientType3>()
-            .AppendRight<CheckClientType2>(x => x.Age > 3)
-            .AppendRight<CheckClientType2>(x => x.Age > 3)
-            ;
+            .AppendRight<CheckClientType2>(x => x.Age > 3);
     }
 }

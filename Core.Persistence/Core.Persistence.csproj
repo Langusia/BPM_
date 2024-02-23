@@ -10,4 +10,8 @@
       <PackageReference Include="Marten" Version="7.0.0-beta.5" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Core.BPM\Core.BPM.csproj" />
+    </ItemGroup>
+
 </Project>

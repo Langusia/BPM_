@@ -1,14 +1,24 @@
 ﻿namespace Core.BPM.Interfaces;
 
-public interface INode<TProcess, TEvent> : INode
-    where TEvent : IEvent
+public interface INode<TProcess, TCommand> : INode<TProcess>
     where TProcess : IProcess
 {
-    INode<TProcess, TEvent> AppendRight<TTEvent>(Predicate<TProcess>? expr = null)
-        where TTEvent : IEvent;
+    INode<TProcess>? AvaiableNodes();
 
-    INode<TProcess, TTEvent> ThenAppendRight<TTEvent>(Predicate<TProcess>? expr = null)
-        where TTEvent : IEvent;
+    //Predicate<TProcess>? Condition { get; set; }
+    //INode<TProcess, TCommand> AppendRight(Predicate<TProcess>? expr = null);
+    ////where TTEvent : IEvent;
+    //
+    //INode<TProcess, TCommand> ThenAppendRight(Predicate<TProcess>? expr = null);
+    //where TTEvent : IEvent;
+}
+
+public interface INode<TProcess> : INode
+    where TProcess : IProcess
+{
+    Predicate<TProcess>? Condition { get; set; }
+
+    bool Valid(TProcess aggregate) => Condition != null && Condition.Invoke(aggregate);
 }
 
 public interface INode
@@ -19,6 +29,6 @@ public interface INode
     List<INode> PrevSteps { get; set; }
     void AddPrevStep(INode node);
 
-    INode? TraverseTo<TEvent>() where TEvent : IEvent;
+    INode? TraverseTo<TEvent>();
     INode? TraverseTo(Type eventType);
 }
