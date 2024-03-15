@@ -12,7 +12,7 @@ public class Register : Aggregate
     public int Age { get; set; }
 }
 
-public record CheckClientType(Guid DocumentId, int clientId) : IEvent, IRequest<Result<bool>>;
+public record CheckClientType(Guid DocumentId, int clientId) : IBpmEvent, IRequest<Result<bool>>;
 
 public class CheckClientTypeHandler : IRequestHandler<CheckClientType, Result<bool>>
 {
@@ -30,15 +30,15 @@ public class CheckClientTypeHandler : IRequestHandler<CheckClientType, Result<bo
     }
 }
 
-public record CheckClientType2(Guid DocumentId, int clientId) : IEvent;
+public record CheckClientType2(Guid DocumentId, int clientId) : IBpmEvent;
 
-public record CheckClientType3(Guid DocumentId, int clientId) : IEvent;
+public record CheckClientType3(Guid DocumentId, int clientId) : IBpmEvent;
 
 public class RegisterDefinition : BpmProcessGraphDefinition<Register>
 {
     public override void Define(BpmProcessGraphConfigurator<Register> configurator)
     {
-        configurator.SetRootNode<CheckClientType>()
-            .AppendRight<CheckClientType2>(x => x.Age > 3);
+        configurator.StartWith<CheckClientType>()
+            .Or<CheckClientType2>(x => x.Age > 3);
     }
 }

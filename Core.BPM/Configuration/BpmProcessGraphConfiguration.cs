@@ -6,9 +6,10 @@ public static class BpmProcessGraphConfiguration
 {
     private static List<BpmProcess?> _processes;
 
-    public static BpmProcess? GetConfig<TProcess>()
+    public static BpmProcess<TProcess>? GetConfig<TProcess>() where TProcess : IAggregate
     {
-        return _processes.FirstOrDefault(x => x?.ProcessType == typeof(TProcess));
+        var bpmProcess = _processes.FirstOrDefault(x => x?.ProcessType == typeof(TProcess));
+        return bpmProcess as BpmProcess<TProcess>;
     }
 
     public static void AddProcess(BpmProcess? processToAdd)
@@ -17,7 +18,7 @@ public static class BpmProcessGraphConfiguration
         _processes.Add(processToAdd);
     }
 
-    public static void AddProcess<T>(BpmProcess<T> processToAdd) where T : IProcess
+    public static void AddProcess<T>(BpmProcess<T> processToAdd) where T : IAggregate
     {
         _processes ??= new List<BpmProcess?>();
         _processes.Add(processToAdd);

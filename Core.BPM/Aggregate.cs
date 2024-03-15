@@ -2,9 +2,9 @@
 
 namespace Core.BPM;
 
-public class Aggregate : IProcess
+public class Aggregate : IAggregate
 {
-    public Guid Id { get; protected set; } = default!;
+    public Guid Id { get; set; }
 
     public int Version { get; protected set; }
 

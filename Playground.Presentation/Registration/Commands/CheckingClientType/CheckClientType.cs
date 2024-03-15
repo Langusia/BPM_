@@ -2,7 +2,6 @@
 using Core.Persistence;
 using Credo.Core.Shared.Library;
 using Credo.Core.Shared.Mediator;
-using MediatR;
 
 namespace Playground.Presentation.Registration.Commands.CheckingClientType;
 
@@ -19,8 +18,10 @@ public class CheckClientTypeHandler : ICommandHandler<CheckClientType, Guid?>
 
     public async Task<Result<Guid?>> Handle(CheckClientType request, CancellationToken cancellationToken)
     {
-        var res = BpmConfigurationExtensions.Validate<Registration>(request.GetType());
-        if (res)
+        var agg = await _repo.Get(request.DocumentId, cancellationToken: cancellationToken);
+        var res = BpmProcessGraphConfiguration.GetConfig<Registration>();
+        var validNodes = res.GetConditionValidGraphNodes(agg);
+        if (validNodes.Any(x => x.CommandType == typeof(CheckClientType)))
             return null;
 
         //LOGIC

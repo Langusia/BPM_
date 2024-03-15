@@ -1,6 +1,7 @@
 ﻿using Core.BPM;
 using Core.BPM.MediatR;
 using Marten.Events.Aggregation;
+using Playground.Presentation.Registration.Commands;
 using Playground.Presentation.Registration.Commands.CheckingClientType;
 using Playground.Presentation.Registration.Commands.EnrollingKYC;
 
@@ -84,7 +85,10 @@ public class RegistrationDefinition : BpmProcessGraphDefinition<Registration>
 {
     public override void Define(BpmProcessGraphConfigurator<Registration> configurator)
     {
-        configurator.SetRootNode<Playground.Presentation.Registration.Commands.CheckingClientType.CheckClientType>()
-            .ThenAppendRight<EnrollKYC>(x => x.ClientType is not null);
+        configurator.StartWith<Playground.Presentation.Registration.Commands.CheckingClientType.CheckClientType>()
+            .ContinueWith<EnrollKYC>(x =>
+                x.ContinueWith<CheckClientType>())
+            .Or<Initiate>(x =>
+                x.ContinueWith<EnrollKYC>());
     }
 }

@@ -2,4 +2,4 @@
 
 namespace Playground.Presentation.Registration.Commands.CheckingClientType;
 
-public record CheckedClientType(string PersonId, ClientType ClientType) : IEvent;
+public record CheckedClientType(string PersonId, ClientType ClientType) : IBpmEvent;

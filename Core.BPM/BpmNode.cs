@@ -1,65 +1,68 @@
-﻿using Core.BPM.Interfaces;
+﻿using Core.BPM.Configuration;
+using Core.BPM.Interfaces;
 
 namespace Core.BPM;
 
-public class BpmNode<TProcess, TCommand> : INode<TProcess, TCommand> where TProcess : IProcess
+public class BpmNode<TProcess, TCommand> : INode<TProcess, TCommand> where TProcess : Aggregate
 {
     public BpmNode()
     {
         _eventType = typeof(TCommand);
     }
 
-    public BpmNode(Type eventType)
-    {
-        _eventType = eventType;
-    }
-
-    private Type _eventType;
+    private readonly Type _eventType;
+    private int? _permittedCommandTryCount;
 
     public Predicate<TProcess>? Condition { get; set; }
 
-    public INode<TProcess>? AvaiableNodes()
+    public bool ValidatePermittedCount(IList<IBpmEvent> events)
     {
-        foreach (var nextStep in NextSteps)
-        {
-            nextStep.
-        }
+        if (_permittedCommandTryCount is not null)
+            if (events.Count(x => x.GetType() == typeof(TCommand)) >= _permittedCommandTryCount)
+                throw new Exception();
+
+        return true;
     }
 
-    public Type EventType => _eventType;
-
-    public List<INode> NextSteps { get; set; }
-
-    public void AddNextStep(INode node)
+    public void GetValidNodes(TProcess aggregate, List<INode<TProcess>> result)
     {
-        NextSteps ??= new List<INode>();
+        if (Validate(aggregate))
+            result.Add(this);
+
+        foreach (var nextStep in NextSteps)
+            (nextStep as INode<TProcess>)?.GetValidNodes(aggregate, result);
+    }
+
+    public bool Validate(TProcess aggregate) =>
+        Condition is null || Condition.Invoke(aggregate);
+
+    public Type CommandType => _eventType;
+
+    public List<INode<TProcess>> NextSteps { get; set; }
+
+    public void AddNextStep(INode<TProcess> node)
+    {
+        NextSteps ??= new List<INode<TProcess>>();
         NextSteps.Add(node);
     }
 
-    public List<INode> PrevSteps { get; set; }
+    public List<INode<TProcess>> PrevSteps { get; set; }
 
-    public void AddPrevStep(INode node)
+    public void AddPrevStep(INode<TProcess> node)
     {
-        PrevSteps ??= new List<INode>();
+        PrevSteps ??= new List<INode<TProcess>>();
         PrevSteps.Add(node);
     }
 
-    public INode? TraverseTo<TTraverseToEvent>()
+    public void SetConfig(NodeConfig<TProcess> cfg)
     {
-        if (_eventType == typeof(TTraverseToEvent))
-            return this;
-
-        foreach (var nextStep in NextSteps)
-        {
-            var result = nextStep.TraverseTo<TTraverseToEvent>();
-            if (result != null)
-                return result;
-        }
-
-        return null;
+        _permittedCommandTryCount = cfg.CommandTryCount;
     }
 
-    public INode? TraverseTo(Type eventType)
+    public INode<TProcess, TTraverseToEvent>? MoveTo<TTraverseToEvent>() =>
+        MoveTo(typeof(TTraverseToEvent)) as INode<TProcess, TTraverseToEvent>;
+
+    public INode<TProcess>? MoveTo(Type eventType)
     {
         if (_eventType == eventType)
             return this;
@@ -67,7 +70,7 @@ public class BpmNode<TProcess, TCommand> : INode<TProcess, TCommand> where TProc
 
         foreach (var nextStep in NextSteps)
         {
-            var result = nextStep.TraverseTo(eventType);
+            var result = nextStep.MoveTo(eventType);
             if (result != null)
                 return result;
         }
@@ -75,7 +78,14 @@ public class BpmNode<TProcess, TCommand> : INode<TProcess, TCommand> where TProc
         return null;
     }
 
-    public INode<TProcess, TCommand> AppendRight<TCommandd>(Predicate<TProcess>? expr = null)
+    public Tuple<int, bool> ValidCommandTry(IList<Type> events)
+    {
+        var currentCount = events?.Count(x => x == _eventType);
+        return new Tuple<int, bool>(currentCount ?? 0, _permittedCommandTryCount is null ||
+                                                       currentCount <= _permittedCommandTryCount);
+    }
+
+    public INode<TProcess, TCommand> Or<TCommandd>(Predicate<TProcess>? expr = null)
         //where TTEvent : IEvent
     {
         var newNode = new BpmNode<TProcess, TCommandd>() { Condition = expr };
@@ -84,30 +94,53 @@ public class BpmNode<TProcess, TCommand> : INode<TProcess, TCommand> where TProc
         return this;
     }
 
-    public INode<TProcess, TCommandd> ThenAppendRight<TCommandd>(Predicate<TProcess>? expr = null)
+    public INode<TProcess, TCommand> Or<TNextCommand>(Action<INode<TProcess, TNextCommand>>? configure = null,
+        Predicate<TProcess>? expr = null)
+    {
+        var newNode = new BpmNode<TProcess, TNextCommand>() { Condition = expr };
+        configure?.Invoke(newNode);
+        foreach (var prevStep in PrevSteps)
+        {
+            prevStep.AddNextStep(newNode);
+        }
+
+        newNode.AddPrevStep(this);
+        return this;
+    }
+
+    public INode<TProcess, TNextCommand> ThenAppendRight<TNextCommand>(Predicate<TProcess>? expr = null)
         //where TTEvent : IEvent
     {
-        var newNode = new BpmNode<TProcess, TCommandd>()
+        var newNode = new BpmNode<TProcess, TNextCommand>() { Condition = expr };
+        AddNextStep(newNode);
+        newNode.AddPrevStep(this);
+
+        return newNode;
+    }
+
+    public INode<TProcess, TNextCommand> ContinueWith<TNextCommand>(
+            Action<INode<TProcess, TNextCommand>>? configure = null, Predicate<TProcess>? expr = null)
+        //where TTEvent : IEvent
+    {
+        var newNode = new BpmNode<TProcess, TNextCommand>()
         {
             Condition = expr,
         };
 
         newNode.AddPrevStep(this);
-        foreach (var nextStep in NextSteps)
-        {
-            nextStep.AddNextStep(newNode);
-        }
+        if (NextSteps is null)
+            NextSteps = new List<INode<TProcess>>();
+
+        AddNextStep(newNode);
+
+        //foreach (var nextStep in NextSteps)
+        //{
+        //    nextStep.AddNextStep(newNode);
+        //}
+
+        if (configure is not null)
+            configure.Invoke(newNode);
 
         return newNode;
-    }
-
-    public void SetCondition<T>(Predicate<T> condition)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Predicate<T> GetCondition<T>()
-    {
-        throw new NotImplementedException();
     }
 }

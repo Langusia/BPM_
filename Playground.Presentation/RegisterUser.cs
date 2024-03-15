@@ -1,4 +1,5 @@
-﻿using Marten;
+﻿using Core.BPM.Configuration;
+using Marten;
 using MediatR;
 using Playground.Application.Documents;
 
@@ -24,7 +25,7 @@ public class RegisterUserHandler : IRequestHandler<RegisterUser, bool>
 
     public async Task<bool> Handle(RegisterUser request, CancellationToken cancellationToken)
     {
-        
+        var cfg = BpmProcessGraphConfiguration.GetConfig<Registration.Registration>();
 
 
         await using var session = _store.LightweightSession();

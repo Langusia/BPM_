@@ -12,6 +12,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Core.BPM\Core.BPM.csproj" />
+      <ProjectReference Include="..\Core.Persistence\Core.Persistence.csproj" />
       <ProjectReference Include="..\Credo.Core.Shared\Credo.Core.Shared.csproj" />
     </ItemGroup>
 

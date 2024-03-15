@@ -1,5 +1,5 @@
 ﻿namespace Core.BPM.Interfaces;
 
-public interface IEvent
+public interface IBpmEvent
 {
 }

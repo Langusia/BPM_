@@ -3,7 +3,7 @@ using Marten;
 
 namespace Playground.Presentation;
 
-public record Checked2FA(Guid DocumentId, bool IsValid) : IEvent;
+public record Checked2FA(Guid DocumentId, bool IsValid) : IBpmEvent;
 
 public class TwoFactorValidator
 {

@@ -1,3 +1,4 @@
+using Core.BPM.Configuration;
 using Core.BPM.MediatR;
 using Marten;
 using Marten.Events.Projections;
@@ -49,7 +50,11 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapPost("user/register",
-        async (IMediator mediator) => await mediator.Send(new RegisterUser(Guid.NewGuid(), "testman")))
+        async (IMediator mediator) =>
+        {
+            var s = BpmProcessGraphConfiguration.GetConfig<Registration>();
+            return await mediator.Send(new RegisterUser(Guid.NewGuid(), "testman"));
+        })
     .WithName("RegisterUser")
     .WithOpenApi();
 

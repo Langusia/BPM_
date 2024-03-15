@@ -1,5 +1,7 @@
 ﻿using Core.BPM;
 using Marten;
+using Marten.Events;
+using Marten.Internal.Storage;
 
 namespace Core.Persistence;
 
@@ -13,11 +15,14 @@ public class MartenRepository<T> where T : Aggregate
     public Task<T?> Find(Guid id, CancellationToken ct) =>
         documentSession.Events.AggregateStreamAsync<T>(id, token: ct);
 
+    public Task<IReadOnlyList<IEvent>> FetchStreamAsync(Guid id, CancellationToken ct) =>
+        documentSession.Events.FetchStreamAsync(id, token: ct);
+
     public async Task<long> Add(T aggregate, CancellationToken ct = default)
     {
         var events = aggregate.DequeueUncommittedEvents();
 
-        documentSession.Events.StartStream<Aggregate>(
+        documentSession.Events.StartStream<T>(
             aggregate.Id,
             events
         );
