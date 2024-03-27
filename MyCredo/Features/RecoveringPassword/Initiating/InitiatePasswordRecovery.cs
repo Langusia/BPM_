@@ -1,4 +1,6 @@
 ﻿using Core.BPM;
+using Core.BPM.Configuration;
+using Core.BPM.Interfaces;
 using Core.BPM.MediatR;
 using Core.BPM.MediatR.Mediator;
 using Credo.Core.Shared.Library;
@@ -20,7 +22,13 @@ public class InitiatePasswordRecoveryHandler(BpmProcessManager<PasswordRecovery>
 {
     public async Task<Result<Guid>> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
+        var cc = BpmProcessGraphConfiguration.GetConfig<PasswordRecovery>();
+        new PasswordRecoveryDefinition().Define2(new BProcessBuilder<PasswordRecovery>());
+        var config = BProcessGraphConfiguration.GetConfig<PasswordRecovery>();
+
         //dostuff
+
+        var s = BpmProcessGraphConfiguration.GetConfig<PasswordRecovery>();
         var agg = PasswordRecovery.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType);
         await mgr.StartProcess(
             agg,

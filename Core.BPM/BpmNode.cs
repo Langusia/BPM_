@@ -13,6 +13,11 @@ public class BpmNode<TProcess, TCommand> : INode<TProcess, TCommand> where TProc
     private readonly Type _eventType;
     private int? _permittedCommandTryCount;
 
+    public List<INode<TProcess>> GetLastNodes()
+    {
+        throw new NotImplementedException();
+    }
+
     public Predicate<TProcess>? Condition { get; set; }
 
     public bool ValidatePermittedCount(IList<IBpmEvent> events)

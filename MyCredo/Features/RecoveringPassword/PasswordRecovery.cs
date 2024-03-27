@@ -1,4 +1,5 @@
 ﻿using Core.BPM;
+using Core.BPM.Interfaces;
 using Core.BPM.MediatR;
 using MyCredo.Common;
 using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
@@ -78,7 +79,35 @@ public class PasswordRecoveryDefinition : BpmProcessGraphDefinition<PasswordReco
                         .ContinueWith<CheckCard>())
                     .Or<IdentifyFace>())
                 .Or<ValidatePhoneChange>())
+            .Or<CheckCard>()
             .ContinueWith<FinishPasswordRecovery>();
+
+        //  configure.SetMap(typeof(GenerateOtp), typeof)(GenerateOtp), typeof(GenerateOtp), typeof(GenerateOtp))
+        //      .SetMap(typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace));
+    }
+
+    public void Define2(IBProcessBuilder<PasswordRecovery> configure)
+    {
+        configure
+            .StartWith<InitiatePasswordRecovery>()
+            .Continue<ValidateOtp>()
+            .Or<ValidatePhoneChange>()
+            .Or<ValidatePhoneChange>()
+            .Continue<ValidateOtp>()
+            .Continue<ValidateOtp>()
+            .Or<ValidatePhoneChange>()
+            .Or<ValidatePhoneChange>()
+            .Continue<ValidateOtp>()
+            .Build();
+
+        //.Or<GenerateOtp>()
+        //.Or<ValidatePhoneChange>()
+        //.Continue<ValidateOtp>()
+        //.Continue<CheckCard>()
+        //.Or<FinishPasswordRecovery>()
+        //.Continue<CheckCard>()
+        //.Build();
+
 
         //  configure.SetMap(typeof(GenerateOtp), typeof)(GenerateOtp), typeof(GenerateOtp), typeof(GenerateOtp))
         //      .SetMap(typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace));

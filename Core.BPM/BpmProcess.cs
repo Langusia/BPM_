@@ -24,3 +24,4 @@ public class BpmProcess(Type processType, INode rootNode)
 
     protected virtual INode GetRootNode() => rootNode;
 }
+
