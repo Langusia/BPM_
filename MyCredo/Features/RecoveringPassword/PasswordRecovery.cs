@@ -81,7 +81,7 @@ public class PasswordRecoveryDefinition : BpmProcessGraphDefinition<PasswordReco
                 .Or<ValidatePhoneChange>())
             .Or<CheckCard>()
             .ContinueWith<FinishPasswordRecovery>();
-
+ 
         //  configure.SetMap(typeof(GenerateOtp), typeof)(GenerateOtp), typeof(GenerateOtp), typeof(GenerateOtp))
         //      .SetMap(typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace));
     }
@@ -91,22 +91,12 @@ public class PasswordRecoveryDefinition : BpmProcessGraphDefinition<PasswordReco
         configure
             .StartWith<InitiatePasswordRecovery>()
             .Continue<ValidateOtp>()
-            .Or<ValidatePhoneChange>()
-            .Or<ValidatePhoneChange>()
-            .Continue<ValidateOtp>()
-            .Continue<ValidateOtp>()
-            .Or<ValidatePhoneChange>()
-            .Or<ValidatePhoneChange>()
-            .Continue<ValidateOtp>()
-            .Build();
-
-        //.Or<GenerateOtp>()
-        //.Or<ValidatePhoneChange>()
-        //.Continue<ValidateOtp>()
-        //.Continue<CheckCard>()
-        //.Or<FinishPasswordRecovery>()
-        //.Continue<CheckCard>()
-        //.Build();
+            .Or1<IdentifyFace>()
+            .Continue<ValidateSecurityQuestion>()
+            .Or1<ValidatePhoneChange>()
+            .Continue<CheckCard>()
+            .Or1<InitiateCheckCard>()
+            ;
 
 
         //  configure.SetMap(typeof(GenerateOtp), typeof)(GenerateOtp), typeof(GenerateOtp), typeof(GenerateOtp))

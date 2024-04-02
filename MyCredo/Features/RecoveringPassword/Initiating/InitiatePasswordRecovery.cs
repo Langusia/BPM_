@@ -22,7 +22,7 @@ public class InitiatePasswordRecoveryHandler(BpmProcessManager<PasswordRecovery>
 {
     public async Task<Result<Guid>> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
-        var cc = BpmProcessGraphConfiguration.GetConfig<PasswordRecovery>();
+        var cc  = BpmProcessGraphConfiguration.GetConfig<PasswordRecovery>();
         new PasswordRecoveryDefinition().Define2(new BProcessBuilder<PasswordRecovery>());
         var config = BProcessGraphConfiguration.GetConfig<PasswordRecovery>();
 

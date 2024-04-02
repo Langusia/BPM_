@@ -31,7 +31,7 @@ builder.Services.AddMarten(options =>
 builder.Services.AddMediatR(c =>
 {
     c.RegisterServicesFromAssembly(typeof(Program).Assembly);
-    c.AddOpenBehavior(typeof(BpmCommandValidationBehavior<,>));
+    //c.AddOpenBehavior(typeof(BpmCommandValidationBehavior<,>));
     //c.AddBpmValidatorPipes();
 });
 builder.Services.AddBpm(x => { x.AddBpmDefinition<PasswordRecovery, PasswordRecoveryDefinition>(); });

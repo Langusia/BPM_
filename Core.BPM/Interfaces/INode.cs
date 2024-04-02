@@ -48,20 +48,9 @@ public interface IBNode
     Type ProcessType { get; }
 
 
-    void GetLastNodes(List<IBNode> lastNodes)
-    {
-        if (NextSteps is not null)
-            foreach (var nextStep in NextSteps)
-            {
-                if (nextStep.NextSteps is null || nextStep.NextSteps.Count == 0)
-                    lastNodes.Add(nextStep);
-                else
-                    GetLastNodes(lastNodes);
-            }
-    }
-
     List<IBNode> NextSteps { get; set; }
     void AddNextStep(IBNode node);
+    void AddNextStepToTail(IBNode node);
     void AddNextSteps(IList<IBNode> nodes);
     List<IBNode> PrevSteps { get; set; }
     void AddPrevStep(IBNode node);
@@ -75,6 +64,30 @@ public class Node(Type commandType, Type processType) : IBNode
     public Type ProcessType { get; } = processType;
 
     public List<IBNode> NextSteps { get; set; } = new List<IBNode>();
+
+    private void GetLastNodes(List<IBNode> lastNodes)
+    {
+        if (NextSteps is not null)
+            foreach (var nextStep in NextSteps)
+            {
+                if (nextStep.NextSteps is null || nextStep.NextSteps.Count == 0)
+                    lastNodes.Add(nextStep);
+                else
+                    GetLastNodes(lastNodes);
+            }
+    }
+
+    public void AddNextStepToTail(IBNode node)
+    {
+        if (NextSteps.Count == 0)
+            NextSteps.Add(node);
+        else
+        {
+            var tails = new List<IBNode>();
+            GetLastNodes(tails);
+            tails.ForEach(x => x.AddNextStep(node));
+        }
+    }
 
     public void AddNextStep(IBNode node)
     {
@@ -118,35 +131,81 @@ public interface IBProcessBuilder<TProcess>
     }
 }
 
+public static class RootExtensions
+{
+    public static IExtendableNodeBuilder Or1<TCommand>(this IExtendableNodeBuilder builder, Action<IBNodeBuilder>? configure = null)
+    {
+        var p = builder.GetProcess();
+        var r = builder.GetRoot();
+        var n = new Node(typeof(TCommand), p.ProcessType);
+        //add prev to new
+        n.AddPrevStep(r);
+        //add next to root
+        if (r.PrevSteps is not null)
+            r.PrevSteps.ForEach(x => x.NextSteps.ForEach(z => z.AddNextStep(n)));
+        else
+            r.AddNextStep(n);
+        configure?.Invoke(builder);
+        return builder;
+    }
+}
+
 public class BProcess(Type processType, IBNode rootNode)
 {
     public readonly Type ProcessType = processType;
     public readonly IBNode RootNode = rootNode;
 }
 
-public static class BNodeBuilderExtensions
+public class BConditionNodeBuilder : IBNodeBuilder, IExtendableNodeBuilder
 {
-    public static IBNodeBuilder ThenContinue(this IBNodeBuilder builder)
-    {
-        return null;
-    }
-
-    public static IBNodeBuilder Or<TNextCommand>(this IBNodeBuilder builder, Action<ICBNodeBuilder>? configure = null)
-    {
-        return builder.Or<TNextCommand>(configure);
-    }
-}
-
-public class BConditionNodeBuilder(IBNode rootNode, BProcess process) : IBNodeBuilder
-{
-    private readonly IBNode _rootNode = rootNode;
-    private IBNode _currentNode = rootNode;
-    private List<IBNode> _currentNexts = rootNode.NextSteps;
+    private IBNode _rootNode;
+    private IBNode _currentNode;
+    private List<IBNode> _currentNexts;
     public List<IBNode> _nodesToAppend = [];
+
+    private readonly BConditionNodeBuilder _rootContext;
+    private readonly BProcess _process;
+
+    public BConditionNodeBuilder(IBNode rootNode, BProcess process, BConditionNodeBuilder rootContext)
+    {
+        _rootContext = rootContext;
+        _process = process;
+        _rootNode = rootNode;
+        _currentNode = rootNode;
+        _currentNexts = rootNode.NextSteps;
+    }
+
+    public IBNode GetCurrentRoot()
+    {
+        return _rootContext.GetCurrent();
+    }
+
+    public BConditionNodeBuilder(IBNode rootNode, BProcess process)
+    {
+        _process = process;
+        _rootNode = rootNode;
+        _currentNode = rootNode;
+        _currentNexts = rootNode.NextSteps;
+    }
 
     public BProcess GetProcess()
     {
-        return process;
+        return _process;
+    }
+
+    public IBNode GetCurrent()
+    {
+        return _currentNode;
+    }
+
+    public void AddNextToRoot(IBNode node)
+    {
+        if (_rootContext is not null)
+            _rootContext.GetCurrent().AddNextStep(node);
+        else
+        {
+            _rootNode.AddNextStep(node);
+        }
     }
 
     public void AppendAndMoveNext()
@@ -158,9 +217,35 @@ public class BConditionNodeBuilder(IBNode rootNode, BProcess process) : IBNodeBu
         }
     }
 
-    public IBNodeBuilder Continue<TCommand>(Action<IBNodeBuilder>? configure = null)
+    public IExtendableNodeBuilder Continue<TCommand>(Action<IBNodeBuilder>? configure = null)
     {
-        var node = new Node(typeof(TCommand), process.ProcessType);
+        var node = new Node(typeof(TCommand), _process.ProcessType);
+
+        //if (_currentNode.PrevSteps is not null && _currentNode.PrevSteps?.Count != 0)
+        //    _currentNode.PrevSteps!.ForEach(x => x.NextSteps.ForEach(x => x.AddNextStepToTail(node)));
+        if (_rootNode is not null)
+            _rootNode.AddNextStepToTail(node);
+
+
+        node.AddPrevStep(_currentNode);
+        if (configure is not null)
+        {
+            var nextNodeBuilder = new BConditionNodeBuilder(node, _process, this);
+            configure?.Invoke(nextNodeBuilder);
+            _currentNode.AddNextStep(nextNodeBuilder.GetCurrent());
+        }
+
+        _rootNode = _currentNode;
+        _currentNode = node;
+
+        return this;
+    }
+
+    public IBNode GetRoot() => _rootNode;
+
+    public IBNodeBuilder ContinueRoot<TCommand>(Action<IBNodeBuilder>? configure = null)
+    {
+        var node = new Node(typeof(TCommand), _process.ProcessType);
 
         if (_currentNode.PrevSteps is not null && _currentNode.PrevSteps?.Count != 0)
             _currentNode.PrevSteps!.ForEach(x => x.NextSteps.ForEach(x => x.AddNextStep(node)));
@@ -169,24 +254,14 @@ public class BConditionNodeBuilder(IBNode rootNode, BProcess process) : IBNodeBu
 
 
         node.AddPrevStep(_currentNode);
-        _currentNode = node;
-
-//if (_nodesToAppend.Count != 0)
-//{
-//    _currentNexts.ForEach(x => x.AddNextSteps(_nodesToAppend));
-//    _nodesToAppend.RemoveAll(_ => true);
-//}
-//else
-//{
-//    _currentNexts.Add(node);
-//}
+        configure?.Invoke(new BConditionNodeBuilder(_currentNode, _process));
 
         return this;
     }
 
     public IBNodeBuilder Or<TNextCommand>(Action<ICBNodeBuilder>? configure = null)
     {
-        var newNode = new Node(typeof(TNextCommand), process.ProcessType);
+        var newNode = new Node(typeof(TNextCommand), _process.ProcessType);
         _currentNode.PrevSteps.ForEach(x => x.AddNextStep(newNode));
         newNode.AddPrevStep(_currentNode);
         //_nodesToAppend.Add(newNode);
@@ -195,24 +270,13 @@ public class BConditionNodeBuilder(IBNode rootNode, BProcess process) : IBNodeBu
     }
 }
 
-//public class BNodeBuilder(IBNode currentNode, Type processType) : IBNodeBuilder
-//{
-//    public IConditionBNodeBuilder AddNext<TCommand>(Action<IBNodeBuilder>? configure = null)
-//    {
-//        var newNode = new Node(typeof(TCommand), processType);
-//        currentNode.AddNextStep(newNode);
-//
-//        return new BConditionNodeBuilder(currentNode, processType);
-//    }
-//}
-
 public class BProcessBuilder<TProcess> : IBProcessBuilder<TProcess>
 {
     public IBNodeBuilder StartWith<TCommand>()
     {
         var nodeInst = new Node(typeof(TCommand), typeof(TProcess));
         var processInst = new BProcess(typeof(TProcess), nodeInst);
-
+        BProcessGraphConfiguration.AddProcess(processInst);
         return new BConditionNodeBuilder(nodeInst, processInst);
     }
 }
@@ -230,9 +294,19 @@ public interface ICBNodeBuilder
     IBNodeBuilder ThenAdd<Command>(Action<ICBNodeBuilder>? configure = null);
 }
 
+public interface IExtendableNodeBuilder : IBNodeBuilder
+{
+    IBNode GetRoot();
+}
+
 public interface IBNodeBuilder // : IBNodeBuilder
 {
+    IBNodeBuilder ContinueRoot<TCommand>(Action<IBNodeBuilder>? configure = null);
     BProcess GetProcess();
-    IBNodeBuilder Continue<Command>(Action<IBNodeBuilder>? configure = null);
-    IBNodeBuilder Or<TNextCommand>(Action<ICBNodeBuilder>? configure = null);
+    IBNode GetCurrent();
+
+    void AddNextToRoot(IBNode node);
+
+    IExtendableNodeBuilder Continue<Command>(Action<IBNodeBuilder>? configure = null);
+    //IBNodeBuilder Or<TNextCommand>(Action<ICBNodeBuilder>? configure = null);
 }
