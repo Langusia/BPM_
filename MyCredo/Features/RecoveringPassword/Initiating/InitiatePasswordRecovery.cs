@@ -24,7 +24,7 @@ public class InitiatePasswordRecoveryHandler(BpmProcessManager<PasswordRecovery>
     public async Task<Result<Guid>> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
         //var cc  = BpmProcessGraphConfiguration.GetConfig<PasswordRecovery>();
-        new PasswordRecoveryDefinition().Define2(new BProcessBuilder<PasswordRecovery>());
+        //new PasswordRecoveryDefinition().Define2(new BProcessBuilder<PasswordRecovery>());
         var config = BProcessGraphConfiguration.GetConfig<PasswordRecovery>();
         var ss = JsonConvert.SerializeObject(config.RootNode, new JsonSerializerSettings
         {
@@ -34,7 +34,6 @@ public class InitiatePasswordRecoveryHandler(BpmProcessManager<PasswordRecovery>
         });
         //dostuff
 
-        var s = BpmProcessGraphConfiguration.GetConfig<PasswordRecovery>();
         var agg = PasswordRecovery.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType);
         await mgr.StartProcess(
             agg,

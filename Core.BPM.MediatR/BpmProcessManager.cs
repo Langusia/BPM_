@@ -16,7 +16,7 @@ public class BpmProcessManager<TProcess> : IBpmValidationManager where TProcess 
 
     public bool ValidateConfig<TCommand>()
     {
-        var config = BpmProcessGraphConfiguration.GetConfig<TProcess>();
+        var config = BProcessGraphConfiguration.GetConfig<TProcess>();
         if (config is null)
             throw BpmProcessNotConfiguredException.For<TProcess>(); //process not found exception
 
@@ -29,7 +29,7 @@ public class BpmProcessManager<TProcess> : IBpmValidationManager where TProcess 
 
     public async Task ValidateAsync<TCommand>(Guid documentId, CancellationToken cancellationToken)
     {
-        var config = BpmProcessGraphConfiguration.GetConfig<TProcess>();
+        var config = BProcessGraphConfiguration.GetConfig<TProcess>();
         if (config is null)
             throw BpmProcessNotConfiguredException.For<TProcess>(); //process not found exception
 

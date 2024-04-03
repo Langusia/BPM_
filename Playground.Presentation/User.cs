@@ -1,4 +1,4 @@
-﻿namespace Playground.Application.Documents;
+﻿namespace Playground.Presentation;
 
 public class User
 {

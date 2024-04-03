@@ -19,10 +19,10 @@ public class CheckClientTypeHandler : ICommandHandler<CheckClientType, Guid?>
     public async Task<Result<Guid?>> Handle(CheckClientType request, CancellationToken cancellationToken)
     {
         var agg = await _repo.Get(request.DocumentId, cancellationToken: cancellationToken);
-        var res = BpmProcessGraphConfiguration.GetConfig<Registration>();
-        var validNodes = res.GetConditionValidGraphNodes(agg);
-        if (validNodes.Any(x => x.CommandType == typeof(CheckClientType)))
-            return null;
+        var res = BProcessGraphConfiguration.GetConfig<Registration>();
+        //var validNodes = res.GetConditionValidGraphNodes(agg);
+        //if (validNodes.Any(x => x.CommandType == typeof(CheckClientType)))
+        //    return null;
 
         //LOGIC
 

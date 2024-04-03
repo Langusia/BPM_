@@ -1,7 +1,6 @@
 ﻿using Core.BPM;
 using Core.BPM.Configuration;
 using Core.BPM.Interfaces;
-using Core.BPM.MediatR;
 using Credo.Core.Shared.Library;
 using MediatR;
 
@@ -33,12 +32,3 @@ public class CheckClientTypeHandler : IRequestHandler<CheckClientType, Result<bo
 public record CheckClientType2(Guid DocumentId, int clientId) : IBpmEvent;
 
 public record CheckClientType3(Guid DocumentId, int clientId) : IBpmEvent;
-
-public class RegisterDefinition : BpmProcessGraphDefinition<Register>
-{
-    public override void Define(BpmProcessGraphConfigurator<Register> configurator)
-    {
-        configurator.StartWith<CheckClientType>()
-            .Or<CheckClientType2>(x => x.Age > 3);
-    }
-}

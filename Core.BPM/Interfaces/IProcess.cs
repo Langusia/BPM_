@@ -2,7 +2,7 @@
 
 public interface IProcess<TProcess> where TProcess : IAggregate
 {
-    List<INode<TProcess>> GetConditionValidGraphNodes(TProcess aggregate);
+    List<INode> GetConditionValidGraphNodes(TProcess aggregate);
 }
 
 public interface IAggregate

@@ -81,14 +81,14 @@ public class RegistrationProjection : SingleStreamProjection<Registration>
     }
 }
 
-public class RegistrationDefinition : BpmProcessGraphDefinition<Registration>
-{
-    public override void Define(BpmProcessGraphConfigurator<Registration> configurator)
-    {
-        configurator.StartWith<Playground.Presentation.Registration.Commands.CheckingClientType.CheckClientType>()
-            .ContinueWith<EnrollKYC>(x =>
-                x.ContinueWith<CheckClientType>())
-            .Or<Initiate>(x =>
-                x.ContinueWith<EnrollKYC>());
-    }
-}
+//public class RegistrationDefinition : BpmProcessGraphDefinition<Registration>
+//{
+//    public override void Define(BpmProcessGraphConfigurator<Registration> configurator)
+//    {
+//        configurator.StartWith<Playground.Presentation.Registration.Commands.CheckingClientType.CheckClientType>()
+//            .ContinueWith<EnrollKYC>(x =>
+//                x.ContinueWith<CheckClientType>())
+//            .Or<Initiate>(x =>
+//                x.ContinueWith<EnrollKYC>());
+//    }
+//}

@@ -35,7 +35,7 @@ builder.Services.AddMarten(options =>
 
 builder.Services.AddBpm(x =>
 {
-    x.AddBpmDefinition<Registration, RegistrationDefinition>();
+    //x.AddBpmDefinition<Registration, RegistrationDefinition>();
 });
 
 var app = builder.Build();
@@ -52,7 +52,7 @@ app.UseHttpsRedirection();
 app.MapPost("user/register",
         async (IMediator mediator) =>
         {
-            var s = BpmProcessGraphConfiguration.GetConfig<Registration>();
+            var s = BProcessGraphConfiguration.GetConfig<Registration>();
             return await mediator.Send(new RegisterUser(Guid.NewGuid(), "testman"));
         })
     .WithName("RegisterUser")

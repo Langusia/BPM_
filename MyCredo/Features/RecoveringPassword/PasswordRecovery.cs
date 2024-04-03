@@ -1,5 +1,7 @@
 ﻿using Core.BPM;
+using Core.BPM.Extensions;
 using Core.BPM.Interfaces;
+using Core.BPM.Interfaces.Builder;
 using Core.BPM.MediatR;
 using MyCredo.Common;
 using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
@@ -66,9 +68,9 @@ public class PasswordRecovery : Aggregate
     public int? KycParameters { get; set; }
 }
 
-public class PasswordRecoveryDefinition : BpmProcessGraphDefinition<PasswordRecovery>
+public class PasswordRecoveryDefinition
 {
-    public override void Define(BpmProcessGraphConfigurator<PasswordRecovery> configure)
+    public void Define()
     {
         //onfigure
         //   .StartWith<InitiatePasswordRecovery>()
@@ -87,7 +89,7 @@ public class PasswordRecoveryDefinition : BpmProcessGraphDefinition<PasswordReco
         //      .SetMap(typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace));
     }
 
-    public void Define2(IBProcessBuilder<PasswordRecovery> configure)
+    public void Define2(IProcessBuilder<PasswordRecovery> configure)
     {
         configure
             .StartWith<InitiatePasswordRecovery>()

@@ -2,7 +2,7 @@
 using Marten.Events.Aggregation;
 using Marten.Events.Projections;
 
-namespace Playground.Application.GitHubSamples;
+namespace Playground.Presentation.GitHubSamples;
 
 public class WorkingWithEvents
 {

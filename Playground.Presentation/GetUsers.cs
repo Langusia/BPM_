@@ -1,8 +1,7 @@
 ﻿using Marten;
 using MediatR;
-using Playground.Application.Documents;
 
-namespace Playground.Application;
+namespace Playground.Presentation;
 
 public record GetUsers : IRequest<List<User>>;
 
