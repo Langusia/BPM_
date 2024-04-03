@@ -7,6 +7,7 @@ using Credo.Core.Shared.Library;
 using Credo.Core.Shared.Mediator;
 using MediatR;
 using MyCredo.Common;
+using Newtonsoft.Json;
 
 namespace MyCredo.Features.RecoveringPassword.Initiating;
 
@@ -22,10 +23,15 @@ public class InitiatePasswordRecoveryHandler(BpmProcessManager<PasswordRecovery>
 {
     public async Task<Result<Guid>> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
-        var cc  = BpmProcessGraphConfiguration.GetConfig<PasswordRecovery>();
+        //var cc  = BpmProcessGraphConfiguration.GetConfig<PasswordRecovery>();
         new PasswordRecoveryDefinition().Define2(new BProcessBuilder<PasswordRecovery>());
         var config = BProcessGraphConfiguration.GetConfig<PasswordRecovery>();
-
+        var ss = JsonConvert.SerializeObject(config.RootNode, new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.All,
+            MaxDepth = 1,
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+        });
         //dostuff
 
         var s = BpmProcessGraphConfiguration.GetConfig<PasswordRecovery>();

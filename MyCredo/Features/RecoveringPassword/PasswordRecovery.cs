@@ -70,18 +70,19 @@ public class PasswordRecoveryDefinition : BpmProcessGraphDefinition<PasswordReco
 {
     public override void Define(BpmProcessGraphConfigurator<PasswordRecovery> configure)
     {
-        configure
-            .StartWith<InitiatePasswordRecovery>()
-            .ContinueWith<GenerateOtp>(g => g
-                .ContinueWith<ValidateOtp>(v => v
-                    .ContinueWith<ValidateSecurityQuestion>()
-                    .Or<InitiateCheckCard>(x => x
-                        .ContinueWith<CheckCard>())
-                    .Or<IdentifyFace>())
-                .Or<ValidatePhoneChange>())
-            .Or<CheckCard>()
-            .ContinueWith<FinishPasswordRecovery>();
- 
+        //onfigure
+        //   .StartWith<InitiatePasswordRecovery>()
+        //   .ContinueWith<GenerateOtp>(g => g
+        //       .ContinueWith<ValidateOtp>(v => v
+        //           .ContinueWith<ValidateSecurityQuestion>()
+        //           .Or<InitiateCheckCard>(x => x
+        //               .ContinueWith<CheckCard>())
+        //           .Or<IdentifyFace>())
+        //       .Or<ValidatePhoneChange>())
+        //   .Or<CheckCard>()
+        //   .ContinueWith<FinishPasswordRecovery>()
+        //   .ContinueWith<FinishPasswordRecovery>();
+
         //  configure.SetMap(typeof(GenerateOtp), typeof)(GenerateOtp), typeof(GenerateOtp), typeof(GenerateOtp))
         //      .SetMap(typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace));
     }
@@ -90,13 +91,18 @@ public class PasswordRecoveryDefinition : BpmProcessGraphDefinition<PasswordReco
     {
         configure
             .StartWith<InitiatePasswordRecovery>()
-            .Continue<ValidateOtp>()
-            .Or1<IdentifyFace>()
-            .Continue<ValidateSecurityQuestion>()
-            .Or1<ValidatePhoneChange>()
+            .Continue<ValidateOtp>(x => x
+                .Continue<ValidatePhoneChange>()
+                .Or1<ValidateSecurityQuestion>())
             .Continue<CheckCard>()
-            .Or1<InitiateCheckCard>()
-            ;
+            .Continue<FinishPasswordRecovery>()
+            .Or2<ValidateSecurityQuestion>(z => z
+                .Continue<InitiatePasswordRecovery>(c => c
+                    .Continue<InitiateCheckCard>()
+                    .Or1<GenerateOtp>()
+                    .Or1<GenerateOtp>())
+                .Continue<CheckCard>())
+            .Continue<PasswordRecoveryInitiated>();
 
 
         //  configure.SetMap(typeof(GenerateOtp), typeof)(GenerateOtp), typeof(GenerateOtp), typeof(GenerateOtp))

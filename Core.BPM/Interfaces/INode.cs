@@ -65,16 +65,22 @@ public class Node(Type commandType, Type processType) : IBNode
 
     public List<IBNode> NextSteps { get; set; } = new List<IBNode>();
 
-    private void GetLastNodes(List<IBNode> lastNodes)
+    private IBNode currNext;
+
+    private void GetLastNodes(List<IBNode> lastNodes, IBNode start)
     {
-        if (NextSteps is not null)
-            foreach (var nextStep in NextSteps)
+        foreach (var nextStep in start.NextSteps)
+        {
+            if (nextStep.NextSteps is null || nextStep.NextSteps.Count == 0)
+                lastNodes.Add(nextStep);
+            else
             {
-                if (nextStep.NextSteps is null || nextStep.NextSteps.Count == 0)
-                    lastNodes.Add(nextStep);
-                else
-                    GetLastNodes(lastNodes);
+                currNext = nextStep;
+                GetLastNodes(lastNodes, currNext);
             }
+        }
+
+        currNext = null;
     }
 
     public void AddNextStepToTail(IBNode node)
@@ -84,8 +90,8 @@ public class Node(Type commandType, Type processType) : IBNode
         else
         {
             var tails = new List<IBNode>();
-            GetLastNodes(tails);
-            tails.ForEach(x => x.AddNextStep(node));
+            GetLastNodes(tails, this);
+            tails.Distinct().ToList().ForEach(x => x.AddNextStep(node));
         }
     }
 
@@ -137,6 +143,7 @@ public static class RootExtensions
     {
         var p = builder.GetProcess();
         var r = builder.GetRoot();
+        var c = builder.GetCurrent();
         var n = new Node(typeof(TCommand), p.ProcessType);
         //add prev to new
         n.AddPrevStep(r);
@@ -144,6 +151,21 @@ public static class RootExtensions
         if (r.PrevSteps is not null)
             r.PrevSteps.ForEach(x => x.NextSteps.ForEach(z => z.AddNextStep(n)));
         else
+            r.AddNextStep(n);
+        configure?.Invoke(builder);
+        return builder;
+    }
+
+    public static IExtendableNodeBuilder Or2<TCommand>(this IExtendableNodeBuilder builder, Action<IBNodeBuilder>? configure = null)
+    {
+        var p = builder.GetProcess();
+        var r = builder.GetRoot();
+        var c = builder.GetCurrent();
+        var n = new Node(typeof(TCommand), p.ProcessType);
+        //add prev to new
+        n.AddPrevStep(r);
+        //add next to root
+        if (r.PrevSteps is not null)
             r.AddNextStep(n);
         configure?.Invoke(builder);
         return builder;
@@ -175,11 +197,6 @@ public class BConditionNodeBuilder : IBNodeBuilder, IExtendableNodeBuilder
         _currentNexts = rootNode.NextSteps;
     }
 
-    public IBNode GetCurrentRoot()
-    {
-        return _rootContext.GetCurrent();
-    }
-
     public BConditionNodeBuilder(IBNode rootNode, BProcess process)
     {
         _process = process;
@@ -208,15 +225,6 @@ public class BConditionNodeBuilder : IBNodeBuilder, IExtendableNodeBuilder
         }
     }
 
-    public void AppendAndMoveNext()
-    {
-        if (_nodesToAppend.Count != 0)
-        {
-            _currentNexts = _nodesToAppend;
-            _nodesToAppend.RemoveAll(_ => true);
-        }
-    }
-
     public IExtendableNodeBuilder Continue<TCommand>(Action<IBNodeBuilder>? configure = null)
     {
         var node = new Node(typeof(TCommand), _process.ProcessType);
@@ -232,7 +240,6 @@ public class BConditionNodeBuilder : IBNodeBuilder, IExtendableNodeBuilder
         {
             var nextNodeBuilder = new BConditionNodeBuilder(node, _process, this);
             configure?.Invoke(nextNodeBuilder);
-            _currentNode.AddNextStep(nextNodeBuilder.GetCurrent());
         }
 
         _rootNode = _currentNode;
@@ -278,14 +285,6 @@ public class BProcessBuilder<TProcess> : IBProcessBuilder<TProcess>
         var processInst = new BProcess(typeof(TProcess), nodeInst);
         BProcessGraphConfiguration.AddProcess(processInst);
         return new BConditionNodeBuilder(nodeInst, processInst);
-    }
-}
-
-public static class ConfigExtensions
-{
-    public static void Build(this IBNodeBuilder builder)
-    {
-        BProcessGraphConfiguration.AddProcess(builder.GetProcess());
     }
 }
 

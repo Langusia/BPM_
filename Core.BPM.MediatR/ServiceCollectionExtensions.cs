@@ -10,10 +10,10 @@ namespace Core.BPM.MediatR;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddBpm(this IServiceCollection services, Action<Builder> configure)
+    public static void AddBpm(this IServiceCollection services, Action<Builder> configure = null)
     {
         var inst = new Builder(services);
-        configure.Invoke(inst);
+        configure?.Invoke(inst);
         services.TryAddScoped(typeof(MartenRepository<>));
         services.TryAddScoped(typeof(BpmProcessManager<>));
         //services.TryAddTransient(typeof(IPipelineBehavior<,>), typeof(BpmCommandValidationBehavior<,>));

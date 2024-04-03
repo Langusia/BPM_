@@ -34,7 +34,7 @@ builder.Services.AddMediatR(c =>
     //c.AddOpenBehavior(typeof(BpmCommandValidationBehavior<,>));
     //c.AddBpmValidatorPipes();
 });
-builder.Services.AddBpm(x => { x.AddBpmDefinition<PasswordRecovery, PasswordRecoveryDefinition>(); });
+builder.Services.AddBpm();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
