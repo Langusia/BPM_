@@ -95,14 +95,14 @@ public class PasswordRecoveryDefinition
             .StartWith<InitiatePasswordRecovery>()
             .Continue<ValidateOtp>(x => x
                 .Continue<ValidatePhoneChange>()
-                .Or1<ValidateSecurityQuestion>())
+                .Or<ValidateSecurityQuestion>())
             .Continue<CheckCard>()
             .Continue<FinishPasswordRecovery>()
-            .Or2<ValidateSecurityQuestion>(z => z
+            .Or<ValidateSecurityQuestion>(z => z
                 .Continue<InitiatePasswordRecovery>(c => c
                     .Continue<InitiateCheckCard>()
-                    .Or1<GenerateOtp>()
-                    .Or1<GenerateOtp>())
+                    .Or<GenerateOtp>()
+                    .Or<GenerateOtp>())
                 .Continue<CheckCard>())
             .Continue<PasswordRecoveryInitiated>();
 

@@ -4,7 +4,7 @@ namespace Core.BPM.Interfaces.Builder;
 
 public interface IProcessBuilder<TProcess>
 {
-    public INodeBuilder StartWith<TCommand>()
+    public IOuterNodeBuilderBuilder StartWith<TCommand>()
     {
         var inst = new Node(typeof(TCommand), typeof(TProcess));
         var processInst = new BProcess(typeof(TProcess), inst);

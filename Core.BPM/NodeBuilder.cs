@@ -3,7 +3,7 @@ using Core.BPM.Interfaces.Builder;
 
 namespace Core.BPM;
 
-public class NodeBuilder(INode rootNode, BProcess process) : IExtendableNodeBuilder
+public class NodeBuilder(INode rootNode, BProcess process) : IInnerNodeBuilder, IOuterNodeBuilderBuilder
 {
     private INode _rootNode = rootNode;
     private INode _currentNode = rootNode;
@@ -12,10 +12,21 @@ public class NodeBuilder(INode rootNode, BProcess process) : IExtendableNodeBuil
     public INode GetCurrent() => _currentNode;
     public INode GetRoot() => _rootNode;
 
-
-    public IExtendableNodeBuilder Continue<TCommand>(Func<NodeBuilder, IExtendableNodeBuilder>? configure = null)
+    IOuterNodeBuilderBuilder IOuterNodeBuilderBuilder.Continue<TCommand>(Action<IInnerNodeBuilder>? configure)
     {
-        var node = new Node(typeof(TCommand), process.ProcessType);
+        Continue(typeof(TCommand), configure);
+        return this;
+    }
+
+    IInnerNodeBuilder IInnerNodeBuilder.Continue<TCommand>(Action<IInnerNodeBuilder>? configure)
+    {
+        Continue(typeof(TCommand), configure);
+        return this;
+    }
+
+    private void Continue(Type command, Action<IInnerNodeBuilder>? configure)
+    {
+        var node = new Node(command, process.ProcessType);
 
         _rootNode.AddNextStepToTail(node);
         node.AddPrevStep(_currentNode);
@@ -23,12 +34,10 @@ public class NodeBuilder(INode rootNode, BProcess process) : IExtendableNodeBuil
         if (configure is not null)
         {
             var nextNodeBuilder = new NodeBuilder(node, process);
-            var s = configure?.Invoke(nextNodeBuilder);
+            configure?.Invoke(nextNodeBuilder);
         }
 
         _rootNode = _currentNode;
         _currentNode = node;
-
-        return this;
     }
 }

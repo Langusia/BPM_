@@ -22,7 +22,7 @@ public record ValidateOtpHandler : IRequestHandler<ValidateOtp, Result<long>>
         //doStuff
         var isValid = true;
         //
-        var s = await _mgr.AppendEvent(request.DocumentId, x => x.ValidateOtp(isValid), cancellationToken);
-        return Result.Success(s);
+        //var s = await _mgr.AppendEvent(request.DocumentId, x => x.ValidateOtp(isValid), cancellationToken);
+        return null;
     }
 }
