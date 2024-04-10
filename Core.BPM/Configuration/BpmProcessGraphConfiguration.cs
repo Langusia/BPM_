@@ -1,20 +1,27 @@
-﻿using Core.BPM.Interfaces;
+﻿using System.ComponentModel;
+using Core.BPM.Interfaces;
 
 namespace Core.BPM.Configuration;
 
 public static class BProcessGraphConfiguration
 {
-    public static List<BProcess?> _processes;
+    private static List<BProcess>? _processes;
 
     public static BProcess? GetConfig<TProcess>() where TProcess : IAggregate
     {
-        var bpmProcess = _processes.FirstOrDefault(x => x?.ProcessType == typeof(TProcess));
+        var bpmProcess = _processes?.FirstOrDefault(x => x?.ProcessType == typeof(TProcess));
+        if (bpmProcess is null)
+            throw new InvalidEnumArgumentException($"process named {typeof(TProcess).Name} does not exist in the configuration.");
+
         return bpmProcess;
     }
 
-    public static void AddProcess(BProcess? processToAdd)
+    public static void AddProcess(BProcess processToAdd)
     {
-        _processes ??= new List<BProcess?>();
+        _processes ??= [];
+        if (_processes.Any(x => x.ProcessType == processToAdd.ProcessType))
+            throw new InvalidEnumArgumentException($"process named {processToAdd.ProcessType.Name} already exists in the configuration.");
+
         _processes.Add(processToAdd);
     }
 }

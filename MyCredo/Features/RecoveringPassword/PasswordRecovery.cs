@@ -68,28 +68,9 @@ public class PasswordRecovery : Aggregate
     public int? KycParameters { get; set; }
 }
 
-public class PasswordRecoveryDefinition
+public class PasswordRecoveryDefinition : IBpmDefinition<PasswordRecovery>
 {
-    public void Define()
-    {
-        //onfigure
-        //   .StartWith<InitiatePasswordRecovery>()
-        //   .ContinueWith<GenerateOtp>(g => g
-        //       .ContinueWith<ValidateOtp>(v => v
-        //           .ContinueWith<ValidateSecurityQuestion>()
-        //           .Or<InitiateCheckCard>(x => x
-        //               .ContinueWith<CheckCard>())
-        //           .Or<IdentifyFace>())
-        //       .Or<ValidatePhoneChange>())
-        //   .Or<CheckCard>()
-        //   .ContinueWith<FinishPasswordRecovery>()
-        //   .ContinueWith<FinishPasswordRecovery>();
-
-        //  configure.SetMap(typeof(GenerateOtp), typeof)(GenerateOtp), typeof(GenerateOtp), typeof(GenerateOtp))
-        //      .SetMap(typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace), typeof(RecognizeFace));
-    }
-
-    public void Define2(IProcessBuilder<PasswordRecovery> configure)
+    public void Define(IProcessBuilder<PasswordRecovery> configure)
     {
         configure
             .StartWith<InitiatePasswordRecovery>()
