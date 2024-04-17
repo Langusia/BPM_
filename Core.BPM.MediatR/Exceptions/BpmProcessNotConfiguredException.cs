@@ -9,4 +9,7 @@ public class BpmProcessNotConfiguredException : Exception
 
     public static BpmProcessNotConfiguredException For<TP>() =>
         new BpmProcessNotConfiguredException(typeof(TP).Name);
+
+    public static BpmProcessNotConfiguredException For(Type processType) =>
+        new BpmProcessNotConfiguredException(processType.Name);
 }

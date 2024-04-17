@@ -1,3 +1,15 @@
-﻿namespace MyCredo.Features.RecoveringPassword.Finishing;
+﻿using Core.BPM.MediatR.Attributes;
+using MediatR;
 
-public record FinishPasswordRecovery(Guid DocumentId);
+namespace MyCredo.Features.RecoveringPassword.Finishing;
+
+[BpmProducer(typeof(FinishedPasswordRecovery))]
+public record FinishPasswordRecovery(Guid DocumentId) : IRequest<bool>;
+
+public class FinishPasswordRecoveryHandler() : IRequestHandler<FinishPasswordRecovery, bool>
+{
+    public Task<bool> Handle(FinishPasswordRecovery request, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+}

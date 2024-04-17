@@ -1,43 +1,36 @@
-﻿using Core.BPM;
-using Core.BPM.Configuration;
-using Core.BPM.Interfaces;
-using Core.BPM.MediatR;
-using Core.BPM.MediatR.Mediator;
-using Credo.Core.Shared.Library;
-using Credo.Core.Shared.Mediator;
+﻿using Core.BPM.MediatR;
+using Core.BPM.MediatR.Attributes;
+using Core.BPM.MediatR.Managers;
+using Marten;
 using MediatR;
 using MyCredo.Common;
-using Newtonsoft.Json;
 
 namespace MyCredo.Features.RecoveringPassword.Initiating;
 
-[BpmRequest<PasswordRecovery>]
+[BpmProducer(typeof(PasswordRecoveryInitiated))]
 public record InitiatePasswordRecovery(
     string PersonalNumber,
     DateTime BirthDate,
     ChannelTypeEnum ChannelType)
-    : IBpmRootCommand<Guid>;
+    : IRequest<Guid>;
 
-public class InitiatePasswordRecoveryHandler(BpmProcessManager<PasswordRecovery> mgr)
-    : ICommandHandler<InitiatePasswordRecovery, Guid>
+public class InitiatePasswordRecoveryHandler(BpmManager mgr1, IDocumentSession ds)
+    : IRequestHandler<InitiatePasswordRecovery, Guid>
 {
-    public async Task<Result<Guid>> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
+    private readonly BpmManager _mgr = mgr1;
+    private readonly IDocumentSession _ds = ds;
+
+    public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
-        //var cc  = BpmProcessGraphConfiguration.GetConfig<PasswordRecovery>();
-        var config = BProcessGraphConfiguration.GetConfig<PasswordRecovery>();
-        var ss = JsonConvert.SerializeObject(config.RootNode, new JsonSerializerSettings
-        {
-            TypeNameHandling = TypeNameHandling.All,
-            MaxDepth = 1,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-        });
-        //dostuff
-
+        
         var agg = PasswordRecovery.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType);
-        // await mgr.StartProcess(
-        //     agg,
-        //     cancellationToken);
+        _ds.Events.StartStream<PasswordRecovery>(
+            agg.Id,
+            agg.DequeueUncommittedEvents()
+        );
 
-        return Result.Success(agg.Id);
+        await _ds.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return agg.Id;
     }
 }

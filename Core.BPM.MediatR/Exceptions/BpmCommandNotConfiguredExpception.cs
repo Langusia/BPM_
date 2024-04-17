@@ -10,4 +10,7 @@ public class CommandNotConfiguredException : Exception
 
     public static CommandNotConfiguredException For<TP, TC>() =>
         new CommandNotConfiguredException(typeof(TP).Name, typeof(TC).Name);
+
+    public static CommandNotConfiguredException For(Type processType, Type commandType) =>
+        new CommandNotConfiguredException(processType.Name, commandType.Name);
 }

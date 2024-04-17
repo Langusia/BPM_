@@ -1,5 +1,4 @@
 ﻿using Core.BPM.Configuration;
-using Core.BPM.Interfaces;
 using Core.BPM.Interfaces.Builder;
 
 namespace Core.BPM;

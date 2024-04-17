@@ -3,7 +3,7 @@ using Core.BPM.Interfaces.Builder;
 
 namespace Core.BPM;
 
-public class NodeBuilder(INode rootNode, BProcess process) : IInnerNodeBuilder, IOuterNodeBuilderBuilder
+public class NodeBuilder(INode rootNode, BProcess process) : INodeBuilderBuilder //IInnerNodeBuilder, IOuterNodeBuilderBuilder
 {
     private INode _rootNode = rootNode;
     private INode _currentNode = rootNode;
@@ -12,21 +12,32 @@ public class NodeBuilder(INode rootNode, BProcess process) : IInnerNodeBuilder, 
     public INode GetCurrent() => _currentNode;
     public INode GetRoot() => _rootNode;
 
-    IOuterNodeBuilderBuilder IOuterNodeBuilderBuilder.Continue<TCommand>(Action<IInnerNodeBuilder>? configure)
+    public INode SetRoot(INode node)
+    {
+        _rootNode = node;
+        return _rootNode;
+    }
+
+    public INode SetCurrent(INode node)
+    {
+        _currentNode = node;
+        return _currentNode;
+    }
+
+    INodeBuilderBuilder INodeBuilderBuilder.Continue<TCommand>(Action<INodeBuilderBuilder>? configure)
     {
         Continue(typeof(TCommand), configure);
         return this;
     }
 
-    IInnerNodeBuilder IInnerNodeBuilder.Continue<TCommand>(Action<IInnerNodeBuilder>? configure)
-    {
-        Continue(typeof(TCommand), configure);
-        return this;
-    }
-
-    private void Continue(Type command, Action<IInnerNodeBuilder>? configure)
+    private void Continue(Type command, Action<INodeBuilderBuilder>? configure)
     {
         var node = new Node(command, process.ProcessType);
+
+        if (command.Name == "PhoneChangeComplete")
+        {
+            var a = 1;
+        }
 
         _rootNode.AddNextStepToTail(node);
         node.AddPrevStep(_currentNode);

@@ -29,7 +29,6 @@ public static class RepositoryExtensions
             throw AggregateNotFoundException.For<T>(id);
 
         var @events = await repository.FetchStreamAsync(id, ct: cancellationToken).ConfigureAwait(false);
-
         return new Tuple<IReadOnlyList<IEvent>, T>(@events, entity);
     }
 

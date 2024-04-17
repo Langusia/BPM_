@@ -7,11 +7,11 @@ public class Node(Type commandType, Type processType) : INode
     public Type CommandType { get; } = commandType;
     public Type ProcessType { get; } = processType;
 
-    public List<INode> NextSteps { get; set; } = new List<INode>();
+    public List<INode> NextSteps { get; set; } = [];
 
     public void AddNextStep(INode node)
     {
-        NextSteps ??= new List<INode>();
+        NextSteps ??= [];
         NextSteps.Add(node);
     }
 
@@ -19,12 +19,12 @@ public class Node(Type commandType, Type processType) : INode
 
     public void AddPrevStep(INode node)
     {
-        PrevSteps ??= new List<INode>();
+        PrevSteps ??= [];
         PrevSteps.Add(node);
     }
 
 
-    private INode currNext;
+    private INode _currNext;
 
     private void GetLastNodes(List<INode> lastNodes, INode start)
     {
@@ -34,12 +34,12 @@ public class Node(Type commandType, Type processType) : INode
                 lastNodes.Add(nextStep);
             else
             {
-                currNext = nextStep;
-                GetLastNodes(lastNodes, currNext);
+                _currNext = nextStep;
+                GetLastNodes(lastNodes, _currNext);
             }
         }
 
-        currNext = null;
+        _currNext = null;
     }
 
     public void AddNextStepToTail(INode node)

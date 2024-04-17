@@ -15,7 +15,7 @@ public class Result
         }
 
         IsSuccess = isSuccess;
-        Errors = new[] { error };
+        Errors = [error];
     }
 
     protected internal Result(bool isSuccess, Error[] errors)

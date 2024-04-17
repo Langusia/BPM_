@@ -59,7 +59,7 @@ public class RequestValidationBehavior<TRequest, TResponse>
                 m is { IsGenericMethod: true, Name: nameof(Result.Failure) } &&
                 m.GetParameters().First().ParameterType == typeof(Error[]))!
             .MakeGenericMethod(typeof(TResult).GenericTypeArguments[0])
-            .Invoke(null, new object?[] { errors })!;
+            .Invoke(null, [errors])!;
 
         return (TResult)result;
     }

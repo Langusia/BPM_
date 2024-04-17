@@ -4,12 +4,12 @@ namespace Core.BPM.Interfaces.Builder;
 
 public interface IProcessBuilder<TProcess> : IProcessBuilder
 {
-    public IOuterNodeBuilderBuilder StartWith<TCommand>() => StartWith(typeof(TProcess), typeof(TCommand));
+    public INodeBuilderBuilder StartWith<TCommand>() => StartWith(typeof(TProcess), typeof(TCommand));
 }
 
 public interface IProcessBuilder
 {
-    public IOuterNodeBuilderBuilder StartWith(Type processType, Type commandType)
+    public INodeBuilderBuilder StartWith(Type processType, Type commandType)
     {
         var inst = new Node(commandType, processType);
         var processInst = new BProcess(processType, inst);

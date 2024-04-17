@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Marten" Version="7.7.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.1"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
     </ItemGroup>
@@ -23,10 +24,6 @@
       <ProjectReference Include="..\Core.BPM.MediatR\Core.BPM.MediatR.csproj" />
       <ProjectReference Include="..\Core.BPM\Core.BPM.csproj" />
       <ProjectReference Include="..\Credo.Core.Shared\Credo.Core.Shared.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Features\TwoFactor\" />
     </ItemGroup>
 
 </Project>

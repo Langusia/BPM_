@@ -371,7 +371,7 @@ namespace Credo.Core.Shared.Helpers
                 numberStr = number.ToString("0.00000000", StandardCultureGet());
 
 
-            var splittedNumber = numberStr.Split(new[] { "." }, StringSplitOptions.None);
+            var splittedNumber = numberStr.Split(["."], StringSplitOptions.None);
             var leftNumber = splittedNumber[0];
             var rightNumber = numberStr.Contains('.') ? splittedNumber[1] : null;
 
