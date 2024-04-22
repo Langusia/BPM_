@@ -1,9 +1,5 @@
-using System.Runtime.Intrinsics.X86;
-using Core.BPM;
 using Core.BPM.MediatR;
-using JasperFx.Core.Reflection;
 using Marten;
-using Marten.Events.Projections;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MyCredo.Common;
@@ -24,23 +20,12 @@ builder.Services.AddMarten(options =>
     options.Events.MetadataConfig.HeadersEnabled = true;
     options.Events.MetadataConfig.CausationIdEnabled = true;
     options.Events.MetadataConfig.CorrelationIdEnabled = true;
-    //options.Projections.Add<PasswordRecoveryProjection>(ProjectionLifecycle.Inline);
-    //options.Projections.Add<OtpValidationProjection>(ProjectionLifecycle.Inline);
-
-    //options.Projections.Add<RegistrationProjection>(ProjectionLifecycle.Live);
-
-    // If we're running in development mode, let Marten just take care
-    // of all necessary schema building and patching behind the scenes
-    //if (builder.Environment.IsDevelopment())
-    //{
-    //    options.AutoCreateSchemaObjects = AutoCreate.All;
-    //}
 });
 builder.Services.AddMediatR(c => { c.RegisterServicesFromAssembly(typeof(Program).Assembly); });
 builder.Services.AddBpm(x => { x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>(); }
 );
-var app = builder.Build();
 
+var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -51,13 +36,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapPost("/password-recovery/initiate",
-        async (IMediator mediator) =>
-        {
-            await mediator.Send(new InitiatePasswordRecovery(
-                "01010102020",
-                new DateTime(1995, 9, 9),
-                ChannelTypeEnum.Unclassified));
-        })
+        async (IMediator mediator) => await mediator.Send(new InitiatePasswordRecovery(
+            "01010102020",
+            new DateTime(1995, 9, 9),
+            ChannelTypeEnum.Unclassified)))
     .WithName("InitiatePasswordRecovery")
     .WithOpenApi();
 

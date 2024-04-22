@@ -46,12 +46,17 @@ public class PasswordRecovery : Aggregate
         Apply(@event);
     }
 
-    public void Apply(IEvent<IBpmEvent> @event)
+    public void Apply(IEvent<BpmEvent> @event)
     {
         if (!Counters.ContainsKey(@event.EventType.Name))
             Counters.Add(@event.EventType.Name, 1);
         else
             Counters[@event.EventType.Name] += 1;
+    }
+
+    public void Apply(GeneratedOtp @event)
+    {
+        var a = 1;
     }
 
     public void Apply(SecurityQuestionValidated @event)
@@ -138,9 +143,9 @@ public class PasswordRecovery : Aggregate
     public int? KycParameters { get; set; }
 }
 
-public class PasswordRecoveryDefinition : IBpmDefinition<PasswordRecovery>
+public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
-    public void Define(IProcessBuilder<PasswordRecovery> configure)
+    public override void DefineProcess(IProcessBuilder<PasswordRecovery> configure)
     {
         configure
             .StartWith<InitiatePasswordRecovery>()
@@ -157,43 +162,9 @@ public class PasswordRecoveryDefinition : IBpmDefinition<PasswordRecovery>
                         .Or<ValidateSecurityQuestion>())))
             .Continue<FinishPasswordRecovery>();
     }
-}
 
-//{
-// PasswordRecoveryStepEnum.Initiated,
-// PasswordRecoveryStepEnum.OtpGenerated,
-// PasswordRecoveryStepEnum.OtpValidated,
-// PasswordRecoveryStepEnum.CardCheckInitiated,
-// PasswordRecoveryStepEnum.CardCheckCompleted,
-// PasswordRecoveryStepEnum.Finished
-//{
-// PasswordRecoveryStepEnum.Initiated,
-// PasswordRecoveryStepEnum.OtpGenerated,
-// PasswordRecoveryStepEnum.OtpValidated,
-// PasswordRecoveryStepEnum.SecurityAnswerValidated,
-// PasswordRecoveryStepEnum.Finished
-//{
-// PasswordRecoveryStepEnum.Initiated,
-// PasswordRecoveryStepEnum.OtpGenerated,
-// PasswordRecoveryStepEnum.OtpValidated,
-// PasswordRecoveryStepEnum.IdentomatCompleted,
-// PasswordRecoveryStepEnum.Finished
-//{
-// PasswordRecoveryStepEnum.Initiated,
-// PasswordRecoveryStepEnum.OtpGenerated,
-// PasswordRecoveryStepEnum.DidMobileNumberChange,
-// PasswordRecoveryStepEnum.Finished
-//{
-// PasswordRecoveryStepEnum.Initiated,
-// PasswordRecoveryStepEnum.OtpGenerated,
-// PasswordRecoveryStepEnum.DidMobileNumberChange,
-// PasswordRecoveryStepEnum.CardCheckInitiated,
-// PasswordRecoveryStepEnum.CardCheckCompleted,
-// PasswordRecoveryStepEnum.Finished
-//{
-// PasswordRecoveryStepEnum.Initiated,
-// PasswordRecoveryStepEnum.OtpGenerated,
-// PasswordRecoveryStepEnum.DidMobileNumberChange,
-// PasswordRecoveryStepEnum.SecurityAnswerValidated,
-// PasswordRecoveryStepEnum.Finished
-//}
+    public override void SetEventConfiguration(BpmEventConfigurationBuilder<PasswordRecovery> bpmEventConfiguration)
+    {
+        bpmEventConfiguration.AddBpmEventOptions<GeneratedOtp>(x => x.PermittedTryCount = 3);
+    }
+}

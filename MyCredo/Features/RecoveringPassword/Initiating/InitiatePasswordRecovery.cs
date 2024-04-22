@@ -1,5 +1,4 @@
-﻿using Core.BPM.MediatR;
-using Core.BPM.MediatR.Attributes;
+﻿using Core.BPM.MediatR.Attributes;
 using Core.BPM.MediatR.Managers;
 using Marten;
 using MediatR;
@@ -14,23 +13,12 @@ public record InitiatePasswordRecovery(
     ChannelTypeEnum ChannelType)
     : IRequest<Guid>;
 
-public class InitiatePasswordRecoveryHandler(BpmManager mgr1, IDocumentSession ds)
+public class InitiatePasswordRecoveryHandler(BpmManager<PasswordRecovery> mgr1)
     : IRequestHandler<InitiatePasswordRecovery, Guid>
 {
-    private readonly BpmManager _mgr = mgr1;
-    private readonly IDocumentSession _ds = ds;
-
     public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
-        
-        var agg = PasswordRecovery.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType);
-        _ds.Events.StartStream<PasswordRecovery>(
-            agg.Id,
-            agg.DequeueUncommittedEvents()
-        );
-
-        await _ds.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        return agg.Id;
+        var id = await mgr1.StartProcess(PasswordRecovery.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType), cancellationToken);
+        return id;
     }
 }

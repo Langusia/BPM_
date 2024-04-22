@@ -3,10 +3,6 @@ using Marten.Events;
 
 namespace Core.BPM;
 
-public interface ICountableEvent
-{
-}
-
 public class Aggregate : IAggregate
 {
     public Guid Id { get; set; }
@@ -15,8 +11,12 @@ public class Aggregate : IAggregate
 
 
     public Dictionary<string, int> Counters = new();
-    
 
+
+    public void Apply(object @event)
+    {
+        var a = 1;
+    }
 
     [NonSerialized] private readonly Queue<object> uncommittedEvents = new();
 
