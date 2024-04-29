@@ -9,17 +9,18 @@ public class BpmEventConfiguration
 
 public class BpmEventConfigurationBuilder<TAggregate> where TAggregate : Aggregate
 {
-    public void AddBpmEventOptions<T>(Action<BpmEventOptions> configureBpmOptions) where T : BpmEvent
+    public void AddCommandOptions<T>(Action<BpmEventOptions> configureBpmOptions)
     {
         var inst = new BpmProcessEventOptions();
         inst.ProcessName = typeof(TAggregate).Name;
-        inst.BpmEventOptions = new List<BpmEventOptions>();
+        inst.BpmCommandtOptions = new List<BpmEventOptions>();
         var eventInst = new BpmEventOptions
         {
-            BpmEventName = typeof(T).Name
+            BpmEventName = typeof(T).Name,
+            BpmCommandName = typeof(T).Name
         };
         configureBpmOptions.Invoke(eventInst);
-        inst.BpmEventOptions.Add(eventInst);
+        inst.BpmCommandtOptions.Add(eventInst);
         BProcessGraphConfiguration.EventOptions.Add(inst);
     }
 }

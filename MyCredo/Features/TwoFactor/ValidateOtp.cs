@@ -1,7 +1,6 @@
 ﻿using Core.BPM.MediatR.Attributes;
 using Core.BPM.MediatR.Managers;
 using Credo.Core.Shared.Library;
-using Marten;
 using MediatR;
 
 namespace MyCredo.Features.TwoFactor;
@@ -12,12 +11,10 @@ public record ValidateOtp(Guid DocumentId) : IRequest<Result<long>>;
 public record ValidateOtpHandler : IRequestHandler<ValidateOtp, Result<long>>
 {
     private readonly BpmManager _bpm;
-    private readonly IDocumentSession _session;
 
-    public ValidateOtpHandler(BpmManager mgr1, IDocumentSession session)
+    public ValidateOtpHandler(BpmManager mgr1)
     {
         _bpm = mgr1;
-        _session = session;
     }
 
     public async Task<Result<long>> Handle(ValidateOtp request, CancellationToken cancellationToken)

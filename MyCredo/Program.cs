@@ -1,5 +1,6 @@
 using Core.BPM.MediatR;
 using Marten;
+using Marten.Events.Projections;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MyCredo.Common;
@@ -22,7 +23,16 @@ builder.Services.AddMarten(options =>
     options.Events.MetadataConfig.CorrelationIdEnabled = true;
 });
 builder.Services.AddMediatR(c => { c.RegisterServicesFromAssembly(typeof(Program).Assembly); });
-builder.Services.AddBpm(x => { x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>(); }
+builder.Services.AddBpm(options =>
+    {
+        options.Connection("Host=10.195.105.11; Database=CoreStandingOrders; Username=gelkanishvili; Password=fjem$efXc");
+        options.AutoCreateSchemaObjects = AutoCreate.CreateOrUpdate;
+        options.DatabaseSchemaName = "bpm";
+        options.Events.MetadataConfig.HeadersEnabled = true;
+        options.Events.MetadataConfig.CausationIdEnabled = true;
+        options.Events.MetadataConfig.CorrelationIdEnabled = true;
+        options.Projections.Add<PasswordRecovery>(ProjectionLifecycle.Inline);
+    }, x => { x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>(); }
 );
 
 var app = builder.Build();

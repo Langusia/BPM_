@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using Core.BPM.BCommand;
 using Core.BPM.Interfaces;
+using Core.BPM.MediatR.Attributes;
 
 namespace Core.BPM.Configuration;
 
@@ -18,11 +19,63 @@ public static class BProcessGraphConfiguration
         return config;
     }
 
-    public static BpmProcessEventOptions GetEventConfig(string processName)
+    public static bool CheckTryCount<TCommand>(this BpmProcessEventOptions opts, Aggregate aggregate)
+    {
+        var currentCommandConfig = opts.BpmCommandtOptions.FirstOrDefault(x => x.BpmCommandName == typeof(TCommand).Name);
+        if (currentCommandConfig is null || currentCommandConfig.PermittedTryCount is null || currentCommandConfig.PermittedTryCount == 0)
+            return true;
+        if (aggregate.EventCounters.ContainsKey(typeof(TCommand).Name))
+            return true;
+
+        var possibleCommandEventNames = GetCommandProducer<TCommand>().EventTypes.Select(x => x.Name);
+        var currentCount = aggregate.EventCounters.Count(x => possibleCommandEventNames.Contains(x.Key));
+        return currentCommandConfig.PermittedTryCount != currentCount;
+    }
+
+    public static bool CheckPathValid<TCommand>(this BProcess cc, Aggregate aggregate)
+    {
+        var currentCommandType = typeof(TCommand);
+        var config = GetConfig(aggregate.GetType());
+        if (config is null)
+            throw new InvalidEnumArgumentException($"process named {aggregate.GetType().Name} does not exist in the configuration.");
+
+        var currentNodeConfig = config.MoveTo(currentCommandType);
+        var incomingPrevCommandPossibleEvents = currentNodeConfig.SelectMany(x => x.PrevSteps?.Select(z => GetCommandProducer(z.CommandType))).SelectMany(x => x.EventTypes).ToList();
+        var lastPersistedEventName = aggregate.PersistedEvents.Last();
+
+        return incomingPrevCommandPossibleEvents.All(x => x.Name != lastPersistedEventName);
+    }
+
+    public static bool CheckPathValid<TCommand>(Aggregate aggregate)
+    {
+        var currentCommandType = typeof(TCommand);
+        var config = GetConfig(aggregate.GetType());
+        if (config is null)
+            throw new InvalidEnumArgumentException($"process named {aggregate.GetType().Name} does not exist in the configuration.");
+
+        var currentNodeConfig = config.MoveTo(currentCommandType);
+        var incomingPrevCommandPossibleEvents = currentNodeConfig.SelectMany(x => x.PrevSteps?.Select(z => GetCommandProducer(z.CommandType))).SelectMany(x => x.EventTypes).ToList();
+        var lastPersistedEventName = aggregate.PersistedEvents.Last();
+
+        return incomingPrevCommandPossibleEvents.All(x => x.Name != lastPersistedEventName);
+    }
+
+    private static BpmProducer GetCommandProducer<TCommand>()
+    {
+        return (BpmProducer)typeof(TCommand).GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
+    }
+    
+    private static BpmProducer GetCommandProducer(Type commandType)
+    {
+        return (BpmProducer)commandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
+    }
+
+
+    public static BpmProcessEventOptions? GetEventConfig(string processName)
     {
         var config = EventOptions.FirstOrDefault(x => x?.ProcessName == processName);
-        if (config is null)
-            throw new InvalidEnumArgumentException($"process named {processName} does not exist in the configuration.");
+        //if (config is null)
+        //    throw new InvalidEnumArgumentException($"process named {processName} does not exist in the configuration.");
 
         return config;
     }
@@ -58,11 +111,11 @@ public static class BProcessGraphConfiguration
         }
     }
 
-    public static BProcess GetConfig(Type processType)
+    public static BProcess? GetConfig(Type processType)
     {
         var bpmProcess = _processes?.FirstOrDefault(x => x?.ProcessType == processType);
-        if (bpmProcess is null)
-            throw new InvalidEnumArgumentException($"process named {processType.Name} does not exist in the configuration.");
+        //if (bpmProcess is null)
+        //    throw new InvalidEnumArgumentException($"process named {processType.Name} does not exist in the configuration.");
 
         return bpmProcess;
     }

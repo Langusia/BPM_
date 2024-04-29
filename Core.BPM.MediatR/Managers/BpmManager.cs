@@ -1,7 +1,9 @@
-﻿using Core.BPM.Configuration;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Core.BPM.Configuration;
 using Core.BPM.MediatR.Attributes;
 using Credo.Core.Shared.Library;
 using Marten;
+using Microsoft.AspNetCore.Identity.Data;
 
 namespace Core.BPM.MediatR.Managers;
 
@@ -23,6 +25,7 @@ public class BpmManager
         await _session.SaveChangesAsync(token).ConfigureAwait(false);
     }
 
+
     public async Task<Result> ValidateAsync<TCommand>(Guid aggregateId, CancellationToken ct)
     {
         var @events = await QSession.Events.FetchStreamAsync(aggregateId, token: ct);
@@ -39,7 +42,7 @@ public class BpmManager
         if (eventConfig is not null)
         {
             var concreteUpcoming = typeof(TCommand).GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault() as BpmProducer;
-            var concreteEventConfig = eventConfig.BpmEventOptions.FirstOrDefault(x => x.BpmEventName == concreteUpcoming.EventTypes.FirstOrDefault().Name);
+            var concreteEventConfig = eventConfig.BpmCommandtOptions.FirstOrDefault(x => x.BpmEventName == concreteUpcoming.EventTypes.FirstOrDefault().Name);
             if (concreteEventConfig is not null)
             {
                 if (concreteEventConfig.PermittedTryCount == @events.Count(x => x.EventType.Name == concreteUpcoming.EventTypes.FirstOrDefault().Name))
@@ -65,6 +68,7 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
     where T : Aggregate
 {
     private readonly IDocumentSession _session = session;
+    private readonly IQuerySession _qSession = session;
 
     public async Task<Guid> StartProcess(T aggregate, CancellationToken token)
     {
@@ -78,5 +82,42 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
     public async Task<T?> Get<T>(Guid aggregateId, CancellationToken token) where T : Aggregate
     {
         return await QSession.Events.AggregateStreamAsync<T>(aggregateId, token: token);
+    }
+
+    public async Task<Result<T>> AggregateAsync<TCommand>(Guid aggregateId, CancellationToken ct)
+    {
+        var aggregate = await _qSession.Events.AggregateStreamAsync<T>(aggregateId, token: ct);
+
+        // var aggregate1 = await _qSession.Events.AggregateStreamAsync<MyClass>(aggregateId, token: ct);
+
+        if (aggregate is null)
+            return Result.Failure<T>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
+
+        //if (BProcessGraphConfiguration.CheckPathValid<TCommand>(aggregate))
+        //    return Result.Failure(new Error("process_event_wrong_path", "process path not waiting given event", ErrorTypeEnum.NotFound));
+
+        var config = BProcessGraphConfiguration.GetConfig(aggregate.GetType());
+        if (config is null)
+            return Result.Failure<T>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
+        if (config.CheckPathValid<TCommand>(aggregate))
+            return Result.Failure<T>(new Error("process_event_wrong_path", "process path not waiting given event", ErrorTypeEnum.NotFound));
+
+        var eventConfig = BProcessGraphConfiguration.GetEventConfig<T>();
+        if (eventConfig.CheckTryCount<TCommand>(aggregate))
+            return Result.Failure<T>(new Error("process_event_tryCount_reached", "event is exceeding maximum try count", ErrorTypeEnum.NotFound));
+
+
+        return Result.Success(aggregate);
+    }
+
+
+    private static BpmProducer GetCommandProducer<TCommand>()
+    {
+        return (BpmProducer)typeof(TCommand).GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
+    }
+
+    private static BpmProducer GetCommandProducer(Type commandType)
+    {
+        return (BpmProducer)commandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
     }
 }

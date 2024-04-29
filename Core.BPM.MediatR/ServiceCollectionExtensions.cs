@@ -1,6 +1,7 @@
 ﻿using Core.BPM.BCommand;
 using Core.BPM.MediatR.Managers;
 using Core.Persistence;
+using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -8,8 +9,9 @@ namespace Core.BPM.MediatR;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddBpm(this IServiceCollection services, Action<IBpmConfiguration>? configure = null)
+    public static void AddBpm(this IServiceCollection services, Action<StoreOptions> configureMartenStore, Action<IBpmConfiguration>? configure = null)
     {
+        services.AddMarten(configureMartenStore);
         services.TryAddScoped(typeof(MartenRepository<>));
         services.TryAddScoped(typeof(BpmGenericProcessManager<>));
         services.TryAddScoped(typeof(BpmManager));

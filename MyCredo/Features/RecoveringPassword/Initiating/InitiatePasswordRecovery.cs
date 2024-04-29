@@ -13,12 +13,12 @@ public record InitiatePasswordRecovery(
     ChannelTypeEnum ChannelType)
     : IRequest<Guid>;
 
-public class InitiatePasswordRecoveryHandler(BpmManager<PasswordRecovery> mgr1)
+public class InitiatePasswordRecoveryHandler(BpmManager<PasswordRecovery> mgr)
     : IRequestHandler<InitiatePasswordRecovery, Guid>
 {
     public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
-        var id = await mgr1.StartProcess(PasswordRecovery.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType), cancellationToken);
+        var id = await mgr.StartProcess(PasswordRecovery.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType), cancellationToken);
         return id;
     }
 }

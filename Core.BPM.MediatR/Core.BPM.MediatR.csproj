@@ -16,4 +16,8 @@
       <ProjectReference Include="..\Credo.Core.Shared\Credo.Core.Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Attributes\" />
+    </ItemGroup>
+
 </Project>

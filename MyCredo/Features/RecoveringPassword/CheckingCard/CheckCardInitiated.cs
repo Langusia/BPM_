@@ -1,6 +1,7 @@
-﻿namespace MyCredo.Features.RecoveringPassword.CheckingCard;
+﻿using Core.BPM.BCommand;
 
-public record CheckCardInitiated
+namespace MyCredo.Features.RecoveringPassword.CheckingCard;
+
+public record CheckCardInitiated : BpmEvent
 {
-    
 }

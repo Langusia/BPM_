@@ -2,4 +2,5 @@
 
 public interface IBpmEvent
 {
+    public long UserId { get; init; }
 }

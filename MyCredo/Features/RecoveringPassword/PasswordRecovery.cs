@@ -3,7 +3,7 @@ using Core.BPM.BCommand;
 using Core.BPM.Extensions;
 using Core.BPM.Interfaces.Builder;
 using Core.BPM.MediatR;
-using Marten.Events;
+using Marten.Events.Aggregation;
 using MyCredo.Common;
 using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
@@ -46,17 +46,8 @@ public class PasswordRecovery : Aggregate
         Apply(@event);
     }
 
-    public void Apply(IEvent<BpmEvent> @event)
-    {
-        if (!Counters.ContainsKey(@event.EventType.Name))
-            Counters.Add(@event.EventType.Name, 1);
-        else
-            Counters[@event.EventType.Name] += 1;
-    }
-
     public void Apply(GeneratedOtp @event)
     {
-        var a = 1;
     }
 
     public void Apply(SecurityQuestionValidated @event)
@@ -77,6 +68,7 @@ public class PasswordRecovery : Aggregate
     public void CheckCardInitiate()
     {
         var @event = new CheckCardInitiated();
+        SetBpmProps(@event);
         Enqueue(@event);
         Apply(@event);
     }
@@ -165,6 +157,6 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 
     public override void SetEventConfiguration(BpmEventConfigurationBuilder<PasswordRecovery> bpmEventConfiguration)
     {
-        bpmEventConfiguration.AddBpmEventOptions<GeneratedOtp>(x => x.PermittedTryCount = 3);
+        bpmEventConfiguration.AddCommandOptions<GeneratedOtp>(x => x.PermittedTryCount = 3);
     }
 }
