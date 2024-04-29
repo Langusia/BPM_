@@ -2,6 +2,4 @@
 
 namespace MyCredo.Features.RecoveringPassword.CheckingCard;
 
-public record CheckCardInitiated : BpmEvent
-{
-}
+public record CheckCardInitiated(long UserId, int PaymentId, string Hash) : BpmEvent;

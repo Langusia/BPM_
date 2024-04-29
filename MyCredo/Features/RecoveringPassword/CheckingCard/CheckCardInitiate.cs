@@ -1,4 +1,7 @@
 ﻿using Core.BPM.MediatR.Attributes;
+using Core.BPM.MediatR.Managers;
+using Credo.Core.Shared.Library;
+using Marten;
 using MediatR;
 
 namespace MyCredo.Features.RecoveringPassword.CheckingCard;
@@ -6,10 +9,16 @@ namespace MyCredo.Features.RecoveringPassword.CheckingCard;
 [BpmProducer(typeof(CheckCardInitiated))]
 public record CheckCardInitiate(Guid DocumentId) : IRequest<bool>;
 
-public record CheckCardInitiateHandler() : IRequestHandler<CheckCardInitiate, bool>
+public record CheckCardInitiateHandler(BpmManager<CheckCard> _bpm, IDocumentSession _session) : IRequestHandler<CheckCardInitiate, bool>
 {
-    public Task<bool> Handle(CheckCardInitiate request, CancellationToken cancellationToken)
+    private readonly BpmManager<CheckCard> _bpm = _bpm;
+    private readonly IDocumentSession _session = _session;
+
+    public async Task<bool> Handle(CheckCardInitiate request, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var s = await _bpm.AggregateAsync<CheckCardInitiate>(request.DocumentId, cancellationToken);
+        await _bpm.AppendAsync(request.DocumentId, [new CheckCardInitiated(22, 333, "hash")], cancellationToken);
+        //await _session.LoadAsync<CheckCard>(request.DocumentId, cancellationToken);
+        return true;
     }
 }

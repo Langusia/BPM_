@@ -1,14 +1,7 @@
 ﻿using Core.BPM.BCommand;
 using Core.BPM.Interfaces;
-using Marten.Events;
-using Marten.Events.Aggregation;
 
 namespace Core.BPM;
-
-public class ProjectorAggregate<T> : SingleStreamProjection<T> where T : Aggregate
-{
-    
-}
 
 public class Aggregate : IAggregate
 {
