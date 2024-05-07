@@ -10,7 +10,6 @@ public class MartenRepository<T> where T : Aggregate
 
     public MartenRepository(IDocumentSession documentSession)
     {
-        _documentSession.SetHeader("AggregateType", typeof(T).FullName);
         _documentSession = documentSession;
     }
 

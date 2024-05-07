@@ -87,7 +87,6 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
     public async Task<Result<T>> AggregateAsync<TCommand>(Guid aggregateId, CancellationToken ct)
     {
         var aggregate = await _qSession.Events.AggregateStreamAsync<T>(aggregateId, token: ct);
-
         // var aggregate1 = await _qSession.Events.AggregateStreamAsync<MyClass>(aggregateId, token: ct);
 
         if (aggregate is null)

@@ -1,12 +1,7 @@
 ﻿using Core.BPM;
 using Core.BPM.Interfaces.Builder;
 using Core.BPM.MediatR;
-using Marten;
-using Marten.Events;
-using Marten.Events.Aggregation;
-using Marten.Events.Projections;
 using Marten.Events.Projections.Flattened;
-using Weasel.Postgresql.Tables;
 
 namespace MyCredo.Features.RecoveringPassword.CheckingCard;
 
@@ -28,40 +23,8 @@ public class CheckCardDefinition : BpmDefinition<CheckCard>
 {
     public override void DefineProcess(IProcessBuilder<CheckCard> configureProcess)
     {
-        //configureProcess.StartWith<InitiatedCardCheck>()
-        //    .Continue<FinishCheckCard>();
-    }
-}
-
-public class CheckCardProjection : SingleStreamProjection<CheckCard>
-{
-    public CheckCard Create(CheckCardInitiated init)
-    {
-        return new CheckCard
-        {
-            UserId = init.UserId,
-            PaymentId = init.PaymentId,
-            Hash = init.Hash
-        };
-    }
-}
-
-public class CheckCardEventProjection : EventProjection
-{
-    public CheckCardEventProjection()
-    {
-        var table = new Table("check_card");
-        table.AddColumn<Guid>("id").AsPrimaryKey();
-        table.AddColumn<string>("payment_id").NotNull();
-        SchemaObjects.Add(table);
-    }
-
-
-    public void Project(IEvent<CheckCardInitiated> e, IDocumentOperations ops)
-    {
-        ops.QueueSqlCommand("insert into check_card (id, payment_id) values (?, ?)",
-            e.StreamId, e.Data.PaymentId
-        );
+        // configureProcess.StartWith<InitiatedCardCheck>()
+        //     .Continue<FinishCheckCard>();
     }
 }
 

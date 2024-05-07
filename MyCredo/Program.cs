@@ -22,17 +22,9 @@ builder.Services.AddBpm(options =>
         options.Connection("Host=10.195.105.11; Database=CoreStandingOrders; Username=gelkanishvili; Password=fjem$efXc");
         options.AutoCreateSchemaObjects = AutoCreate.CreateOrUpdate;
         options.DatabaseSchemaName = "bpm";
-        options.Policies.ForAllDocuments(m =>
-        {
-            if (m.IdType == typeof(Guid))
-            {
-                m.IdStrategy = new GuidIdGeneration();
-            }
-        });
         options.Events.MetadataConfig.HeadersEnabled = true;
         options.Events.MetadataConfig.CausationIdEnabled = true;
         options.Events.MetadataConfig.CorrelationIdEnabled = true;
-        //options.Projections.Add<CheckCardProjection>(ProjectionLifecycle.Inline);
         options.Projections.Add<CheckCardFlatProjection>(ProjectionLifecycle.Inline);
     }, x => { x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>(); }
 );
