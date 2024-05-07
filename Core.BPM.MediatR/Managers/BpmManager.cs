@@ -29,6 +29,7 @@ public class BpmManager
     public async Task<Result> ValidateAsync<TCommand>(Guid aggregateId, CancellationToken ct)
     {
         var @events = await QSession.Events.FetchStreamAsync(aggregateId, token: ct);
+        var s = @events.First().AggregateTypeName;
         var aggregateName = @events.First().Headers!["AggregateType"];
         if (@events is null)
             return Result.Failure(new Error("process_not_found", "Process not found", ErrorTypeEnum.NotFound));

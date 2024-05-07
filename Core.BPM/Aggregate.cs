@@ -8,7 +8,7 @@ public class Aggregate : IAggregate
     public Guid Id { get; set; }
     public int Version { get; protected set; }
     public Dictionary<string, int> EventCounters = new();
-    public string[] PersistedEvents { get; set; } = Array.Empty<string>();
+    public List<string> PersistedEvents { get; set; } = new();
 
     [NonSerialized] private readonly Queue<object> uncommittedEvents = new();
 
@@ -33,7 +33,7 @@ public class Aggregate : IAggregate
             else
                 EventCounters[@event.GetType().Name] += 1;
 
-        _ = PersistedEvents.Append(@event.GetType().Name);
+        PersistedEvents.Add(@event.GetType().Name);
     }
 
     protected void Enqueue(object @event)
