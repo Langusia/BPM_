@@ -10,14 +10,8 @@ public static class BProcessGraphConfiguration
     private static List<BProcess>? _processes;
     public static List<BpmProcessEventOptions> EventOptions = [];
 
-    public static BpmProcessEventOptions GetEventConfig<TProcess>() where TProcess : IAggregate
-    {
-        var config = EventOptions.FirstOrDefault(x => x?.ProcessName == typeof(TProcess).Name);
-        if (config is null)
-            throw new InvalidEnumArgumentException($"process named {typeof(TProcess).Name} does not exist in the configuration.");
-
-        return config;
-    }
+    public static BpmProcessEventOptions? GetEventConfig<TProcess>() where TProcess : IAggregate
+        => EventOptions.FirstOrDefault(x => x?.ProcessName == typeof(TProcess).Name);
 
     public static bool CheckTryCount<TCommand>(this BpmProcessEventOptions opts, Aggregate aggregate)
     {
@@ -64,7 +58,7 @@ public static class BProcessGraphConfiguration
     {
         return (BpmProducer)typeof(TCommand).GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
     }
-    
+
     private static BpmProducer GetCommandProducer(Type commandType)
     {
         return (BpmProducer)commandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;

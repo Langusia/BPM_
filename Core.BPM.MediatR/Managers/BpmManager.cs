@@ -103,7 +103,7 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
             return Result.Failure<T>(new Error("process_event_wrong_path", "process path not waiting given event", ErrorTypeEnum.NotFound));
 
         var eventConfig = BProcessGraphConfiguration.GetEventConfig<T>();
-        if (eventConfig.CheckTryCount<TCommand>(aggregate))
+        if (eventConfig is not null && eventConfig.CheckTryCount<TCommand>(aggregate))
             return Result.Failure<T>(new Error("process_event_tryCount_reached", "event is exceeding maximum try count", ErrorTypeEnum.NotFound));
 
 
