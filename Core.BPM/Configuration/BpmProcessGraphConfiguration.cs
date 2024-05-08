@@ -18,7 +18,7 @@ public static class BProcessGraphConfiguration
         var currentCommandConfig = opts.BpmCommandtOptions.FirstOrDefault(x => x.BpmCommandName == typeof(TCommand).Name);
         if (currentCommandConfig is null || currentCommandConfig.PermittedTryCount is null || currentCommandConfig.PermittedTryCount == 0)
             return true;
-        if (aggregate.EventCounters.ContainsKey(typeof(TCommand).Name))
+        if (!aggregate.EventCounters.ContainsKey(typeof(TCommand).Name))
             return true;
 
         var possibleCommandEventNames = GetCommandProducer<TCommand>().EventTypes.Select(x => x.Name);
@@ -26,16 +26,23 @@ public static class BProcessGraphConfiguration
         return currentCommandConfig.PermittedTryCount != currentCount;
     }
 
-    public static bool CheckPathValid<TCommand>(this BProcess cc, Aggregate aggregate)
+    public static bool CheckTryCount<TCommand>(this BpmProcessEventOptions opts, List<string> persistedEvents)
+    {
+        var currentCommandConfig = opts.BpmCommandtOptions.FirstOrDefault(x => x.BpmCommandName == typeof(TCommand).Name);
+        if (currentCommandConfig is null || currentCommandConfig.PermittedTryCount is null || currentCommandConfig.PermittedTryCount == 0)
+            return true;
+
+        var currentCount = persistedEvents.Count(x => x == typeof(TCommand).Name);
+        return currentCommandConfig.PermittedTryCount != currentCount;
+    }
+
+    public static bool CheckPathValid<TCommand>(this BProcess config, List<string> persistedEvents)
     {
         var currentCommandType = typeof(TCommand);
-        var config = GetConfig(aggregate.GetType());
-        if (config is null)
-            throw new InvalidEnumArgumentException($"process named {aggregate.GetType().Name} does not exist in the configuration.");
 
         var currentNodeConfig = config.MoveTo(currentCommandType);
         var incomingPrevCommandPossibleEvents = currentNodeConfig.SelectMany(x => x.PrevSteps?.Select(z => GetCommandProducer(z.CommandType))).SelectMany(x => x.EventTypes).ToList();
-        var lastPersistedEventName = aggregate.PersistedEvents.Last();
+        var lastPersistedEventName = persistedEvents.Last();
 
         return incomingPrevCommandPossibleEvents.All(x => x.Name != lastPersistedEventName);
     }
@@ -114,7 +121,7 @@ public static class BProcessGraphConfiguration
         return bpmProcess;
     }
 
-    public static BProcess GetConfig(string processTypeFullName)
+    public static BProcess? GetConfig(string processTypeFullName)
     {
         var bpmProcess = _processes?.FirstOrDefault(x => x?.ProcessType.Name == processTypeFullName);
         if (bpmProcess is null)

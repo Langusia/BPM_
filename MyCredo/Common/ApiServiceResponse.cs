@@ -162,7 +162,7 @@ namespace MyCredo.Common
 
     public class AlreadyExistsApiServiceResponse<T> : ApiServiceResponse<T>
     {
-        public AlreadyExistsApiServiceResponse(string message = null, string errorCode = ResponseErrorCode.AlreadyExists)
+        public AlreadyExistsApiServiceResponse(string message = null, string errorCode = ResponseErrorCode.BadRequest)
         {
             ErrorCode = errorCode;
             State = ApiStatus.AlreadyExists;

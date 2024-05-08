@@ -23,7 +23,6 @@
     <ItemGroup>
       <ProjectReference Include="..\Core.BPM.MediatR\Core.BPM.MediatR.csproj" />
       <ProjectReference Include="..\Core.BPM\Core.BPM.csproj" />
-      <ProjectReference Include="..\Credo.Core.Shared\Credo.Core.Shared.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,9 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using Core.BPM.Configuration;
+﻿using Core.BPM.Configuration;
 using Core.BPM.MediatR.Attributes;
 using Credo.Core.Shared.Library;
 using Marten;
-using Microsoft.AspNetCore.Identity.Data;
 
 namespace Core.BPM.MediatR.Managers;
 
@@ -28,7 +26,7 @@ public class BpmManager
 
     public async Task<Result> ValidateAsync<TCommand>(Guid aggregateId, CancellationToken ct)
     {
-        var @events = await QSession.Events.FetchStreamAsync(aggregateId, token: ct);
+        var @events = await _session.Events.FetchStreamAsync(aggregateId, token: ct);
         var s = @events.First().AggregateTypeName;
         var aggregateName = @events.First().Headers!["AggregateType"];
         if (@events is null)
@@ -87,23 +85,21 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
 
     public async Task<Result<T>> AggregateAsync<TCommand>(Guid aggregateId, CancellationToken ct)
     {
+        var aggregateRawEvents = await _qSession.Events.FetchStreamAsync(aggregateId);
+        var originalAggregateName = aggregateRawEvents.FirstOrDefault().Headers["AggregateType"].ToString();
         var aggregate = await _qSession.Events.AggregateStreamAsync<T>(aggregateId, token: ct);
-        // var aggregate1 = await _qSession.Events.AggregateStreamAsync<MyClass>(aggregateId, token: ct);
 
         if (aggregate is null)
             return Result.Failure<T>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
-
-        //if (BProcessGraphConfiguration.CheckPathValid<TCommand>(aggregate))
-        //    return Result.Failure(new Error("process_event_wrong_path", "process path not waiting given event", ErrorTypeEnum.NotFound));
-
-        var config = BProcessGraphConfiguration.GetConfig(aggregate.GetType());
+        
+        var config = BProcessGraphConfiguration.GetConfig(originalAggregateName!);
         if (config is null)
             return Result.Failure<T>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
-        if (config.CheckPathValid<TCommand>(aggregate))
+        if (config.CheckPathValid<TCommand>(aggregateRawEvents.Select(x => x.EventTypeName).ToList()))
             return Result.Failure<T>(new Error("process_event_wrong_path", "process path not waiting given event", ErrorTypeEnum.NotFound));
 
         var eventConfig = BProcessGraphConfiguration.GetEventConfig<T>();
-        if (eventConfig is not null && eventConfig.CheckTryCount<TCommand>(aggregate))
+        if (eventConfig is not null && eventConfig.CheckTryCount<TCommand>(aggregateRawEvents.Select(x => x.EventTypeName).ToList()))
             return Result.Failure<T>(new Error("process_event_tryCount_reached", "event is exceeding maximum try count", ErrorTypeEnum.NotFound));
 
 
