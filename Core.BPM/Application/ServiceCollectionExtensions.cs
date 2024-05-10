@@ -1,4 +1,5 @@
-﻿using Core.BPM.BCommand;
+﻿using Core.BPM.Application.Managers;
+using Core.BPM.BCommand;
 using Core.BPM.MediatR.Managers;
 using Core.Persistence;
 using Marten;

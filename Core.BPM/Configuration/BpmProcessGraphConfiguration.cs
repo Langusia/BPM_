@@ -44,7 +44,7 @@ public static class BProcessGraphConfiguration
         var incomingPrevCommandPossibleEvents = currentNodeConfig.SelectMany(x => x.PrevSteps?.Select(z => GetCommandProducer(z.CommandType))).SelectMany(x => x.EventTypes).ToList();
         var lastPersistedEventName = persistedEvents.Last();
 
-        return incomingPrevCommandPossibleEvents.All(x => x.Name != lastPersistedEventName);
+        return incomingPrevCommandPossibleEvents.Any(x=>persistedEvents.Contains(x.Name));
     }
 
     public static bool CheckPathValid<TCommand>(Aggregate aggregate)

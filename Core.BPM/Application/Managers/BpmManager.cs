@@ -3,7 +3,7 @@ using Core.BPM.MediatR.Attributes;
 using Credo.Core.Shared.Library;
 using Marten;
 
-namespace Core.BPM.MediatR.Managers;
+namespace Core.BPM.Application.Managers;
 
 public class BpmManager
 {
@@ -91,11 +91,11 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
 
         if (aggregate is null)
             return Result.Failure<T>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
-        
+
         var config = BProcessGraphConfiguration.GetConfig(originalAggregateName!);
         if (config is null)
             return Result.Failure<T>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
-        if (config.CheckPathValid<TCommand>(aggregateRawEvents.Select(x => x.EventTypeName).ToList()))
+        if (!config.CheckPathValid<TCommand>(aggregateRawEvents.Select(x => x.EventType.Name).ToList()))
             return Result.Failure<T>(new Error("process_event_wrong_path", "process path not waiting given event", ErrorTypeEnum.NotFound));
 
         var eventConfig = BProcessGraphConfiguration.GetEventConfig<T>();

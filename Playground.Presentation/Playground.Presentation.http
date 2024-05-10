@@ -1,6 +1,0 @@
-@Playground.Presentation_HostAddress = http://localhost:5060
-
-GET {{Playground.Presentation_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

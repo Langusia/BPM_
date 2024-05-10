@@ -1,4 +1,5 @@
-﻿using Core.BPM.Configuration;
+﻿using Core.BPM.Application.Managers;
+using Core.BPM.Configuration;
 using Core.BPM.MediatR.Attributes;
 using Core.BPM.MediatR.Managers;
 using Marten;
