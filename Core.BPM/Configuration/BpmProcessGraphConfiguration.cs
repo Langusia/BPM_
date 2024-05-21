@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel;
+using System.Xml.Linq;
 using Core.BPM.BCommand;
 using Core.BPM.Interfaces;
 using Core.BPM.MediatR.Attributes;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace Core.BPM.Configuration;
 
@@ -44,7 +46,7 @@ public static class BProcessGraphConfiguration
         var incomingPrevCommandPossibleEvents = currentNodeConfig.SelectMany(x => x.PrevSteps?.Select(z => GetCommandProducer(z.CommandType))).SelectMany(x => x.EventTypes).ToList();
         var lastPersistedEventName = persistedEvents.Last();
 
-        return incomingPrevCommandPossibleEvents.Any(x=>persistedEvents.Contains(x.Name));
+        return incomingPrevCommandPossibleEvents.Any(x => persistedEvents.Contains(x.Name));
     }
 
     public static bool CheckPathValid<TCommand>(Aggregate aggregate)
@@ -101,6 +103,16 @@ public static class BProcessGraphConfiguration
         return result;
     }
 
+    public static INode? MoveTo(this BProcess process, List<string> persistedEvents)
+    {
+        persistedEvents = persistedEvents.Distinct().ToList();
+        var result = new List<INode>();
+        if (GetCommandProducer(process.RootNode.CommandType).EventTypes.All(x => x.Name != persistedEvents.FirstOrDefault()))
+            return null;
+        persistedEvents.RemoveAt(0);
+        return MoveTo(process.RootNode, persistedEvents);
+    }
+
     private static void MoveTo(INode currNode, Type commandType, List<INode> result)
     {
         foreach (var step in currNode.NextSteps!)
@@ -110,6 +122,23 @@ public static class BProcessGraphConfiguration
             else
                 MoveTo(step, commandType, result);
         }
+    }
+
+    private static INode? MoveTo(INode currNode, List<string> persistedEvents)
+    {
+        foreach (var step in currNode.NextSteps!)
+        {
+            if (GetCommandProducer(step.CommandType).EventTypes.All(x => x.Name != persistedEvents.FirstOrDefault()))
+                continue;
+
+            if (persistedEvents.Count == 1)
+                return step;
+
+            persistedEvents.RemoveAt(0);
+            MoveTo(step, persistedEvents);
+        }
+
+        return null;
     }
 
     public static BProcess? GetConfig(Type processType)

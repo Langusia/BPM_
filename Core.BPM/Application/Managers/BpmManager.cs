@@ -83,27 +83,28 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
         return await QSession.Events.AggregateStreamAsync<T>(aggregateId, token: token);
     }
 
-    public async Task<Result<T>> AggregateAsync<TCommand>(Guid aggregateId, CancellationToken ct)
+    public async Task<Result<BpmResult<T>>> AggregateAsync<TCommand>(Guid aggregateId, CancellationToken ct)
     {
         var aggregateRawEvents = await _qSession.Events.FetchStreamAsync(aggregateId);
+        var persistedEvents = aggregateRawEvents.Select(x => x.EventType.Name).ToList();
         var originalAggregateName = aggregateRawEvents.FirstOrDefault().Headers["AggregateType"].ToString();
         var aggregate = await _qSession.Events.AggregateStreamAsync<T>(aggregateId, token: ct);
 
         if (aggregate is null)
-            return Result.Failure<T>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
+            return Result.Failure<BpmResult<T>>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
 
         var config = BProcessGraphConfiguration.GetConfig(originalAggregateName!);
         if (config is null)
-            return Result.Failure<T>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
+            return Result.Failure<BpmResult<T>>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
         if (!config.CheckPathValid<TCommand>(aggregateRawEvents.Select(x => x.EventType.Name).ToList()))
-            return Result.Failure<T>(new Error("process_event_wrong_path", "process path not waiting given event", ErrorTypeEnum.NotFound));
+            return Result.Failure<BpmResult<T>>(new Error("process_event_wrong_path", "process path not waiting given event", ErrorTypeEnum.NotFound));
 
         var eventConfig = BProcessGraphConfiguration.GetEventConfig<T>();
         if (eventConfig is not null && eventConfig.CheckTryCount<TCommand>(aggregateRawEvents.Select(x => x.EventTypeName).ToList()))
-            return Result.Failure<T>(new Error("process_event_tryCount_reached", "event is exceeding maximum try count", ErrorTypeEnum.NotFound));
+            return Result.Failure<BpmResult<T>>(new Error("process_event_tryCount_reached", "event is exceeding maximum try count", ErrorTypeEnum.NotFound));
 
-
-        return Result.Success(aggregate);
+        var currentNote = config.MoveTo(persistedEvents);
+        return Result.Success(new BpmResult<T> { Aggregate = aggregate, CurrentNode = currentNote, NextNodes = currentNote?.NextSteps?.Select(x => x.CommandType.Name).ToList(), });
     }
 
 
