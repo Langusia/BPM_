@@ -110,6 +110,9 @@ public static class BProcessGraphConfiguration
         if (GetCommandProducer(process.RootNode.CommandType).EventTypes.All(x => x.Name != persistedEvents.FirstOrDefault()))
             return null;
         persistedEvents.RemoveAt(0);
+        if (persistedEvents.Count == 0)
+            return process.RootNode;
+
         return MoveTo(process.RootNode, persistedEvents);
     }
 
