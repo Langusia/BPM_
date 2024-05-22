@@ -7,16 +7,16 @@
         <Authors>Guram Elkanishvili</Authors>
         <Company>Credo Bank</Company>
         <Description>Credo BPM management</Description>
-        <Version>1.0.1</Version>
+        <Version>1.0.3</Version>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Credo.Core.Shared" Version="1.0.0" />
-      <PackageReference Include="Marten" Version="7.7.0" />
+        <PackageReference Include="Credo.Core.Shared" Version="1.0.0"/>
+        <PackageReference Include="Marten" Version="7.7.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Application\Attributes\" />
+        <Folder Include="Application\Attributes\"/>
     </ItemGroup>
 
 </Project>
