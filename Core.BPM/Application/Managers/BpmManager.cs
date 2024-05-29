@@ -76,13 +76,14 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
         _session.Events.StartStream<T>(aggregate.Id, aggregate.DequeueUncommittedEvents());
         await _session.SaveChangesAsync(token: token).ConfigureAwait(false);
         var rootNode = BProcessGraphConfiguration.GetConfig(aggregate.GetType().Name)!.RootNode;
-        return new BpmResult { AggregateId = aggregate.Id, CurrentNode = rootNode, NextNodes = rootNode.NextSteps?.Select(x => x.CommandType.Name).ToList() };
+        return new BpmResult { AggregateId = aggregate.Id, CurrentNodeStored = rootNode, NextNodes = rootNode.NextSteps?.Select(x => x.CommandType.Name).ToList() };
     }
 
     public async Task<T?> Get<T>(Guid aggregateId, CancellationToken token) where T : Aggregate
     {
         return await QSession.Events.AggregateStreamAsync<T>(aggregateId, token: token);
     }
+
 
     public async Task<Result<BpmResult<T>>> AggregateAsync<TCommand>(Guid aggregateId, CancellationToken ct)
     {
@@ -104,8 +105,13 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
         if (eventConfig is not null && eventConfig.CheckTryCount<TCommand>(aggregateRawEvents.Select(x => x.EventTypeName).ToList()))
             return Result.Failure<BpmResult<T>>(new Error("process_event_tryCount_reached", "event is exceeding maximum try count", ErrorTypeEnum.NotFound));
 
-        var currentNote = config.MoveTo(persistedEvents);
-        return Result.Success(new BpmResult<T>(aggregate) { CurrentNode = currentNote, NextNodes = currentNote?.NextSteps?.Select(x => x.CommandType.Name).ToList(), });
+        var currentNode = config.MoveTo(persistedEvents);
+        var afterAppend = currentNode?.NextSteps?.FirstOrDefault(x => x.CommandType == typeof(TCommand));
+        return Result.Success(new BpmResult<T>(aggregate)
+        {
+            AggregateId = aggregateId, CurrentNodeStored = currentNode, CurrentNodeAfterAppend = afterAppend, NextNodesAfterAppend = afterAppend?.NextSteps?.Select(x => x.CommandType.Name).ToList(),
+            NextNodes = currentNode?.NextSteps?.Select(x => x.CommandType.Name).ToList(),
+        });
     }
 
 
