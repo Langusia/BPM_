@@ -69,13 +69,14 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
     private readonly IDocumentSession _session = session;
     private readonly IQuerySession _qSession = session;
 
-    public async Task<Guid> StartProcess(T aggregate, CancellationToken token)
+    public async Task<BpmResult> StartProcess(T aggregate, CancellationToken token)
     {
         aggregate.Id = Guid.NewGuid();
         _session.SetHeader("AggregateType", aggregate.GetType().Name);
         _session.Events.StartStream<T>(aggregate.Id, aggregate.DequeueUncommittedEvents());
         await _session.SaveChangesAsync(token: token).ConfigureAwait(false);
-        return aggregate.Id;
+        var rootNode = BProcessGraphConfiguration.GetConfig(aggregate.GetType().Name)!.RootNode;
+        return new BpmResult { AggregateId = aggregate.Id, CurrentNode = rootNode, NextNodes = rootNode.NextSteps?.Select(x => x.CommandType.Name).ToList() };
     }
 
     public async Task<T?> Get<T>(Guid aggregateId, CancellationToken token) where T : Aggregate
@@ -104,7 +105,7 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
             return Result.Failure<BpmResult<T>>(new Error("process_event_tryCount_reached", "event is exceeding maximum try count", ErrorTypeEnum.NotFound));
 
         var currentNote = config.MoveTo(persistedEvents);
-        return Result.Success(new BpmResult<T> { Aggregate = aggregate, CurrentNode = currentNote, NextNodes = currentNote?.NextSteps?.Select(x => x.CommandType.Name).ToList(), });
+        return Result.Success(new BpmResult<T>(aggregate) { CurrentNode = currentNote, NextNodes = currentNote?.NextSteps?.Select(x => x.CommandType.Name).ToList(), });
     }
 
 

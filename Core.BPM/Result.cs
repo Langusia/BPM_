@@ -2,9 +2,15 @@
 
 namespace Core.BPM;
 
-public class BpmResult<T> where T : Aggregate
+public class BpmResult<T>(T aggregate) : BpmResult
+    where T : Aggregate
 {
-    public T Aggregate { get; set; }
-    public INode CurrentNode { get; set; }
-    public List<string>? NextNodes { get; set; }
+    public T Aggregate { get; init; } = aggregate;
+}
+
+public class BpmResult
+{
+    public Guid AggregateId { get; init; }
+    public INode CurrentNode { get; init; }
+    public List<string>? NextNodes { get; init; }
 }
