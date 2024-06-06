@@ -129,19 +129,15 @@ public static class BProcessGraphConfiguration
 
     private static INode? MoveTo(INode currNode, List<string> persistedEvents)
     {
-        foreach (var step in currNode.NextSteps!)
-        {
-            if (GetCommandProducer(step.CommandType).EventTypes.All(x => x.Name != persistedEvents.FirstOrDefault()))
-                continue;
+        var nextCurrNode = currNode.NextSteps?.FirstOrDefault(x=>GetCommandProducer(x.CommandType).EventTypes.Any(y => y.Name == persistedEvents.FirstOrDefault()));
+        if (nextCurrNode is null)
+            return null;
+        
+        persistedEvents.RemoveAt(0);
+        if(persistedEvents.Count == 0)
+            return nextCurrNode;
 
-            if (persistedEvents.Count == 1)
-                return step;
-
-            persistedEvents.RemoveAt(0);
-            MoveTo(step, persistedEvents);
-        }
-
-        return null;
+        return MoveTo(nextCurrNode, persistedEvents);
     }
 
     public static BProcess? GetConfig(Type processType)

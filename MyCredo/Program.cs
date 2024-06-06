@@ -9,7 +9,13 @@ using MyCredo.Features.RecoveringPassword;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
 using MyCredo.Features.RecoveringPassword.Initiating;
 using MyCredo.Features.TwoFactor;
+using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop;
+using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.ConfirmRequestLoan;
+using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.Initiating;
+using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpSend;
+using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpValidate;
 using Weasel.Core;
+using ValidateOtp = MyCredo.Features.TwoFactor.ValidateOtp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +32,16 @@ builder.Services.AddBpm(options =>
         options.Events.MetadataConfig.CausationIdEnabled = true;
         options.Events.MetadataConfig.CorrelationIdEnabled = true;
         options.Projections.Add<CheckCardFlatProjection>(ProjectionLifecycle.Inline);
-    }, x => { x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>(); }
+
+        options.Events.AddEventType(typeof(RequestLoanInitiated));
+        options.Events.AddEventType(typeof(OtpSent));
+        options.Events.AddEventType(typeof(OtpValidated));
+        options.Events.AddEventType(typeof(ConfirmedRequestLoan));
+    }, x =>
+    {
+        x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
+        x.AddAggregateDefinition<RequestCarPawnshop, RequestCarPawnshopDefinition>();
+    }
 );
 
 var app = builder.Build();
@@ -38,6 +53,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+
+app.MapPost("car/loan/confirm",
+        async ([FromBody] ConfirmLoanRequest requestLoan, IMediator mediator) => await mediator.Send(requestLoan))
+    .WithName("confirmLoanRequest")
+    .WithOpenApi();
 
 app.MapPost("/password-recovery/initiate",
         async (IMediator mediator) => await mediator.Send(new InitiatePasswordRecovery(
