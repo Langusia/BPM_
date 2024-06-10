@@ -1,9 +1,12 @@
 ﻿using Core.BPM;
+using Core.BPM.Extensions;
 using Core.BPM.Interfaces.Builder;
 using Core.BPM.MediatR;
 using MyCredo.Common;
 using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.ConfirmRequestLoan;
+using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.Finishing;
 using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.Initiating;
+using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.UploadingImage;
 using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpSend;
 using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpValidate;
 using MyCredo.Retail.Loan.Domain.Models.LoanApplication.Enums;
@@ -56,7 +59,7 @@ public class RequestCarPawnshop : Aggregate
         SetBpmProps(@event);
     }
 
-    public void Apply(ConfirmedRequestLoan @event)
+    public void Apply(ConfirmedCarPawnshop @event)
     {
         TraceId = @event.TraceId;
         UserId = @event.UserId;
@@ -74,7 +77,7 @@ public class RequestCarPawnshopDefinition : BpmDefinition<RequestCarPawnshop>
             .Continue<SendOtp>()
             .Continue<ValidateOtp>()
             .Continue<ConfirmLoanRequest>()
-            .Continue<RequestLoanInitiate>();
-        //.Continue<FinishCarPawnshop>();
+            .Continue<UploadImage>()
+            .Continue<FinishCarPawnshop>();
     }
 }

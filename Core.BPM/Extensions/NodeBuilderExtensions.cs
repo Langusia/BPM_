@@ -35,4 +35,22 @@ public static class OuterNodeBuilderExtensions
 
         return builder;
     }
+
+    public static INodeBuilderBuilder ThenAnyTime<TCommand>(this INodeBuilderBuilder builder, Action<INodeBuilderBuilder>? configure = null)
+    {
+        var node = new Node(typeof(TCommand), builder.GetProcess().ProcessType);
+        node.AnyTime = true;
+        builder.GetCurrent().AddNextStepToTail(node);
+        node.AddPrevStep(builder.GetCurrent());
+
+        if (configure is not null)
+        {
+            var nextNodeBuilder = new NodeBuilder(node, builder.GetProcess());
+            configure?.Invoke(nextNodeBuilder);
+        }
+
+        builder.SetCurrent(node);
+
+        return builder;
+    }
 }

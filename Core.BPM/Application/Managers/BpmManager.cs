@@ -109,7 +109,8 @@ public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : B
         var afterAppend = currentNode?.NextSteps?.FirstOrDefault(x => x.CommandType == typeof(TCommand));
         return Result.Success(new BpmResult<T>(aggregate)
         {
-            AggregateId = aggregateId, CurrentNodeStored = currentNode, CurrentNodeAfterAppend = afterAppend, NextNodesAfterAppend = afterAppend?.NextSteps?.Select(x => x.CommandType.Name).ToList(),
+            AggregateId = aggregateId, CurrentNodeStored = currentNode, CurrentNodeAfterAppend = afterAppend,
+            NextNodesAfterAppend = afterAppend?.NextSteps?.Select(x => x.CommandType.Name).ToList() ?? currentNode?.NextSteps?.Select(x => x.CommandType.Name).ToList(),
             NextNodes = currentNode?.NextSteps?.Select(x => x.CommandType.Name).ToList(),
         });
     }

@@ -12,6 +12,7 @@ using MyCredo.Features.TwoFactor;
 using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop;
 using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.ConfirmRequestLoan;
 using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.Initiating;
+using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.UploadingImage;
 using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpSend;
 using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpValidate;
 using Weasel.Core;
@@ -36,7 +37,8 @@ builder.Services.AddBpm(options =>
         options.Events.AddEventType(typeof(RequestLoanInitiated));
         options.Events.AddEventType(typeof(OtpSent));
         options.Events.AddEventType(typeof(OtpValidated));
-        options.Events.AddEventType(typeof(ConfirmedRequestLoan));
+        options.Events.AddEventType(typeof(UploadedImage));
+        options.Events.AddEventType(typeof(ConfirmedCarPawnshop));
     }, x =>
     {
         x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
@@ -58,6 +60,11 @@ app.UseHttpsRedirection();
 app.MapPost("car/loan/confirm",
         async ([FromBody] ConfirmLoanRequest requestLoan, IMediator mediator) => await mediator.Send(requestLoan))
     .WithName("confirmLoanRequest")
+    .WithOpenApi();
+
+app.MapPost("car/loan/upload-image",
+        async ([FromBody] UploadImage requestLoan, IMediator mediator) => await mediator.Send(requestLoan))
+    .WithName("uploadImage")
     .WithOpenApi();
 
 app.MapPost("/password-recovery/initiate",

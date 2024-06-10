@@ -142,7 +142,7 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
         configure
             .StartWith<InitiatePasswordRecovery>()
             .Continue<GenerateOtp>(g => g
-                .ThenContinue<ValidateOtp>(v => v
+                .ThenAnyTime<ValidateOtp>(v => v
                     .ThenContinue<CheckCardInitiate>(ci => ci
                         .ThenContinue<CheckCardComplete>())
                     .Or<ValidateSecurityQuestion>()

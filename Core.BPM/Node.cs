@@ -6,6 +6,7 @@ public class Node(Type commandType, Type processType) : INode
 {
     public Type CommandType { get; } = commandType;
     public Type ProcessType { get; } = processType;
+    public bool AnyTime { get; set; }
 
     public List<INode> NextSteps { get; set; } = [];
 

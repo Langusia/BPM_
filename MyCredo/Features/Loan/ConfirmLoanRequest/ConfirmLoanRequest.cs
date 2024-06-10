@@ -6,7 +6,7 @@ using MyCredo.Common;
 
 namespace MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.ConfirmRequestLoan;
 
-[BpmProducer(typeof(ConfirmedRequestLoan))]
+[BpmProducer(typeof(ConfirmedCarPawnshop))]
 public record ConfirmLoanRequest(Guid ProcessId, string TraceId, int UserId, ChannelTypeEnum Channel) : ICommand<AggregateResult<bool>>;
 
 public class ConfirmRequestLoanHandler(

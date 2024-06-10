@@ -4,4 +4,4 @@ using MyCredo.Retail.Loan.Domain.Models;
 
 namespace MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.ConfirmRequestLoan;
 
-public record ConfirmedRequestLoan(string TraceId, int UserId, ChannelTypeEnum Channel) : BpmEvent;
+public record ConfirmedCarPawnshop(string TraceId, int UserId, ChannelTypeEnum Channel, int? TryCount) : BpmEvent;
