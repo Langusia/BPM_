@@ -20,16 +20,16 @@ public record ValidateOtpHandler : IRequestHandler<ValidateOtp, Result<long>>
 
     public async Task<Result<long>> Handle(ValidateOtp request, CancellationToken cancellationToken)
     {
-        var s = await _bpm.ValidateAsync<ValidateOtp>(request.DocumentId, cancellationToken);
-        //if (s)
-        //    return null;
-        //
-        //await _bpm.ValidateAsync<GenerateOtp>(request.DocumentId, cancellationToken);
-        //doStuff
-        //await _session.Events.LoadAsync<OtpValidationAggregate>();
-        var isValid = true;
-        //
-        await _bpm.AppendAsync(request.DocumentId, [new OtpSubmited("", true)], cancellationToken);
+        //var s = await _bpm.ValidateAsync<ValidateOtp>(request.DocumentId, cancellationToken);
+        ////if (s)
+        ////    return null;
+        ////
+        ////await _bpm.ValidateAsync<GenerateOtp>(request.DocumentId, cancellationToken);
+        ////doStuff
+        ////await _session.Events.LoadAsync<OtpValidationAggregate>();
+        //var isValid = true;
+        ////
+        //await _bpm.AppendAsync<ValidateOtp>(request.DocumentId, [new OtpSubmited("", true)], cancellationToken);
 
         return null;
     }

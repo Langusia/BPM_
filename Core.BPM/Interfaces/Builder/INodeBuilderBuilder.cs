@@ -7,3 +7,9 @@ public interface INodeBuilderBuilder : INodeBuilder
     INode SetCurrent(INode node);
     INodeBuilderBuilder Continue<Command>(Action<INodeBuilderBuilder>? configure = null);
 }
+
+public interface INodeBuilderBuilderModificationBuilder : INodeBuilderBuilder
+{
+    INodeBuilderBuilderModificationBuilder AnyTime();
+    INodeBuilderBuilderModificationBuilder Optional();
+}

@@ -25,9 +25,9 @@ public class GenerateOtpHandler : IRequestHandler<GenerateOtp, long>
         var s = await _bpm.AggregateAsync<GenerateOtp>(request.ProcessId, cancellationToken);
         ////doStuff
         ///
-        
+
         var @event = new GeneratedOtp(request.ProcessId, "1234");
-        await _bpm.AppendAsync(request.ProcessId, [@event], cancellationToken);
+        await _bpm.AppendAsync<GenerateOtp>(request.ProcessId, [@event], cancellationToken);
         return 9;
     }
 }

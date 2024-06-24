@@ -1,4 +1,6 @@
-﻿using Core.BPM.Interfaces.Builder;
+﻿using Core.BPM.BCommand;
+using Core.BPM.Interfaces;
+using Core.BPM.Interfaces.Builder;
 
 namespace Core.BPM.Extensions;
 
@@ -36,10 +38,18 @@ public static class OuterNodeBuilderExtensions
         return builder;
     }
 
-    public static INodeBuilderBuilder ThenAnyTime<TCommand>(this INodeBuilderBuilder builder, Action<INodeBuilderBuilder>? configure = null)
+    public static INodeBuilderBuilder Configure(this INodeBuilderBuilder builder, Action<BpmEventOptions> configure)
+    {
+        configure(builder.GetCurrent().Options);
+        return builder;
+    }
+
+    public static INodeBuilderBuilder ThenContinueWithConfiguring<TCommand>(this INodeBuilderBuilder builder,
+        Action<BpmEventOptions>? configureOptions = null,
+        Action<INodeBuilderBuilder>? configure = null)
     {
         var node = new Node(typeof(TCommand), builder.GetProcess().ProcessType);
-        node.AnyTime = true;
+
         builder.GetCurrent().AddNextStepToTail(node);
         node.AddPrevStep(builder.GetCurrent());
 

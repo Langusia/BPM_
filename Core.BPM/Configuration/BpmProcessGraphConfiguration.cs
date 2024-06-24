@@ -43,6 +43,9 @@ public static class BProcessGraphConfiguration
         var currentCommandType = typeof(TCommand);
 
         var currentNodeConfig = config.MoveTo(currentCommandType);
+        if (currentNodeConfig.SelectMany(x => x.PrevSteps).All(x => x.Options.Optional || x.Options.AnyTime))
+            return true;
+
         var incomingPrevCommandPossibleEvents = currentNodeConfig.SelectMany(x => x.PrevSteps?
                 .Select(z => GetCommandProducer(z.CommandType)))
             .SelectMany(x => x.EventTypes).ToList();
@@ -132,7 +135,7 @@ public static class BProcessGraphConfiguration
     private static INode? MoveTo(INode currNode, List<string> persistedEvents)
     {
         var currNodeEvents = GetCommandProducer(currNode.CommandType);
-        if (currNode.AnyTime)
+        if (currNode.Options.AnyTime)
             persistedEvents.RemoveAll(x => currNodeEvents.EventTypes.Any(z => z.Name == x));
 
         var nextCurrNode = currNode.NextSteps?.FirstOrDefault(x => GetCommandProducer(x.CommandType).EventTypes.Any(y => y.Name == persistedEvents.FirstOrDefault()));

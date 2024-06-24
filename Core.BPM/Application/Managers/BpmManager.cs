@@ -1,7 +1,10 @@
 ﻿using Core.BPM.Configuration;
+using Core.BPM.MediatR;
 using Core.BPM.MediatR.Attributes;
 using Credo.Core.Shared.Library;
 using Marten;
+using Marten.Events;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Core.BPM.Application.Managers;
 
@@ -15,12 +18,97 @@ public class BpmManager
         _session = session;
         QSession = qSession;
     }
+}
 
+public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : BpmManager(session, qSession)
+    where T : Aggregate
+{
+    private readonly IDocumentSession _session = session;
+    private readonly IQuerySession _qSession = session;
 
-    public async Task AppendAsync(Guid aggregateId, object[] events, CancellationToken token)
+    private T? _aggregate;
+    private IReadOnlyList<IEvent> _persistedProcessEvents;
+    private string _aggregateName;
+    private BProcess _config;
+
+    private static BpmProducer GetCommandProducer<TCommand>()
     {
+        return (BpmProducer)typeof(TCommand).GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
+    }
+
+    private static BpmProducer GetCommandProducer(Type commandType)
+    {
+        return (BpmProducer)commandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
+    }
+
+
+    public async Task<T?> Get<T>(Guid aggregateId, CancellationToken token) where T : Aggregate
+    {
+        return await QSession.Events.AggregateStreamAsync<T>(aggregateId, token: token);
+    }
+
+    private BpmResult<T> GetBpmResult<TCommand>()
+    {
+        var persistedEvents = _persistedProcessEvents.Select(x => x.EventType.Name).ToList();
+        var currentNode = _config.MoveTo(persistedEvents);
+        var afterAppend = currentNode?.NextSteps?.FirstOrDefault(x => x.CommandType == typeof(TCommand));
+        return new BpmResult<T>(_aggregate!)
+        {
+            AggregateId = _aggregate!.Id, CurrentNode = currentNode!, CurrentNodeAfterAppend = afterAppend,
+            NextNodesAfterAppend = afterAppend?.NextSteps?.Select(x => x.CommandType.Name).ToList() ?? currentNode?.NextSteps?.Select(x => x.CommandType.Name).ToList(),
+            NextNodes = currentNode?.NextSteps?.Select(x => x.CommandType.Name).ToList(),
+        };
+    }
+
+    private async Task LoadAggregateData(Guid aggregateId, CancellationToken ct)
+    {
+        _persistedProcessEvents = await _qSession.Events.FetchStreamAsync(aggregateId);
+        var originalAggregateName = _persistedProcessEvents?.FirstOrDefault()?.Headers["AggregateType"].ToString();
+        _aggregate = await _qSession.Events.AggregateStreamAsync<T>(aggregateId, token: ct);
+        _config = BProcessGraphConfiguration.GetConfig(_aggregateName!);
+    }
+
+
+    public async Task<BpmResult> StartProcess(T aggregate, CancellationToken token)
+    {
+        aggregate.Id = Guid.NewGuid();
+        _aggregate = aggregate;
+        _aggregateName = aggregate.GetType().Name;
+        _config = BProcessGraphConfiguration.GetConfig(_aggregateName!);
+        _session.SetHeader("AggregateType", aggregate.GetType().Name);
+        var strAct = _session.Events.StartStream<T>(aggregate.Id, aggregate.DequeueUncommittedEvents());
+        _persistedProcessEvents = strAct.Events;
+        await _session.SaveChangesAsync(token: token).ConfigureAwait(false);
+        var rootNode = BProcessGraphConfiguration.GetConfig(aggregate.GetType().Name)!.RootNode;
+        return new BpmResult { AggregateId = aggregate.Id, CurrentNode = rootNode, NextNodes = rootNode.NextSteps?.Select(x => x.CommandType.Name).ToList() };
+    }
+
+    public async Task<Result<BpmResult<T>>> AggregateAsync<TCommand>(Guid aggregateId, CancellationToken ct)
+    {
+        await LoadAggregateData(aggregateId, ct);
+        if (_aggregate is null)
+            return Result.Failure<BpmResult<T>>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
+
+        if (_config is null)
+            return Result.Failure<BpmResult<T>>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
+        if (!_config.CheckPathValid<TCommand>(_persistedProcessEvents.Select(x => x.EventType.Name).ToList()))
+            return Result.Failure<BpmResult<T>>(new Error("process_event_wrong_path", "process path not waiting given event", ErrorTypeEnum.NotFound));
+
+        var eventConfig = BProcessGraphConfiguration.GetEventConfig<T>();
+        if (eventConfig is not null && eventConfig.CheckTryCount<TCommand>(_persistedProcessEvents.Select(x => x.EventTypeName).ToList()))
+            return Result.Failure<BpmResult<T>>(new Error("process_event_tryCount_reached", "event is exceeding maximum try count", ErrorTypeEnum.NotFound));
+
+        return Result.Success(GetBpmResult<TCommand>());
+    }
+
+    public async Task<BpmResult<T>> AppendAsync<TCommand>(Guid aggregateId, object[] events, CancellationToken token)
+    {
+        if (_aggregate is null)
+            await LoadAggregateData(aggregateId, token);
+
         _session.Events.Append(aggregateId, events);
         await _session.SaveChangesAsync(token).ConfigureAwait(false);
+        return GetBpmResult<TCommand>();
     }
 
 
@@ -60,69 +148,5 @@ public class BpmManager
 
 
         return Result.Success();
-    }
-}
-
-public class BpmManager<T>(IDocumentSession session, IQuerySession qSession) : BpmManager(session, qSession)
-    where T : Aggregate
-{
-    private readonly IDocumentSession _session = session;
-    private readonly IQuerySession _qSession = session;
-
-    public async Task<BpmResult> StartProcess(T aggregate, CancellationToken token)
-    {
-        aggregate.Id = Guid.NewGuid();
-        _session.SetHeader("AggregateType", aggregate.GetType().Name);
-        _session.Events.StartStream<T>(aggregate.Id, aggregate.DequeueUncommittedEvents());
-        await _session.SaveChangesAsync(token: token).ConfigureAwait(false);
-        var rootNode = BProcessGraphConfiguration.GetConfig(aggregate.GetType().Name)!.RootNode;
-        return new BpmResult { AggregateId = aggregate.Id, CurrentNodeStored = rootNode, NextNodes = rootNode.NextSteps?.Select(x => x.CommandType.Name).ToList() };
-    }
-
-    public async Task<T?> Get<T>(Guid aggregateId, CancellationToken token) where T : Aggregate
-    {
-        return await QSession.Events.AggregateStreamAsync<T>(aggregateId, token: token);
-    }
-
-
-    public async Task<Result<BpmResult<T>>> AggregateAsync<TCommand>(Guid aggregateId, CancellationToken ct)
-    {
-        var aggregateRawEvents = await _qSession.Events.FetchStreamAsync(aggregateId);
-        var persistedEvents = aggregateRawEvents.Select(x => x.EventType.Name).ToList();
-        var originalAggregateName = aggregateRawEvents.FirstOrDefault().Headers["AggregateType"].ToString();
-        var aggregate = await _qSession.Events.AggregateStreamAsync<T>(aggregateId, token: ct);
-
-        if (aggregate is null)
-            return Result.Failure<BpmResult<T>>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
-
-        var config = BProcessGraphConfiguration.GetConfig(originalAggregateName!);
-        if (config is null)
-            return Result.Failure<BpmResult<T>>(new Error("process_not_configured", "Process not configured", ErrorTypeEnum.BadRequest));
-        if (!config.CheckPathValid<TCommand>(aggregateRawEvents.Select(x => x.EventType.Name).ToList()))
-            return Result.Failure<BpmResult<T>>(new Error("process_event_wrong_path", "process path not waiting given event", ErrorTypeEnum.NotFound));
-
-        var eventConfig = BProcessGraphConfiguration.GetEventConfig<T>();
-        if (eventConfig is not null && eventConfig.CheckTryCount<TCommand>(aggregateRawEvents.Select(x => x.EventTypeName).ToList()))
-            return Result.Failure<BpmResult<T>>(new Error("process_event_tryCount_reached", "event is exceeding maximum try count", ErrorTypeEnum.NotFound));
-
-        var currentNode = config.MoveTo(persistedEvents);
-        var afterAppend = currentNode?.NextSteps?.FirstOrDefault(x => x.CommandType == typeof(TCommand));
-        return Result.Success(new BpmResult<T>(aggregate)
-        {
-            AggregateId = aggregateId, CurrentNodeStored = currentNode, CurrentNodeAfterAppend = afterAppend,
-            NextNodesAfterAppend = afterAppend?.NextSteps?.Select(x => x.CommandType.Name).ToList() ?? currentNode?.NextSteps?.Select(x => x.CommandType.Name).ToList(),
-            NextNodes = currentNode?.NextSteps?.Select(x => x.CommandType.Name).ToList(),
-        });
-    }
-
-
-    private static BpmProducer GetCommandProducer<TCommand>()
-    {
-        return (BpmProducer)typeof(TCommand).GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
-    }
-
-    private static BpmProducer GetCommandProducer(Type commandType)
-    {
-        return (BpmProducer)commandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
     }
 }

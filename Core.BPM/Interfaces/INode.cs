@@ -1,10 +1,14 @@
-﻿namespace Core.BPM.Interfaces;
+﻿using Core.BPM.BCommand;
+
+namespace Core.BPM.Interfaces;
 
 public interface INode
 {
+    List<string> LoadEvents();
+
     Type CommandType { get; }
     Type ProcessType { get; }
-    bool AnyTime { get; set; }
+    BpmEventOptions Options { get; set; }
 
     List<INode>? NextSteps { get; set; }
     void AddNextStep(INode node);

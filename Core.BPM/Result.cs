@@ -11,8 +11,10 @@ public class BpmResult<T>(T aggregate) : BpmResult
 public class BpmResult
 {
     public Guid AggregateId { get; init; }
-    public INode CurrentNodeStored { get; init; }
+    public INode CurrentNode { get; init; }
+    public List<string>? NextNodes { get; init; }
+
+
     public INode? CurrentNodeAfterAppend { get; init; }
     public List<string>? NextNodesAfterAppend { get; init; }
-    public List<string>? NextNodes { get; init; }
 }

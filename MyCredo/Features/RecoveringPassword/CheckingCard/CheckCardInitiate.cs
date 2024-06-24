@@ -19,7 +19,7 @@ public record CheckCardInitiateHandler(BpmManager<CheckCard> _bpm, IDocumentSess
     public async Task<bool> Handle(CheckCardInitiate request, CancellationToken cancellationToken)
     {
         var s = await _bpm.AggregateAsync<CheckCardInitiate>(request.DocumentId, cancellationToken);
-        await _bpm.AppendAsync(request.DocumentId, [new CheckCardInitiated(22, 34433, "hash")], cancellationToken);
+        await _bpm.AppendAsync<CheckCardInitiate>(request.DocumentId, [new CheckCardInitiated(22, 34433, "hash")], cancellationToken);
         //await _session.LoadAsync<CheckCard>(request.DocumentId, cancellationToken);
         return true;
     }

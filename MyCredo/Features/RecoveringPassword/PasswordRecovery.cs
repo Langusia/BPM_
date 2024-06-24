@@ -142,11 +142,21 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
         configure
             .StartWith<InitiatePasswordRecovery>()
             .Continue<GenerateOtp>(g => g
-                .ThenAnyTime<ValidateOtp>(v => v
-                    .ThenContinue<CheckCardInitiate>(ci => ci
-                        .ThenContinue<CheckCardComplete>())
-                    .Or<ValidateSecurityQuestion>()
-                    .Or<IdentifyFace>())
+                .ThenContinue<ValidateOtp>(v =>
+                    v.ThenContinue<CheckCardInitiate>(ci => ci
+                            .ThenContinue<CheckCardComplete>()
+                            .Configure(x =>
+                            {
+                                x.AnyTime = true;
+                                x.Optional = true;
+                            }))
+                        .Or<ValidateSecurityQuestion>()
+                        .Or<IdentifyFace>())
+                .Configure(x =>
+                {
+                    x.AnyTime = true;
+                    x.Optional = true;
+                })
                 .Or<PhoneChangeInitiate>(vpc => vpc
                     .ThenContinue<PhoneChangeComplete>(z => z
                         .ThenContinue<CheckCardInitiate>(zz => zz
@@ -157,6 +167,10 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 
     public override void SetEventConfiguration(BpmEventConfigurationBuilder<PasswordRecovery> bpmEventConfiguration)
     {
-        bpmEventConfiguration.AddCommandOptions<GeneratedOtp>(x => x.PermittedTryCount = 3);
+        bpmEventConfiguration.AddCommandOptions<GeneratedOtp>(x =>
+        {
+            x.PermittedTryCount = 3;
+            x.Optional = true;
+        });
     }
 }

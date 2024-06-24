@@ -1,12 +1,17 @@
-﻿using Core.BPM.Interfaces;
+﻿using Core.BPM.BCommand;
+using Core.BPM.Interfaces;
+using Core.BPM.MediatR.Attributes;
 
 namespace Core.BPM;
 
 public class Node(Type commandType, Type processType) : INode
 {
+    public List<string> LoadEvents()
+        => ((BpmProducer)commandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!).EventTypes.Select(x => x.Name).ToList();
+
     public Type CommandType { get; } = commandType;
     public Type ProcessType { get; } = processType;
-    public bool AnyTime { get; set; }
+    public BpmEventOptions Options { get; set; }
 
     public List<INode> NextSteps { get; set; } = [];
 
