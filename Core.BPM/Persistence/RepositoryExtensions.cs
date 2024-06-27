@@ -1,5 +1,6 @@
 ﻿using Core.BPM;
 using Core.BPM.Interfaces;
+using Core.BPM.Persistence;
 using Core.Persistence.Exceptions;
 using IEvent = Marten.Events.IEvent;
 

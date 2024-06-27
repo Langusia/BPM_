@@ -1,6 +1,7 @@
 ﻿using Core.BPM.Application.Managers;
 using Core.BPM.BCommand;
 using Core.BPM.MediatR.Managers;
+using Core.BPM.Persistence;
 using Core.Persistence;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,8 +16,7 @@ public static class ServiceCollectionExtensions
         services.AddMarten(configureMartenStore);
         services.TryAddScoped(typeof(MartenRepository<>));
         services.TryAddScoped(typeof(BpmGenericProcessManager<>));
-        services.TryAddScoped(typeof(BpmManager));
-        services.TryAddScoped(typeof(BpmManager<>));
+        services.TryAddScoped(typeof(BpmStore<>));
         services.TryAddScoped(typeof(MartenRepository));
         services.TryAddScoped(typeof(BpmEventConfigurationBuilder<>));
         services.AddOptions<BpmEventConfiguration>();

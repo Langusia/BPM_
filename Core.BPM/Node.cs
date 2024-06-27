@@ -1,10 +1,11 @@
 ﻿using Core.BPM.BCommand;
 using Core.BPM.Interfaces;
 using Core.BPM.MediatR.Attributes;
+using MediatR;
 
 namespace Core.BPM;
 
-public class Node(Type commandType, Type processType) : INode
+public class NodeBase(Type commandType, Type processType)
 {
     public List<string> LoadEvents()
         => ((BpmProducer)commandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!).EventTypes.Select(x => x.Name).ToList();
@@ -29,10 +30,14 @@ public class Node(Type commandType, Type processType) : INode
         PrevSteps.Add(node);
     }
 
+    protected static BpmProducer GetCommandProducer(Type commandType)
+    {
+        return (BpmProducer)commandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
+    }
 
     private INode _currNext;
 
-    private void GetLastNodes(List<INode> lastNodes, INode start)
+    protected void GetLastNodes(List<INode> lastNodes, INode start)
     {
         foreach (var nextStep in start.NextSteps)
         {
@@ -46,17 +51,5 @@ public class Node(Type commandType, Type processType) : INode
         }
 
         _currNext = null;
-    }
-
-    public void AddNextStepToTail(INode node)
-    {
-        if (NextSteps.Count == 0)
-            NextSteps.Add(node);
-        else
-        {
-            var tails = new List<INode>();
-            GetLastNodes(tails, this);
-            tails.Distinct().ToList().ForEach(x => x.AddNextStep(node));
-        }
     }
 }

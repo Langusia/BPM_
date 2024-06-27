@@ -1,8 +1,7 @@
-﻿using Core.BPM;
-using Marten;
+﻿using Marten;
 using Marten.Events;
 
-namespace Core.Persistence;
+namespace Core.BPM.Persistence;
 
 public class MartenRepository<T> where T : Aggregate
 {

@@ -1,4 +1,5 @@
 ﻿using Core.BPM.BCommand;
+using MediatR;
 
 namespace Core.BPM.Interfaces;
 
@@ -15,4 +16,6 @@ public interface INode
     void AddNextStepToTail(INode node);
     List<INode>? PrevSteps { get; set; }
     void AddPrevStep(INode node);
+
+    bool Validate(List<string> events);
 }

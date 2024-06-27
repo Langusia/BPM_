@@ -59,6 +59,26 @@ public class RequestCarPawnshop : Aggregate
         SetBpmProps(@event);
     }
 
+    public void InitiateCarPawnshop(DigitalLoanProductTypeEnum productType, string promoCode, decimal percent, int tryCount, decimal amount, decimal effectiveInterestRate, int period)
+    {
+        var @event = new RequestLoanInitiated(productType, promoCode, percent, 0, amount, effectiveInterestRate, period);
+        Apply(@event);
+        Enqueue(@event);
+    }
+
+    public void SendOtp()
+    {
+        var @event = new OtpSent(Guid.NewGuid());
+        Enqueue(@event);
+    }
+
+    public void ConfirmedCarPawnshop(string traceId, int userId, ChannelTypeEnum channel)
+    {
+        var @event = new ConfirmedCarPawnshop(traceId, userId, channel, null);
+        Apply(@event);
+        Enqueue(@event);
+    }
+
     public void Apply(ConfirmedCarPawnshop @event)
     {
         TraceId = @event.TraceId;

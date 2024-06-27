@@ -14,12 +14,15 @@ public record InitiatePasswordRecovery(
     ChannelTypeEnum ChannelType)
     : IRequest<Guid>;
 
-public class InitiatePasswordRecoveryHandler(BpmManager<PasswordRecovery> mgr)
+public class InitiatePasswordRecoveryHandler(BpmStore<PasswordRecovery> mgr)
     : IRequestHandler<InitiatePasswordRecovery, Guid>
 {
     public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
-        var result = await mgr.StartProcess(PasswordRecovery.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType), cancellationToken);
-        return result.AggregateId;
+        var agg = mgr.StartProcess(new PasswordRecovery().Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType));
+
+        await mgr.SaveChangesAsync( cancellationToken);
+
+        return agg.Aggregate.Id;
     }
 }

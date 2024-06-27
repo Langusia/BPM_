@@ -10,12 +10,19 @@ namespace MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnsho
 public record ConfirmLoanRequest(Guid ProcessId, string TraceId, int UserId, ChannelTypeEnum Channel) : ICommand<AggregateResult<bool>>;
 
 public class ConfirmRequestLoanHandler(
-    BpmManager<RequestCarPawnshop> manager
+    BpmStore<RequestCarPawnshop> manager
 ) : ICommandHandler<ConfirmLoanRequest, AggregateResult<bool>>
 {
     public async Task<Result<AggregateResult<bool>>> Handle(ConfirmLoanRequest request, CancellationToken cancellationToken)
     {
-        var aggregateResult = await manager.AggregateAsync<ConfirmLoanRequest>(request.ProcessId, cancellationToken);
+        var aggregateState = await manager.AggregateProcessStateAsync(request.ProcessId, cancellationToken);
+        var matched = aggregateState.ValidateFor<ConfirmLoanRequest>();
+        if (!matched)
+            return null;
+
+        //BL
+
+        aggregateState.AppendEvent(x => x.ConfirmedCarPawnshop(request.TraceId, request.UserId, request.Channel));
 
         throw new NotImplementedException();
     }

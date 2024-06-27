@@ -1,4 +1,5 @@
 ﻿using Core.BPM.Interfaces;
+using MediatR;
 
 namespace Core.BPM;
 
@@ -8,9 +9,10 @@ public class BProcess(Type processType, INode rootNode)
     public readonly INode RootNode = rootNode;
 }
 
-public class BProcessAggregateState(Type processType, INode rootNode) : BProcess(processType, rootNode)
+public class BProcessAggregateState(Aggregate aggregate, Type processType, BProcess? processConfig) : BProcess(processType, processConfig.RootNode)
 {
-    public Aggregate Aggregate { get; set; }
-    
-    public INode CurrentStep { get; set; }
+    public bool ValidatePathFor<TCommand>() where TCommand : IRequest
+    {
+        return true;
+    }
 }

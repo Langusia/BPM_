@@ -9,6 +9,13 @@ public class OtpValidation : Aggregate
     public int ValidationCount { get; set; }
     public int SendCount { get; set; }
 
+    public void SendOtp()
+    {
+        var @event = new OtpSent(Guid.NewGuid());
+        Apply(@event);
+        Enqueue(@event);
+    }
+
     public void Apply(OtpSent @event)
     {
         SendCount++;

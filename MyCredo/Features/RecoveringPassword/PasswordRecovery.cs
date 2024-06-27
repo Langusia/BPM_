@@ -29,6 +29,14 @@ public class PasswordRecovery : Aggregate
         Apply(@event);
     }
 
+    //public void Initiate(string personalNumber, DateTime birthDate, ChannelTypeEnum channelType)
+    //{
+    //    Id = Guid.NewGuid();
+    //    var @event = new PasswordRecoveryInitiated(personalNumber, birthDate, channelType);
+    //    Enqueue(@event);
+    //    Apply(@event);
+    //}
+
     public void Apply(PasswordRecoveryInitiated @event)
     {
         PersonalNumber = @event.PersonalNumber;
@@ -36,8 +44,13 @@ public class PasswordRecovery : Aggregate
         ChannelType = @event.ChannelType;
     }
 
-    public static PasswordRecovery Initiate(string personalNumber, DateTime birthDate, ChannelTypeEnum channelType) =>
-        new(personalNumber, birthDate, channelType);
+    public PasswordRecovery Initiate(string personalNumber, DateTime birthDate, ChannelTypeEnum channelType)
+    {
+        var @event = new PasswordRecoveryInitiated(personalNumber, birthDate, channelType);
+        Enqueue(@event);
+        Apply(@event);
+        return new(personalNumber, birthDate, channelType);
+    }
 
     public void ValidateSecurityQuestion()
     {
@@ -141,25 +154,15 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     {
         configure
             .StartWith<InitiatePasswordRecovery>()
-            .Continue<GenerateOtp>(g => g
-                .ThenContinue<ValidateOtp>(v =>
+            .ThenContinueAnyTime<GenerateOtp>(g => g
+                .ThenContinueAnyTime<ValidateOtp>(v =>
                     v.ThenContinue<CheckCardInitiate>(ci => ci
-                            .ThenContinue<CheckCardComplete>()
-                            .Configure(x =>
-                            {
-                                x.AnyTime = true;
-                                x.Optional = true;
-                            }))
+                            .ThenContinue<CheckCardComplete>())
                         .Or<ValidateSecurityQuestion>()
                         .Or<IdentifyFace>())
-                .Configure(x =>
-                {
-                    x.AnyTime = true;
-                    x.Optional = true;
-                })
                 .Or<PhoneChangeInitiate>(vpc => vpc
-                    .ThenContinue<PhoneChangeComplete>(z => z
-                        .ThenContinue<CheckCardInitiate>(zz => zz
+                    .ThenContinueOptional<PhoneChangeComplete>(z => z
+                        .ThenContinueAnyTime<CheckCardInitiate>(zz => zz
                             .ThenContinue<CheckCardComplete>())
                         .Or<ValidateSecurityQuestion>())))
             .Continue<FinishPasswordRecovery>();

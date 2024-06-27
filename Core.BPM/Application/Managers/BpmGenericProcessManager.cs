@@ -1,4 +1,5 @@
-﻿using Core.Persistence;
+﻿using Core.BPM.Persistence;
+using Core.Persistence;
 
 namespace Core.BPM.MediatR.Managers;
 

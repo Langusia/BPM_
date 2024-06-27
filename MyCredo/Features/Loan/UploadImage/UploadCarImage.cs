@@ -20,17 +20,17 @@ public record UploadImage : ICommand<bool>
 
 internal class UploadImageHandler : ICommandHandler<UploadImage, bool>
 {
-    private readonly BpmManager<RequestCarPawnshop> _bpm;
+    private readonly BpmStore<RequestCarPawnshop> _bpm;
 
     public UploadImageHandler(
-        BpmManager<RequestCarPawnshop> bpm)
+        BpmStore<RequestCarPawnshop> bpm)
     {
         _bpm = bpm;
     }
 
     public async Task<Result<bool>> Handle(UploadImage request, CancellationToken cancellationToken)
     {
-        var s = await _bpm.AggregateAsync<UploadImage>(request.ProcessId, cancellationToken);
+        var s = await _bpm.AggregateProcessStateAsync(request.ProcessId, cancellationToken);
 
 
         return Result.Success(true);

@@ -13,21 +13,20 @@ public record GenerateOtp(Guid ProcessId) : IRequest<long>;
 
 public class GenerateOtpHandler : IRequestHandler<GenerateOtp, long>
 {
-    private readonly BpmManager<TwoFactor> _bpm;
+    private readonly BpmStore<TwoFactor> _bpm;
 
-    public GenerateOtpHandler(BpmManager<TwoFactor> bpm)
+    public GenerateOtpHandler(BpmStore<TwoFactor> bpm)
     {
         _bpm = bpm;
     }
 
     public async Task<long> Handle(GenerateOtp request, CancellationToken cancellationToken)
     {
-        var s = await _bpm.AggregateAsync<GenerateOtp>(request.ProcessId, cancellationToken);
-        ////doStuff
-        ///
+        var s = await _bpm.AggregateProcessStateAsync(request.ProcessId, cancellationToken);
+        s.ValidateFor<GenerateOtp>();
 
-        var @event = new GeneratedOtp(request.ProcessId, "1234");
-        await _bpm.AppendAsync<GenerateOtp>(request.ProcessId, [@event], cancellationToken);
+        s.AppendEvent(x => x.GenerateOtp(s.Aggregate.Id, "1234"));
+        await _bpm.SaveChangesAsync(cancellationToken);
         return 9;
     }
 }

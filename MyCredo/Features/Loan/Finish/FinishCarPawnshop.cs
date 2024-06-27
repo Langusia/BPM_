@@ -15,13 +15,13 @@ public record FinishCarPawnshop : ICommand<bool>
 
 internal class FinishRequestCarPawnshopHandler
     (
-    BpmManager<RequestCarPawnshop> manager
+    BpmStore<RequestCarPawnshop> manager
     )
     : ICommandHandler<FinishCarPawnshop, bool>
 {
     public async Task<Result<bool>> Handle(FinishCarPawnshop request, CancellationToken cancellationToken)
     {
-        var s = await manager.AggregateAsync<FinishCarPawnshop>(request.ProcessId, cancellationToken);
+        var s = await manager.AggregateProcessStateAsync(request.ProcessId, cancellationToken);
 
 
         return Result.Success(true);
