@@ -1,14 +1,14 @@
 ﻿namespace Core.BPM.Interfaces.Builder;
 
-public interface INodeBuilderBuilder : INodeBuilder
+public interface INodeDefinitionBuilder : INodeBuilder
 {
     INode GetRoot();
     INode SetRoot(INode node);
     INode SetCurrent(INode node);
-    INodeBuilderBuilder Continue<Command>(Action<INodeBuilderBuilder>? configure = null);
+    INodeDefinitionBuilder Continue<Command>(Action<INodeDefinitionBuilder>? configure = null);
 }
 
-public interface INodeBuilderBuilderModificationBuilder : INodeBuilderBuilder
+public interface INodeBuilderBuilderModificationBuilder : INodeDefinitionBuilder
 {
     INodeBuilderBuilderModificationBuilder AnyTime();
     INodeBuilderBuilderModificationBuilder Optional();

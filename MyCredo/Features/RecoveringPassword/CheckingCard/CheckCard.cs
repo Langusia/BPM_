@@ -17,6 +17,13 @@ public class CheckCard : Aggregate
         PaymentId = @event.PaymentId;
         Hash = @event.Hash;
     }
+
+    public void Initiate(long userId, int paymentId, string hash)
+    {
+        var @event = new CheckCardInitiated(userId, paymentId, hash);
+        Enqueue(@event);
+        Apply(@event);
+    }
 }
 
 public class CheckCardDefinition : BpmDefinition<CheckCard>

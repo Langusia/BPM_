@@ -3,7 +3,6 @@ using Core.BPM.BCommand;
 using Core.BPM.Extensions;
 using Core.BPM.Interfaces.Builder;
 using Core.BPM.MediatR;
-using Marten.Events.Aggregation;
 using MyCredo.Common;
 using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
@@ -162,7 +161,7 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
                         .Or<IdentifyFace>())
                 .Or<PhoneChangeInitiate>(vpc => vpc
                     .ThenContinueOptional<PhoneChangeComplete>(z => z
-                        .ThenContinueAnyTime<CheckCardInitiate>(zz => zz
+                        .ThenContinue<CheckCardInitiate>(zz => zz
                             .ThenContinue<CheckCardComplete>())
                         .Or<ValidateSecurityQuestion>())))
             .Continue<FinishPasswordRecovery>();

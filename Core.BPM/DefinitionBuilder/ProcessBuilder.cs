@@ -1,4 +1,5 @@
 ﻿using Core.BPM.Configuration;
+using Core.BPM.DefinitionBuilder;
 using Core.BPM.Interfaces.Builder;
 using Core.BPM.Nodes;
 

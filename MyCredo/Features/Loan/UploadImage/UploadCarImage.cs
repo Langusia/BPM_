@@ -20,10 +20,10 @@ public record UploadImage : ICommand<bool>
 
 internal class UploadImageHandler : ICommandHandler<UploadImage, bool>
 {
-    private readonly BpmStore<RequestCarPawnshop> _bpm;
+    private readonly BpmStore<RequestCarPawnshop, UploadImage> _bpm;
 
     public UploadImageHandler(
-        BpmStore<RequestCarPawnshop> bpm)
+        BpmStore<RequestCarPawnshop, UploadImage> bpm)
     {
         _bpm = bpm;
     }

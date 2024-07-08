@@ -5,6 +5,7 @@ using Credo.Core.Shared.Mediator;
 using MyCredo.Common;
 
 namespace MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.Finishing;
+
 [BpmProducer(typeof(FinishedRequestCarPawnshop))]
 public record FinishCarPawnshop : ICommand<bool>
 {
@@ -13,10 +14,9 @@ public record FinishCarPawnshop : ICommand<bool>
     public int UserId { get; set; }
 }
 
-internal class FinishRequestCarPawnshopHandler
-    (
-    BpmStore<RequestCarPawnshop> manager
-    )
+internal class FinishRequestCarPawnshopHandler(
+    BpmStore<RequestCarPawnshop, FinishCarPawnshop> manager
+)
     : ICommandHandler<FinishCarPawnshop, bool>
 {
     public async Task<Result<bool>> Handle(FinishCarPawnshop request, CancellationToken cancellationToken)
@@ -27,6 +27,3 @@ internal class FinishRequestCarPawnshopHandler
         return Result.Success(true);
     }
 }
-
-
-

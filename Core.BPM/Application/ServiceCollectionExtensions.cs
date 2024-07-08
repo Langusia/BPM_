@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
         services.AddMarten(configureMartenStore);
         services.TryAddScoped(typeof(MartenRepository<>));
         services.TryAddScoped(typeof(BpmGenericProcessManager<>));
-        services.TryAddScoped(typeof(BpmStore<>));
+        services.TryAddScoped(typeof(BpmStore<,>));
         services.TryAddScoped(typeof(MartenRepository));
         services.TryAddScoped(typeof(BpmEventConfigurationBuilder<>));
         services.AddOptions<BpmEventConfiguration>();

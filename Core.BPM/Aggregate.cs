@@ -11,6 +11,7 @@ public class Aggregate : IAggregate
     public List<string> PersistedEvents { get; set; } = new();
 
     [NonSerialized] protected readonly Queue<object> UncommittedEvents = new();
+    public object? LastUncommitedEvent;
 
     public virtual void When(object @event)
     {
@@ -36,8 +37,9 @@ public class Aggregate : IAggregate
         PersistedEvents.Add(@event.GetType().Name);
     }
 
-    protected void Enqueue(object @event)
+    public void Enqueue(object @event)
     {
         UncommittedEvents.Enqueue(@event);
+        LastUncommitedEvent = @event;
     }
 }
