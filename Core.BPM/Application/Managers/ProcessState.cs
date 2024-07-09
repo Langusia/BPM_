@@ -24,20 +24,23 @@ public class ProcessState<T> where T : Aggregate
         Aggregate = aggregate;
         ProcessConfig = BProcessGraphConfiguration.GetConfig<T>();
         CurrentStep = TraverseToEnd().Item1;
+        _inMemoryEvents = aggregate.UncommittedEvents.Select(x => x.GetType().Name).ToList();
+        ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
     }
 
     public ProcessState(T aggregate, BProcess config, List<string> persistedEvents, Type commandOrigin)
     {
         Aggregate = aggregate;
         ProcessConfig = config;
-        _persistedEvents = persistedEvents;
-        ProgressedPath = _persistedEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
+        _persistedEvents = _inMemoryEvents = persistedEvents;
+        ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
         CurrentStep = TraverseToEnd().Item1;
         CommandOrigin = commandOrigin;
     }
 
     public T Aggregate { get; }
     private readonly List<string> _persistedEvents;
+    private List<string> _inMemoryEvents = [];
     public List<MutableTuple<string, INode?>> ProgressedPath { get; private set; }
     public BProcess ProcessConfig { get; }
     public INode? CurrentStep { get; private set; }
@@ -60,17 +63,22 @@ public class ProcessState<T> where T : Aggregate
         var nextSteps = CurrentStep!.NextSteps;
         if (nextSteps is null)
             return false;
-        if (nextSteps.All(x => x.ProducingEvents.All(z => z.Name != Aggregate.LastUncommitedEvent?.ToString())))
-            return false;
 
         action(Aggregate);
+        if (nextSteps.All(x => x.ProducingEvents.All(z => z.Name != Aggregate.LastUncommitedEvent?.GetType().Name)))
+            return false;
+
+        _inMemoryEvents = _persistedEvents.Union(Aggregate.UncommittedEvents.Select(x => x.GetType().Name)).ToList();
+        ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
         CurrentStep = TraverseToEnd().Item1;
         return true;
     }
 
     private Tuple<INode?, INode?> TraverseToEnd(Type? searchCommand = null)
     {
-        var persEventsCopy = new List<string>(_persistedEvents);
+        if (_inMemoryEvents is null || _inMemoryEvents.Count == 0)
+            return new Tuple<INode?, INode?>(ProcessConfig.RootNode, null);
+        var persEventsCopy = new List<string>(_inMemoryEvents);
         var currentStep = ProcessConfig.RootNode;
         if (persEventsCopy.Count == 0)
             return null;
@@ -122,7 +130,7 @@ public class ProcessState<T> where T : Aggregate
 
     private Tuple<INode?, INode?> TraverseToEnd1(Type? searchCommand = null)
     {
-        var persEventsCopy = new List<string>(_persistedEvents);
+        var persEventsCopy = new List<string>(_inMemoryEvents);
         var currentStep = ProcessConfig.RootNode;
         if (persEventsCopy.Count == 0)
             return null;

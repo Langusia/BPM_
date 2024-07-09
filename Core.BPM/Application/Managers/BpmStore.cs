@@ -17,6 +17,7 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session) where TAgg
 
     public async Task<ProcessState<TAggregate>> StartProcess(Action<TAggregate> action, CancellationToken token)
     {
+        _aggregate = Activator.CreateInstance<TAggregate>();
         action(_aggregate);
         _aggregate.Id = Guid.NewGuid();
         _aggregateName = typeof(TAggregate).Name;

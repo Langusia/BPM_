@@ -19,8 +19,8 @@ public class InitiatePasswordRecoveryHandler(BpmStore<PasswordRecovery, Initiate
 {
     public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
-        var agg = mgr.StartProcess(new PasswordRecovery().Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType));
-
+        var agg = await mgr.StartProcess(x => x.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType), cancellationToken);
+        //agg.AppendEvent(x => x.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType));
         await mgr.SaveChangesAsync(cancellationToken);
 
         return agg.Aggregate.Id;

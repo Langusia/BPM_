@@ -10,7 +10,7 @@ public class Aggregate : IAggregate
     public Dictionary<string, int> EventCounters = new();
     public List<string> PersistedEvents { get; set; } = new();
 
-    [NonSerialized] protected readonly Queue<object> UncommittedEvents = new();
+    [NonSerialized] public readonly Queue<object> UncommittedEvents = new();
     public object? LastUncommitedEvent;
 
     public virtual void When(object @event)
@@ -20,9 +20,8 @@ public class Aggregate : IAggregate
     public object[] DequeueUncommittedEvents()
     {
         var dequeuedEvents = UncommittedEvents.ToArray();
-
+        PersistedEvents.AddRange(dequeuedEvents.Select(x => x.GetType().Name));
         UncommittedEvents.Clear();
-
         return dequeuedEvents;
     }
 
