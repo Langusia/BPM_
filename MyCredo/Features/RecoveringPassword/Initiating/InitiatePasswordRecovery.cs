@@ -1,6 +1,5 @@
 ﻿using Core.BPM.Application.Managers;
-using Core.BPM.MediatR.Attributes;
-using Core.BPM.MediatR.Managers;
+using Core.BPM.Attributes;
 using Marten;
 using MediatR;
 using MyCredo.Common;
@@ -22,7 +21,7 @@ public class InitiatePasswordRecoveryHandler(BpmStore<PasswordRecovery, Initiate
         var agg = await mgr.StartProcess(x => x.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType), cancellationToken);
         //agg.AppendEvent(x => x.Initiate(request.PersonalNumber, request.BirthDate, request.ChannelType));
         await mgr.SaveChangesAsync(cancellationToken);
-
+        
         return agg.Aggregate.Id;
     }
 }

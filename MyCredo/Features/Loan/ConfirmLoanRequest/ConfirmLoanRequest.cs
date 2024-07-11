@@ -1,10 +1,10 @@
 ﻿using Core.BPM.Application.Managers;
-using Core.BPM.MediatR.Attributes;
+using Core.BPM.Attributes;
 using Credo.Core.Shared.Library;
 using Credo.Core.Shared.Mediator;
 using MyCredo.Common;
 
-namespace MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.ConfirmRequestLoan;
+namespace MyCredo.Features.Loan.ConfirmLoanRequest;
 
 [BpmProducer(typeof(ConfirmedCarPawnshop))]
 public record ConfirmLoanRequest(Guid ProcessId, string TraceId, int UserId, ChannelTypeEnum Channel) : ICommand<AggregateResult<bool>>;

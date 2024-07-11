@@ -1,10 +1,9 @@
 ﻿using Core.BPM.Application.Managers;
-using Core.BPM.MediatR.Attributes;
+using Core.BPM.Attributes;
 using Credo.Core.Shared.Library;
 using MediatR;
+using MyCredo.Features.Loan.OtpValidate;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
-using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpSend;
-using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpValidate;
 
 namespace MyCredo.Features.TwoFactor;
 

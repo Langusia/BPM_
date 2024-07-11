@@ -1,4 +1,4 @@
 ﻿using Core.BPM.BCommand;
 
-namespace MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpSend;
+namespace MyCredo.Features.Loan.OtpSend;
 public record OtpSent(Guid OtpSessionId) : BpmEvent;

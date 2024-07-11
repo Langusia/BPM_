@@ -1,8 +1,8 @@
 ﻿using Core.BPM;
+using Core.BPM.Application;
 using Core.BPM.BCommand;
+using Core.BPM.DefinitionBuilder;
 using Core.BPM.Extensions;
-using Core.BPM.Interfaces.Builder;
-using Core.BPM.MediatR;
 using MyCredo.Common;
 using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
 using MyCredo.Features.RecoveringPassword.CheckingCard;

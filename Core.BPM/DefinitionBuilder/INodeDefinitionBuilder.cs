@@ -1,4 +1,6 @@
-﻿namespace Core.BPM.Interfaces.Builder;
+﻿using Core.BPM.Interfaces;
+
+namespace Core.BPM.DefinitionBuilder;
 
 public interface INodeDefinitionBuilder : INodeBuilder
 {

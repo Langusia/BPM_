@@ -1,11 +1,9 @@
 ﻿using Core.BPM.Application.Managers;
-using Core.BPM.MediatR.Attributes;
+using Core.BPM.Attributes;
 using Credo.Core.Shared.Library;
 using Credo.Core.Shared.Mediator;
-using Microsoft.Extensions.Options;
-using MyCredo.Retail.Loan.Domain.Models.LoanApplication.Enums;
 
-namespace MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.UploadingImage;
+namespace MyCredo.Features.Loan.UploadImage;
 
 [BpmProducer(typeof(UploadedImage))]
 public record UploadImage : ICommand<bool>

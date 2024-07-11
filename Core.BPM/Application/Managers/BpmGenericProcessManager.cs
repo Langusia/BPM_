@@ -1,7 +1,6 @@
 ﻿using Core.BPM.Persistence;
-using Core.Persistence;
 
-namespace Core.BPM.MediatR.Managers;
+namespace Core.BPM.Application.Managers;
 
 public class BpmGenericProcessManager<TProcess> where TProcess : Aggregate
 {

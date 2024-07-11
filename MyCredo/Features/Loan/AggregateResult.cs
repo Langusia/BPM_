@@ -1,4 +1,4 @@
-﻿namespace MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop;
+﻿namespace MyCredo.Features.Loan;
 
 public record AggregateResult<T>
 {

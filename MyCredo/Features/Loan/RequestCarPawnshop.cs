@@ -1,17 +1,14 @@
 ﻿using Core.BPM;
-using Core.BPM.Extensions;
-using Core.BPM.Interfaces.Builder;
-using Core.BPM.MediatR;
+using Core.BPM.Application;
+using Core.BPM.DefinitionBuilder;
 using MyCredo.Common;
-using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.ConfirmRequestLoan;
-using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.Finishing;
-using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.Initiating;
-using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.UploadingImage;
-using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpSend;
-using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpValidate;
-using MyCredo.Retail.Loan.Domain.Models.LoanApplication.Enums;
+using MyCredo.Features.Loan.ConfirmLoanRequest;
+using MyCredo.Features.Loan.Finish;
+using MyCredo.Features.Loan.Initiating;
+using MyCredo.Features.Loan.OtpSend;
+using MyCredo.Features.Loan.OtpValidate;
 
-namespace MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop;
+namespace MyCredo.Features.Loan;
 
 public class RequestCarPawnshop : Aggregate
 {
@@ -96,8 +93,8 @@ public class RequestCarPawnshopDefinition : BpmDefinition<RequestCarPawnshop>
             .StartWith<RequestLoanInitiate>()
             .Continue<SendOtp>()
             .Continue<ValidateOtp>()
-            .Continue<ConfirmLoanRequest>()
-            .Continue<UploadImage>()
+            .Continue<ConfirmLoanRequest.ConfirmLoanRequest>()
+            .Continue<UploadImage.UploadImage>()
             .Continue<FinishCarPawnshop>();
     }
 }

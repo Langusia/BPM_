@@ -1,6 +1,5 @@
 ﻿using Core.BPM;
-using Core.BPM.MediatR.Attributes;
-using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpValidate;
+using MyCredo.Features.Loan.OtpValidate;
 
 namespace MyCredo.Features.TwoFactor;
 

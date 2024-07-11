@@ -74,6 +74,66 @@ public class ProcessState<T> where T : Aggregate
         return true;
     }
 
+    private Tuple<INode?, INode?> TraverseToEnd1(Type? searchCommand = null)
+    {
+        if (_inMemoryEvents is null || _inMemoryEvents.Count == 0)
+            return new Tuple<INode?, INode?>(ProcessConfig.RootNode, null);
+        var persEventsCopy = new List<string>(_inMemoryEvents);
+        var currentStep = ProcessConfig.RootNode;
+        if (persEventsCopy.Count == 0)
+            return null;
+
+        if (!ProcessConfig.RootNode.ProducingEvents.Any(x => x.Name == persEventsCopy.FirstOrDefault()))
+            return null;
+
+        ProgressedPath.FirstOrDefault()!.Item2 = ProcessConfig.RootNode;
+        persEventsCopy.RemoveAt(0);
+        var foundNode = currentStep.CommandType == searchCommand ? currentStep : null;
+        if (persEventsCopy.Count == 0)
+            return new Tuple<INode?, INode?>(currentStep, foundNode);
+
+        var matched = true;
+        while (matched && persEventsCopy.Count > 0)
+        {
+            foreach (var step in currentStep.NextSteps!)
+            {
+                var @event = persEventsCopy.FirstOrDefault();
+                if (step.ProducingEvents.Any(x => x.Name == @event))
+                {
+                    persEventsCopy.RemoveAll(x => x == @event);
+                    if (step.CommandType == searchCommand)
+                        foundNode = step;
+
+                    currentStep = step;
+                    foreach (var mutableTuple in ProgressedPath.Where(x => x.Item1 == @event))
+                    {
+                        mutableTuple.Item2 = currentStep;
+                    }
+
+                    matched = true;
+                    break;
+                }
+
+                if (step is OptionalNode)
+                {
+                    if (step.CommandType == searchCommand)
+                        foundNode = step;
+
+                    currentStep = step;
+                    break;
+                }
+            }
+
+            if (!matched)
+            {
+                currentStep = null;
+                break;
+            }
+        }
+
+        return new Tuple<INode?, INode?>(currentStep, foundNode);
+    }
+
     private Tuple<INode?, INode?> TraverseToEnd(Type? searchCommand = null)
     {
         if (_inMemoryEvents is null || _inMemoryEvents.Count == 0)
@@ -116,54 +176,6 @@ public class ProcessState<T> where T : Aggregate
 
                 if (step is not OptionalNode)
                     matched = false;
-            }
-
-            if (!matched)
-            {
-                currentStep = null;
-                break;
-            }
-        }
-
-        return new Tuple<INode?, INode?>(currentStep, foundNode);
-    }
-
-    private Tuple<INode?, INode?> TraverseToEnd1(Type? searchCommand = null)
-    {
-        var persEventsCopy = new List<string>(_inMemoryEvents);
-        var currentStep = ProcessConfig.RootNode;
-        if (persEventsCopy.Count == 0)
-            return null;
-
-        if (!ProcessConfig.RootNode.ProducingEvents.Any(x => x.Name == persEventsCopy.FirstOrDefault()))
-            return null;
-
-        ProgressedPath.FirstOrDefault()!.Item2 = ProcessConfig.RootNode;
-        persEventsCopy.RemoveAt(0);
-        var foundNode = currentStep.CommandType == searchCommand ? currentStep : null;
-        if (persEventsCopy.Count == 0)
-            return new Tuple<INode?, INode?>(currentStep, foundNode);
-
-        var matched = true;
-        while (ProgressedPath.Any(x => x.Item2 is null))
-        {
-            foreach (var step in currentStep.NextSteps!)
-            {
-                var @event = ProgressedPath.FirstOrDefault(x => x.Item2 is null);
-                if (@event is null)
-                    break;
-
-                if (step.ProducingEvents.Any(x => x.Name == @event.Item1))
-                {
-                    ProgressedPath.Where(x => x.Item1 == @event.Item1).ToList().ForEach(x => { x.Item2 ??= step; });
-                    if (step.CommandType == searchCommand)
-                        foundNode = step;
-
-                    currentStep = step;
-
-                    matched = true;
-                    break;
-                }
             }
 
             if (!matched)

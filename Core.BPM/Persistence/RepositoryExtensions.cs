@@ -1,10 +1,7 @@
-﻿using Core.BPM;
-using Core.BPM.Interfaces;
-using Core.BPM.Persistence;
-using Core.Persistence.Exceptions;
+﻿using Core.BPM.Persistence.Exceptions;
 using IEvent = Marten.Events.IEvent;
 
-namespace Core.Persistence;
+namespace Core.BPM.Persistence;
 
 public static class RepositoryExtensions
 {

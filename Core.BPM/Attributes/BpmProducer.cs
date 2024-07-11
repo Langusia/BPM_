@@ -1,4 +1,4 @@
-﻿namespace Core.BPM.MediatR.Attributes;
+﻿namespace Core.BPM.Attributes;
 
 public class BpmProducer : Attribute
 {

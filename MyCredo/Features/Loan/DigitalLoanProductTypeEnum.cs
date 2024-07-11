@@ -1,4 +1,4 @@
-﻿namespace MyCredo.Retail.Loan.Domain.Models.LoanApplication.Enums;
+﻿namespace MyCredo.Features.Loan;
 
 public enum DigitalLoanProductTypeEnum
 {

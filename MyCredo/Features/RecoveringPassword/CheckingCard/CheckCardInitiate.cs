@@ -1,6 +1,5 @@
 ﻿using Core.BPM.Application.Managers;
-using Core.BPM.MediatR.Attributes;
-using Core.BPM.MediatR.Managers;
+using Core.BPM.Attributes;
 using Credo.Core.Shared.Library;
 using Marten;
 using MediatR;

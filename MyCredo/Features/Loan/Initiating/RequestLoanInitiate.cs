@@ -1,10 +1,9 @@
 ﻿using Core.BPM.Application.Managers;
-using Core.BPM.MediatR.Attributes;
+using Core.BPM.Attributes;
 using Credo.Core.Shared.Library;
 using Credo.Core.Shared.Mediator;
-using MyCredo.Retail.Loan.Domain.Models.LoanApplication.Enums;
 
-namespace MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.Initiating;
+namespace MyCredo.Features.Loan.Initiating;
 
 [BpmProducer(typeof(RequestLoanInitiated))]
 public record RequestLoanInitiate : ICommand<RequestLoanInitiateResponse>

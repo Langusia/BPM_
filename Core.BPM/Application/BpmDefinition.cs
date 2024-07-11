@@ -1,7 +1,7 @@
 ﻿using Core.BPM.BCommand;
-using Core.BPM.Interfaces.Builder;
+using Core.BPM.DefinitionBuilder;
 
-namespace Core.BPM.MediatR;
+namespace Core.BPM.Application;
 
 public interface IBpmDefinition<T> where T : Aggregate
 {

@@ -1,5 +1,5 @@
 ﻿using Core.BPM.Application.Managers;
-using Core.BPM.MediatR.Attributes;
+using Core.BPM.Attributes;
 using MediatR;
 
 namespace MyCredo.Features.TwoFactor;

@@ -1,13 +1,12 @@
 ﻿using Core.BPM.Application.Managers;
 using Core.BPM.BCommand;
-using Core.BPM.MediatR.Managers;
+using Core.BPM.DefinitionBuilder;
 using Core.BPM.Persistence;
-using Core.Persistence;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Core.BPM.MediatR;
+namespace Core.BPM.Application;
 
 public static class ServiceCollectionExtensions
 {

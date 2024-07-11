@@ -1,4 +1,4 @@
 ﻿using Core.BPM.BCommand;
 
-namespace MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpValidate;
+namespace MyCredo.Features.Loan.OtpValidate;
 public record OtpValidated(Guid OtpSessionId, bool ValidOtp) : BpmEvent;

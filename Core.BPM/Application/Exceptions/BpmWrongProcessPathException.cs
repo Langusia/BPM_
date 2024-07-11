@@ -1,6 +1,4 @@
-﻿using Core.BPM.Interfaces;
-
-namespace Core.BPM.MediatR.Exceptions;
+﻿namespace Core.BPM.Application.Exceptions;
 
 public class BpmWrongProcessPathException : Exception
 {

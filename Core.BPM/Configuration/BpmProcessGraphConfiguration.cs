@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
+using Core.BPM.Attributes;
 using Core.BPM.BCommand;
 using Core.BPM.Interfaces;
-using Core.BPM.MediatR.Attributes;
 
 namespace Core.BPM.Configuration;
 

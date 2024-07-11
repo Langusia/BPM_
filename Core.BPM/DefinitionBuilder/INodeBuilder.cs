@@ -1,6 +1,6 @@
-﻿using Core.BPM.BCommand;
+﻿using Core.BPM.Interfaces;
 
-namespace Core.BPM.Interfaces.Builder;
+namespace Core.BPM.DefinitionBuilder;
 
 public interface INodeBuilder
 {

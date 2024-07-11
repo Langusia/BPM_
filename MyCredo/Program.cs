@@ -1,20 +1,20 @@
-using Core.BPM.MediatR;
+using Core.BPM.Application;
 using Marten;
 using Marten.Events.Projections;
 using Marten.Schema.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MyCredo.Common;
+using MyCredo.Features.Loan;
+using MyCredo.Features.Loan.ConfirmLoanRequest;
+using MyCredo.Features.Loan.Initiating;
+using MyCredo.Features.Loan.OtpSend;
+using MyCredo.Features.Loan.OtpValidate;
+using MyCredo.Features.Loan.UploadImage;
 using MyCredo.Features.RecoveringPassword;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
 using MyCredo.Features.RecoveringPassword.Initiating;
 using MyCredo.Features.TwoFactor;
-using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop;
-using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.ConfirmRequestLoan;
-using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.Initiating;
-using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.UploadingImage;
-using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpSend;
-using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpValidate;
 using Weasel.Core;
 using ValidateOtp = MyCredo.Features.TwoFactor.ValidateOtp;
 

@@ -1,4 +1,4 @@
-﻿using Core.BPM.MediatR.Attributes;
+﻿using Core.BPM.Attributes;
 using Credo.Core.Shared.Library;
 using MediatR;
 

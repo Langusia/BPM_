@@ -1,4 +1,4 @@
-﻿namespace MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop.Initiating;
+﻿namespace MyCredo.Features.Loan.Initiating;
 
 public record RequestLoanInitiateResponse
 {

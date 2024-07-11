@@ -1,11 +1,10 @@
 ﻿using Core.BPM.Application.Managers;
-using Core.BPM.MediatR.Attributes;
+using Core.BPM.Attributes;
 using Credo.Core.Shared.Library;
 using Credo.Core.Shared.Mediator;
 using MyCredo.Common;
-using MyCredo.Retail.Loan.Application.Features.RequestLoanProcess.CarPawnshop;
 
-namespace MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpSend;
+namespace MyCredo.Features.Loan.OtpSend;
 
 [BpmProducer(typeof(OtpSent))]
 public record SendOtp(Guid ProcessId, int UserId, ChannelTypeEnum Channel) : ICommand<AggregateResult<bool>>;

@@ -1,6 +1,6 @@
 ﻿using Core.BPM;
-using Core.BPM.Interfaces.Builder;
-using Core.BPM.MediatR;
+using Core.BPM.Application;
+using Core.BPM.DefinitionBuilder;
 using Marten.Events.Projections.Flattened;
 
 namespace MyCredo.Features.RecoveringPassword.CheckingCard;

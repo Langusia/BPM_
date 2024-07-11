@@ -1,12 +1,12 @@
 ﻿using Core.BPM.Configuration;
-using Core.BPM.DefinitionBuilder;
 using Core.BPM.Nodes;
+using MediatR;
 
-namespace Core.BPM.Interfaces.Builder;
+namespace Core.BPM.DefinitionBuilder;
 
 public interface IProcessBuilder<TProcess> : IProcessBuilder
 {
-    public INodeDefinitionBuilder StartWith<TCommand>() => StartWith(typeof(TProcess), typeof(TCommand));
+    public INodeDefinitionBuilder StartWith<TCommand>() where TCommand : IBaseRequest => StartWith(typeof(TProcess), typeof(TCommand));
 }
 
 public interface IProcessBuilder

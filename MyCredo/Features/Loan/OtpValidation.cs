@@ -1,8 +1,8 @@
 ﻿using Core.BPM;
-using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpSend;
-using MyCredo.Retail.Loan.Application.Features.TwoFactor.OtpValidate;
+using MyCredo.Features.Loan.OtpSend;
+using MyCredo.Features.Loan.OtpValidate;
 
-namespace MyCredo.Retail.Loan.Application.Features.TwoFactor;
+namespace MyCredo.Features.Loan;
 
 public class OtpValidation : Aggregate
 {
