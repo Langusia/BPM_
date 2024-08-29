@@ -3,4 +3,4 @@ using Core.BPM.BCommand;
 
 namespace MyCredo.Features.TwoFactor;
 
-public record GeneratedOtp(Guid ParentProcessId, string OtpHash) : BpmEvent;
+public record OtpSent(Guid ParentProcessId, string OtpHash) : BpmEvent;

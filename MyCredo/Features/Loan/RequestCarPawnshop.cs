@@ -1,12 +1,16 @@
 ﻿using Core.BPM;
 using Core.BPM.Application;
+using Core.BPM.BCommand;
 using Core.BPM.DefinitionBuilder;
+using Core.BPM.Extensions;
 using MyCredo.Common;
 using MyCredo.Features.Loan.ConfirmLoanRequest;
 using MyCredo.Features.Loan.Finish;
 using MyCredo.Features.Loan.Initiating;
 using MyCredo.Features.Loan.OtpSend;
 using MyCredo.Features.Loan.OtpValidate;
+using MyCredo.Features.Loan.UploadImage;
+using MyCredo.Features.Loann;
 
 namespace MyCredo.Features.Loan;
 
@@ -63,6 +67,13 @@ public class RequestCarPawnshop : Aggregate
         Enqueue(@event);
     }
 
+    public void Upload()
+    {
+        var @event = new UploadedImage("", "", "", 0, 0);
+        Enqueue(@event);
+    }
+
+
     public void SendOtp()
     {
         var @event = new OtpSent(Guid.NewGuid());
@@ -85,16 +96,27 @@ public class RequestCarPawnshop : Aggregate
     }
 }
 
+public record CarPawnshopInitiated(
+    DigitalLoanProductTypeEnum ProductType,
+    string? PromoCode,
+    decimal Percent,
+    decimal Amount,
+    decimal EffectiveInterestRate,
+    int Period,
+    RequestDigitalLoan.InsuranceCompanyEnum? Insurance = null,
+    bool NotCheckInRs = false
+) : BpmEvent;
+
 public class RequestCarPawnshopDefinition : BpmDefinition<RequestCarPawnshop>
 {
     public override void DefineProcess(IProcessBuilder<RequestCarPawnshop> configureProcess)
     {
         configureProcess
             .StartWith<RequestLoanInitiate>()
-            .Continue<SendOtp>()
-            .Continue<ValidateOtp>()
+            .ThenContinueAnyTime<SendOtp>()
+            .ThenContinueAnyTime<ValidateOtp>()
             .Continue<ConfirmLoanRequest.ConfirmLoanRequest>()
-            .Continue<UploadImage.UploadImage>()
+            .ThenContinueAnyTime<UploadImage.UploadImage>()
             .Continue<FinishCarPawnshop>();
     }
 }

@@ -7,6 +7,7 @@ using MyCredo.Common;
 using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
 using MyCredo.Features.RecoveringPassword.Finishing;
+using MyCredo.Features.RecoveringPassword.GetUserData;
 using MyCredo.Features.RecoveringPassword.IdentifyingFace;
 using MyCredo.Features.RecoveringPassword.Initiating;
 using MyCredo.Features.RecoveringPassword.RequestingPhoneChange;
@@ -58,7 +59,7 @@ public class PasswordRecovery : Aggregate
         Apply(@event);
     }
 
-    public void Apply(GeneratedOtp @event)
+    public void Apply(OtpSent @event)
     {
     }
 
@@ -154,22 +155,17 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
         configure
             .StartWith<InitiatePasswordRecovery>()
             .ThenContinueAnyTime<GenerateOtp>(g => g
-                .ThenContinueAnyTime<ValidateOtp>(v =>
-                    v.ThenContinue<CheckCardInitiate>(ci => ci
-                            .ThenContinue<CheckCardComplete>())
-                        .Or<ValidateSecurityQuestion>()
-                        .Or<IdentifyFace>())
-                .Or<PhoneChangeInitiate>(vpc => vpc
-                    .ThenContinueOptional<PhoneChangeComplete>(z => z
-                        .ThenContinue<CheckCardInitiate>(zz => zz
-                            .ThenContinue<CheckCardComplete>())
-                        .Or<ValidateSecurityQuestion>())))
-            .Continue<FinishPasswordRecovery>();
+                .ThenContinueAnyTime<ValidateOtp>(v => v
+                    .ThenContinue<ValidateSecurityQuestion>()
+                    .Or<CheckCardInitiate>(x => x
+                        .ThenContinue<CheckCardComplete>()))
+                .ThenContinueOptional<GetUserDataCommand>()
+                .Continue<FinishPasswordRecovery>());
     }
 
     public override void SetEventConfiguration(BpmEventConfigurationBuilder<PasswordRecovery> bpmEventConfiguration)
     {
-        bpmEventConfiguration.AddCommandOptions<GeneratedOtp>(x =>
+        bpmEventConfiguration.AddCommandOptions<OtpSent>(x =>
         {
             x.PermittedTryCount = 3;
             x.Optional = true;

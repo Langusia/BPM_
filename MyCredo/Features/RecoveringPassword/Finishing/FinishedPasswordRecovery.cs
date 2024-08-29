@@ -1,6 +1,5 @@
-﻿namespace MyCredo.Features.RecoveringPassword.Finishing;
+﻿using Core.BPM.BCommand;
 
-public class FinishedPasswordRecovery
-{
-    
-}
+namespace MyCredo.Features.RecoveringPassword.Finishing;
+
+public record FinishedPasswordRecovery : BpmEvent;

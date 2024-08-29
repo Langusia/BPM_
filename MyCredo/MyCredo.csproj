@@ -18,10 +18,23 @@
       <Content Include="..\.dockerignore">
         <Link>.dockerignore</Link>
       </Content>
+      <Content Remove="Features\NewLoan\**" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Core.BPM\Core.BPM.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Features\NewLoan\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="Features\NewLoan\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Features\NewLoan\**" />
     </ItemGroup>
 
 </Project>

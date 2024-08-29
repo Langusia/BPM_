@@ -10,7 +10,7 @@ public class OtpValidationAggregate : Aggregate
     public bool UserSubmitted { get; set; }
     public bool UserValidated { get; set; }
 
-    public void Apply(GeneratedOtp @event)
+    public void Apply(OtpSent @event)
     {
         ParentAggregateId = @event.ParentProcessId;
         HashedOtp = @event.OtpHash;
@@ -34,7 +34,7 @@ public class OtpValidationProjection : SingleStreamProjection<OtpValidationAggre
     public int SendCount { get; set; }
     public bool Validated { get; set; }
 
-    public void Create(OtpValidationAggregate snapshot, GeneratedOtp @event)
+    public void Create(OtpValidationAggregate snapshot, OtpSent @event)
     {
         ParentAggregateId = @event.ParentProcessId;
         HashedOtp = @event.OtpHash;

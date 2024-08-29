@@ -11,11 +11,16 @@ using MyCredo.Features.Loan.Initiating;
 using MyCredo.Features.Loan.OtpSend;
 using MyCredo.Features.Loan.OtpValidate;
 using MyCredo.Features.Loan.UploadImage;
+using MyCredo.Features.Loann;
 using MyCredo.Features.RecoveringPassword;
+using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
+using MyCredo.Features.RecoveringPassword.Finishing;
+using MyCredo.Features.RecoveringPassword.GetUserData;
 using MyCredo.Features.RecoveringPassword.Initiating;
 using MyCredo.Features.TwoFactor;
 using Weasel.Core;
+using OtpSent = MyCredo.Features.TwoFactor.OtpSent;
 using ValidateOtp = MyCredo.Features.TwoFactor.ValidateOtp;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,12 +42,24 @@ builder.Services.AddBpm(options =>
         options.Events.AddEventType(typeof(RequestLoanInitiated));
         options.Events.AddEventType(typeof(OtpSent));
         options.Events.AddEventType(typeof(OtpValidated));
+        options.Events.AddEventType(typeof(PasswordRecoveryInitiated));
+        options.Events.AddEventType(typeof(SecurityQuestionValidated));
+        options.Events.AddEventType(typeof(CheckCardInitiated));
+        options.Events.AddEventType(typeof(FinishedPasswordRecovery));
+        options.Events.AddEventType(typeof(CheckCardCompleted));
+        options.Events.AddEventType(typeof(UserDataGet));
         options.Events.AddEventType(typeof(UploadedImage));
         options.Events.AddEventType(typeof(ConfirmedCarPawnshop));
+        options.Events.AddEventType(typeof(CarPawnshopInitiated));
+        //
+        options.Events.AddEventType(typeof(FinishedRequestDigitalLoan));
+        options.Events.AddEventType(typeof(ConfirmedDigitalLoan));
+        options.Events.AddEventType(typeof(DigitalLoanInitiated));
     }, x =>
     {
         x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
         x.AddAggregateDefinition<RequestCarPawnshop, RequestCarPawnshopDefinition>();
+        x.AddAggregateDefinition<RequestDigitalLoan, RequestDigitalLoanDefinition>();
     }
 );
 
@@ -93,6 +110,11 @@ app.MapPost("/password-recovery/validate-otp",
 app.MapPost("/load",
         async ([FromBody] Guid documentId, IMediator mediator) => { await mediator.Send(new ValidateOtp(documentId)); })
     .WithName("load")
+    .WithOpenApi();
+
+app.MapPost("/digitLoanFinish",
+        async ([FromBody] Guid documentId, IMediator mediator) => { await mediator.Send(new FinishDigitalLoan(documentId)); })
+    .WithName("digitLoanFinish")
     .WithOpenApi();
 
 app.Run();

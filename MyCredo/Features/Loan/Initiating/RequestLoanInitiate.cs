@@ -5,7 +5,7 @@ using Credo.Core.Shared.Mediator;
 
 namespace MyCredo.Features.Loan.Initiating;
 
-[BpmProducer(typeof(RequestLoanInitiated))]
+[BpmProducer(typeof(CarPawnshopInitiated))]
 public record RequestLoanInitiate : ICommand<RequestLoanInitiateResponse>
 {
     public DigitalLoanProductTypeEnum ProductType { get; set; }
