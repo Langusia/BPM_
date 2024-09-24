@@ -8,6 +8,7 @@ using MyCredo.Common;
 using MyCredo.Features.Loan;
 using MyCredo.Features.Loan.ConfirmLoanRequest;
 using MyCredo.Features.Loan.Initiating;
+using MyCredo.Features.Loan.LoanV9;
 using MyCredo.Features.Loan.OtpSend;
 using MyCredo.Features.Loan.OtpValidate;
 using MyCredo.Features.Loan.UploadImage;
@@ -55,11 +56,16 @@ builder.Services.AddBpm(options =>
         options.Events.AddEventType(typeof(FinishedRequestDigitalLoan));
         options.Events.AddEventType(typeof(ConfirmedDigitalLoan));
         options.Events.AddEventType(typeof(DigitalLoanInitiated));
+        //
+        options.Events.AddEventType(typeof(IssueLoanInitiated));
+        options.Events.AddEventType(typeof(GeneratedContract));
+        options.Events.AddEventType(typeof(GeneratedSchedule));
     }, x =>
     {
-        x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
-        x.AddAggregateDefinition<RequestCarPawnshop, RequestCarPawnshopDefinition>();
-        x.AddAggregateDefinition<RequestDigitalLoan, RequestDigitalLoanDefinition>();
+        //x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
+        //x.AddAggregateDefinition<RequestCarPawnshop, RequestCarPawnshopDefinition>();
+        //x.AddAggregateDefinition<RequestDigitalLoan, RequestDigitalLoanDefinition>();
+        x.AddAggregateDefinition<IssueLoan, LoanV9AggregateDefinition>();
     }
 );
 
@@ -79,6 +85,7 @@ app.MapPost("car/loan/confirm",
     .WithName("confirmLoanRequest")
     .WithOpenApi();
 
+
 app.MapPost("car/loan/upload-image",
         async ([FromBody] UploadImage requestLoan, IMediator mediator) => await mediator.Send(requestLoan))
     .WithName("uploadImage")
@@ -90,6 +97,16 @@ app.MapPost("/password-recovery/initiate",
             new DateTime(1995, 9, 9),
             ChannelTypeEnum.Unclassified)))
     .WithName("InitiatePasswordRecovery")
+    .WithOpenApi();
+
+app.MapPost("loan/init",
+        async (IMediator mediator) => await mediator.Send(new InitiateIssueLoanProcess()))
+    .WithName("initiateLoanRequest")
+    .WithOpenApi();
+
+app.MapPost("/loan/schedule",
+        async (IMediator mediator) => await mediator.Send(new GenerateSchedule()))
+    .WithName("generate-schedule")
     .WithOpenApi();
 
 app.MapPost("/password-recovery/check-card",

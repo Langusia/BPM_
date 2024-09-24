@@ -14,8 +14,8 @@ public static class OuterNodeBuilderExtensions
 
         builder.SetCurrent(node);
         node.AddPrevStep(r);
-        if (r.PrevSteps is not null)
-            r.AddNextStep(node);
+        //if (r.PrevSteps is not null)
+        r.AddNextStep(node);
 
         configure?.Invoke(builder);
         return builder;
