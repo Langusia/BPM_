@@ -6,7 +6,9 @@ using Core.BPM.DefinitionBuilder;
 using Core.BPM.Extensions;
 using MediatR;
 using MyCredo.Common;
+using MyCredo.Features.Loan.Finish;
 using MyCredo.Features.Loan.OtpSend;
+using MyCredo.Features.TwoFactor;
 
 namespace MyCredo.Features.Loan.LoanV9;
 
@@ -46,12 +48,11 @@ public class LoanV9AggregateDefinition : BpmDefinition<IssueLoan>
     {
         configureProcess
             .StartWith<InitiateIssueLoanProcess>()
-            .ThenContinue<GenerateContract>(x => x.ThenContinue<GenerateSchedule>())
+            .Continue<GenerateContract>(x => x.ThenContinue<GenerateSchedule>())
             .Or<GenerateSchedule>(x => x.ThenContinue<GenerateContract>())
-            .ThenContinueAnyTime<SendOtp>()
-            .ThenContinueAnyTime<SendOtp>()
-            .Continue<SendOtp>()
-            .Continue<SendOtp>();
+            .ContinueAnyTime<SendOtp>()
+            .ContinueAnyTime<ValidateOtp>()
+            .Continue<FinishCarPawnshop>();
         //configureProcess
         //    .StartWith<InitiateIssueLoanProcess>()
         //    .ThenContinue<GenerateContract>(x => 

@@ -26,13 +26,25 @@ public class NodeBuilder(INode rootNode, BProcess process) : INodeDefinitionBuil
 
     INodeDefinitionBuilder INodeDefinitionBuilder.Continue<TCommand>(Action<INodeDefinitionBuilder>? configure)
     {
-        Continue(typeof(TCommand), configure);
+        Continue(new Node(typeof(TCommand), GetProcess().ProcessType), configure);
         return this;
     }
 
-    private void Continue(Type command, Action<INodeDefinitionBuilder>? configure)
+    public INodeDefinitionBuilder ContinueAnyTime<TCommand>(Action<INodeDefinitionBuilder>? configure = null)
     {
-        var node = new Node(command, process.ProcessType);
+        Continue(new AnyTimeNode(typeof(TCommand), GetProcess().ProcessType), configure);
+        return this;
+    }
+
+    public INodeDefinitionBuilder ContinueOptional<TCommand>(Action<INodeDefinitionBuilder>? configure = null)
+    {
+        Continue(new OptionalNode(typeof(TCommand), GetProcess().ProcessType), configure);
+        return this;
+    }
+
+    private void Continue(INode node, Action<INodeDefinitionBuilder>? configure)
+    {
+        //var node = new Node(command, process.ProcessType);
 
         _rootNode.AddNextStepToTail(node);
         node.AddPrevStep(_currentNode);
