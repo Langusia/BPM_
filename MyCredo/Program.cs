@@ -62,10 +62,10 @@ builder.Services.AddBpm(options =>
         options.Events.AddEventType(typeof(GeneratedSchedule));
     }, x =>
     {
-        //x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
+        x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
         //x.AddAggregateDefinition<RequestCarPawnshop, RequestCarPawnshopDefinition>();
         //x.AddAggregateDefinition<RequestDigitalLoan, RequestDigitalLoanDefinition>();
-        x.AddAggregateDefinition<IssueLoan, LoanV9AggregateDefinition>();
+        //x.AddAggregateDefinition<IssueLoan, LoanV9AggregateDefinition>();
     }
 );
 

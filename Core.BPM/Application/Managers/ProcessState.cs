@@ -24,7 +24,7 @@ public class ProcessState<T> where T : Aggregate
     {
         Aggregate = aggregate;
         ProcessConfig = BProcessGraphConfiguration.GetConfig<T>();
-        CurrentStep = TraverseToEnd().Item1;
+        CurrentStep = FindCurrentNode();
         _inMemoryEvents = aggregate.UncommittedEvents.Select(x => x.GetType().Name).ToList();
         ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
     }
@@ -35,7 +35,7 @@ public class ProcessState<T> where T : Aggregate
         ProcessConfig = config;
         _persistedEvents = _inMemoryEvents = persistedEvents;
         ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
-        CurrentStep = TraverseToEnd().Item1;
+        CurrentStep = FindCurrentNode();
         CommandOrigin = commandOrigin;
     }
 
@@ -72,69 +72,65 @@ public class ProcessState<T> where T : Aggregate
 
         _inMemoryEvents = _persistedEvents.Union(Aggregate.UncommittedEvents.Select(x => x.GetType().Name)).ToList();
         ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
-        CurrentStep = TraverseToEnd().Item1;
+        CurrentStep = FindCurrentNode();
         return true;
+    }
+
+    private INode? FindCurrentNode()
+    {
+        if (!_inMemoryEvents.Any())
+            return ProcessConfig.RootNode;
+
+        var currentStep = ProcessConfig.RootNode;
+        ProgressedPath.FirstOrDefault()!.Item2 = currentStep;
+
+        foreach (var eventName in _inMemoryEvents)
+        {
+            currentStep = currentStep?.FindNextNode(eventName);
+            if (currentStep == null) return null;
+
+            ProgressedPath.FirstOrDefault(x => x.Item1 == eventName)!.Item2 = currentStep;
+        }
+
+        return currentStep;
+    }
+
+
+    public INode? FindNode(Type searchCommand)
+    {
+        var currentStep = ProcessConfig.RootNode;
+        if (currentStep?.CommandType == searchCommand)
+            return currentStep;
+
+        foreach (var eventName in _inMemoryEvents)
+        {
+            currentStep = currentStep?.FindNextNode(eventName);
+            if (currentStep == null) return null;
+
+            if (currentStep.CommandType == searchCommand)
+                return currentStep;
+        }
+
+        return null;
     }
 
     private Tuple<INode?, INode?> TraverseToEnd(Type? searchCommand = null)
     {
-        if (_inMemoryEvents is null || _inMemoryEvents.Count == 0)
+        if (!_inMemoryEvents.Any())
             return new Tuple<INode?, INode?>(ProcessConfig.RootNode, null);
-        var persEventsCopy = new List<string>(_inMemoryEvents);
+
         var currentStep = ProcessConfig.RootNode;
-        if (persEventsCopy.Count == 0)
-            return null;
+        ProgressedPath.FirstOrDefault()!.Item2 = currentStep;
 
-        if (!ProcessConfig.RootNode.ProducingEvents.Any(x => x.Name == persEventsCopy.FirstOrDefault()))
-            return null;
-
-        ProgressedPath.FirstOrDefault()!.Item2 = ProcessConfig.RootNode;
-        persEventsCopy.RemoveAt(0);
-        var foundNode = currentStep.CommandType == searchCommand ? currentStep : null;
-        if (persEventsCopy.Count == 0)
-            return new Tuple<INode?, INode?>(currentStep, foundNode);
-
-        var matched = true;
-        while (matched && persEventsCopy.Count > 0)
+        foreach (var eventName in _inMemoryEvents)
         {
-            foreach (var step in currentStep.NextSteps!)
-            {
-                var @event = persEventsCopy.FirstOrDefault();
-                if (step.ProducingEvents.Any(x => x.Name == @event))
-                {
-                    persEventsCopy.RemoveAll(x => x == @event);
-                    if (step.CommandType == searchCommand)
-                        foundNode = step;
+            currentStep = currentStep?.FindNextNode(eventName);
+            if (currentStep == null) return new Tuple<INode?, INode?>(null, null);
 
-                    currentStep = step;
-                    foreach (var mutableTuple in ProgressedPath.Where(x => x.Item1 == @event))
-                    {
-                        mutableTuple.Item2 = currentStep;
-                    }
-
-                    matched = true;
-                    break;
-                }
-
-                if (step is OptionalNode)
-                {
-                    if (step.CommandType == searchCommand)
-                        foundNode = step;
-
-                    currentStep = step;
-                    break;
-                }
-
-                matched = false;
-            }
-
-            if (!matched)
-            {
-                currentStep = null;
-                break;
-            }
+            ProgressedPath.FirstOrDefault(x => x.Item1 == eventName)!.Item2 = currentStep;
         }
 
+        var foundNode = currentStep?.CommandType == searchCommand ? currentStep : null;
         return new Tuple<INode?, INode?>(currentStep, foundNode);
     }
 }

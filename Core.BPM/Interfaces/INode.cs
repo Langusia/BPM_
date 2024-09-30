@@ -16,7 +16,7 @@ public interface INode
     void AddNextStepToTail(INode node);
     List<INode>? PrevSteps { get; set; }
     void AddPrevStep(INode node);
-
+    INode? FindNextNode(string eventName);
     public BpmProducer CommandProducer() => (BpmProducer)CommandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
 
     bool Validate(List<MutableTuple<string, INode?>> savedEvents, INode currentNode);

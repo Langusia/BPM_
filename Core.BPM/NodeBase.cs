@@ -28,6 +28,11 @@ public abstract class NodeBase : INode, INodeState
 
     public List<INode> NextSteps { get; set; } = [];
 
+    public virtual INode? FindNextNode(string eventName)
+    {
+        return NextSteps.FirstOrDefault(step => step.ProducingEvents.Any(e => e.Name == eventName));
+    }
+
     public void AddNextStep(INode node)
     {
         NextSteps ??= [];
@@ -53,8 +58,8 @@ public abstract class NodeBase : INode, INodeState
         PrevSteps ??= [];
         PrevSteps.Add(node);
     }
-    
-    public abstract bool Validate(List<MutableTuple<string, INode?>> events , INode node);
+
+    public abstract bool Validate(List<MutableTuple<string, INode?>> events, INode node);
 
     protected static BpmProducer GetCommandProducer(Type commandType)
     {

@@ -12,6 +12,7 @@ using MyCredo.Features.RecoveringPassword.IdentifyingFace;
 using MyCredo.Features.RecoveringPassword.Initiating;
 using MyCredo.Features.RecoveringPassword.RequestingPhoneChange;
 using MyCredo.Features.TwoFactor;
+using ValidateOtp = MyCredo.Features.Loan.OtpValidate.ValidateOtp;
 
 namespace MyCredo.Features.RecoveringPassword;
 
@@ -154,13 +155,16 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     {
         configure
             .StartWith<InitiatePasswordRecovery>()
-            .ThenContinueAnyTime<GenerateOtp>(g => g
-                .ThenContinueAnyTime<ValidateOtp>(v => v
-                    .ThenContinue<ValidateSecurityQuestion>()
-                    .Or<CheckCardInitiate>(x => x
-                        .ThenContinue<CheckCardComplete>()))
-                .ThenContinueOptional<GetUserDataCommand>()
-                .Continue<FinishPasswordRecovery>());
+            .ContinueAnyTime<GenerateOtp>()
+            .ContinueAnyTime<ValidateOtp>()
+            .Continue<FinishPasswordRecovery>();
+        //.ThenContinueAnyTime<GenerateOtp>(g => g
+        //    .ThenContinueAnyTime<ValidateOtp>(v => v
+        //        .ThenContinue<ValidateSecurityQuestion>()
+        //        .Or<CheckCardInitiate>(x => x
+        //            .ThenContinue<CheckCardComplete>()))
+        //    .ThenContinueOptional<GetUserDataCommand>()
+        //    .Continue<FinishPasswordRecovery>());
     }
 
     public override void SetEventConfiguration(BpmEventConfigurationBuilder<PasswordRecovery> bpmEventConfiguration)
