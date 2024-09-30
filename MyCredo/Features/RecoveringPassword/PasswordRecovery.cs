@@ -12,7 +12,7 @@ using MyCredo.Features.RecoveringPassword.IdentifyingFace;
 using MyCredo.Features.RecoveringPassword.Initiating;
 using MyCredo.Features.RecoveringPassword.RequestingPhoneChange;
 using MyCredo.Features.TwoFactor;
-using ValidateOtp = MyCredo.Features.Loan.OtpValidate.ValidateOtp;
+using ValidateOtp = MyCredo.Features.TwoFactor;
 
 namespace MyCredo.Features.RecoveringPassword;
 
@@ -156,7 +156,7 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
         configure
             .StartWith<InitiatePasswordRecovery>()
             .ContinueAnyTime<GenerateOtp>()
-            .ContinueAnyTime<ValidateOtp>()
+            .ContinueAnyTime<ValidateOtp.ValidateOtp>()
             .Continue<FinishPasswordRecovery>();
         //.ThenContinueAnyTime<GenerateOtp>(g => g
         //    .ThenContinueAnyTime<ValidateOtp>(v => v

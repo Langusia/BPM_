@@ -60,7 +60,7 @@ public class ProcessState<T> where T : Aggregate
 
     private void InitializeProcessState(Type? commandOrigin = null)
     {
-        _inMemoryEvents = Aggregate.UncommittedEvents.Select(x => x.GetType().Name).ToList();
+        _inMemoryEvents = Aggregate.PersistedEvents.Union(Aggregate.UncommittedEvents.Select(x => x.GetType().Name)).ToList();
         ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
         CurrentStep = FindCurrentNode();
         CommandOrigin = commandOrigin;
@@ -85,8 +85,8 @@ public class ProcessState<T> where T : Aggregate
 
     private INode? FindCurrentNode()
     {
-        if (!_inMemoryEvents.Any())
-            return ProcessConfig.RootNode;
+        //if (!_inMemoryEvents.Any())
+        //    return ProcessConfig.RootNode;
 
         var currentStep = ProcessConfig.RootNode;
         ProgressedPath.FirstOrDefault()!.Item2 = currentStep;

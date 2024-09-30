@@ -21,10 +21,10 @@ public class GenerateOtpHandler : IRequestHandler<GenerateOtp, long>
         var process = await _bpm.AggregateProcessStateAsync(request.ProcessId, cancellationToken);
         process.ValidateOrigin();
 
-        if (process.AppendEvent(x => x.Finish(process.Aggregate.Id, "1234")))
-            return 0;
-       // if (process.AppendEvent(x => x.GenerateOtp(process.Aggregate.Id, "1234")))
+       // if (process.AppendEvent(x => x.Finish(process.Aggregate.Id, "1234")))
        //     return 0;
+        if (!process.AppendEvent(x => x.GenerateOtp(process.Aggregate.Id, "1234")))
+            return 0;
         await _bpm.SaveChangesAsync(cancellationToken);
         return 9;
     }
