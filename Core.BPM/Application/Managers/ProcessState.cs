@@ -24,19 +24,15 @@ public class ProcessState<T> where T : Aggregate
     {
         Aggregate = aggregate;
         ProcessConfig = BProcessGraphConfiguration.GetConfig<T>();
-        CurrentStep = FindCurrentNode();
-        _inMemoryEvents = aggregate.UncommittedEvents.Select(x => x.GetType().Name).ToList();
-        ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
+        InitializeProcessState();
     }
 
     public ProcessState(T aggregate, BProcess config, List<string> persistedEvents, Type commandOrigin)
     {
         Aggregate = aggregate;
         ProcessConfig = config;
-        _persistedEvents = _inMemoryEvents = persistedEvents;
-        ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
-        CurrentStep = FindCurrentNode();
-        CommandOrigin = commandOrigin;
+        _persistedEvents = persistedEvents;
+        InitializeProcessState(commandOrigin);
     }
 
     public T Aggregate { get; }
@@ -45,7 +41,7 @@ public class ProcessState<T> where T : Aggregate
     public List<MutableTuple<string, INode?>> ProgressedPath { get; private set; }
     public BProcess ProcessConfig { get; }
     public INode? CurrentStep { get; private set; }
-    public Type CommandOrigin { get; }
+    public Type CommandOrigin { get; private set; }
 
     public bool ValidateOrigin() => ValidateFor(CommandOrigin);
     public bool ValidateFor<TCommand>() where TCommand : IBaseRequest => ValidateFor(typeof(TCommand));
@@ -57,6 +53,14 @@ public class ProcessState<T> where T : Aggregate
             return false;
 
         return nodeFromConfig.FirstOrDefault()!.Validate(ProgressedPath, CurrentStep);
+    }
+
+    private void InitializeProcessState(Type? commandOrigin = null)
+    {
+        _inMemoryEvents = Aggregate.UncommittedEvents.Select(x => x.GetType().Name).ToList();
+        ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
+        CurrentStep = FindCurrentNode();
+        CommandOrigin = commandOrigin;
     }
 
     public bool AppendEvent(Action<T> action)
