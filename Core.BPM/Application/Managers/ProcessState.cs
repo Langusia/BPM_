@@ -1,4 +1,5 @@
-﻿using Core.BPM.Configuration;
+﻿using Core.BPM.Application.Exceptions;
+using Core.BPM.Configuration;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 using MediatR;
@@ -49,10 +50,12 @@ public class ProcessState<T> where T : Aggregate
     public bool ValidateFor(Type commandType)
     {
         var nodeFromConfig = ProcessConfig.MoveTo(commandType);
-        if (nodeFromConfig is null || nodeFromConfig.FirstOrDefault() is null || nodeFromConfig.Count == 0)
-            return false;
+        if (nodeFromConfig == null || nodeFromConfig.Count == 0)
+        {
+            throw new ProcessStateException($"No valid node found for the command type: {commandType.Name}");
+        }
 
-        return nodeFromConfig.FirstOrDefault()!.Validate(ProgressedPath, CurrentStep);
+        return nodeFromConfig.FirstOrDefault()?.Validate(ProgressedPath, CurrentStep) ?? false;
     }
 
     private void InitializeProcessState(Type? commandOrigin = null)
