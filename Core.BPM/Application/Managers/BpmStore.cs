@@ -52,13 +52,13 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session) where TAgg
         var originalAggregateName = _persistedProcessEvents?.FirstOrDefault()?.Headers["AggregateType"].ToString();
         _aggregate = await _qSession.Events.AggregateStreamAsync<TAggregate>(aggregateId, token: ct);
         _config = BProcessGraphConfiguration.GetConfig(originalAggregateName!);
-
+        _aggregate.PersistedEvents = _persistedProcessEvents!.Select(x => x.EventType.Name).ToList();
         if (_aggregate is null)
             return null;
 
         if (_config is null)
             return null;
 
-        return new ProcessState<TAggregate>(_aggregate!, _config, _persistedProcessEvents!.Select(x => x.EventType.Name).ToList(), typeof(TCommand));
+        return new ProcessState<TAggregate>(_aggregate!, _config, typeof(TCommand));
     }
 }

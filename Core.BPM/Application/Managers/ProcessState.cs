@@ -28,17 +28,15 @@ public class ProcessState<T> where T : Aggregate
         InitializeProcessState();
     }
 
-    public ProcessState(T aggregate, BProcess config, List<string> persistedEvents, Type commandOrigin)
+    public ProcessState(T aggregate, BProcess config, Type commandOrigin)
     {
         Aggregate = aggregate;
         ProcessConfig = config;
-        _persistedEvents = persistedEvents;
         InitializeProcessState(commandOrigin);
     }
 
     public T Aggregate { get; }
-    private readonly List<string> _persistedEvents;
-    private List<string> _inMemoryEvents = [];
+    private List<string> _allEvents = [];
     public List<MutableTuple<string, INode?>> ProgressedPath { get; private set; }
     public BProcess ProcessConfig { get; }
     public INode? CurrentStep { get; private set; }
@@ -60,9 +58,9 @@ public class ProcessState<T> where T : Aggregate
 
     private void InitializeProcessState(Type? commandOrigin = null)
     {
-        _inMemoryEvents = Aggregate.PersistedEvents.Union(Aggregate.UncommittedEvents.Select(x => x.GetType().Name)).ToList();
-        ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
-        CurrentStep = FindCurrentNode();
+        _allEvents = Aggregate.PersistedEvents.Union(Aggregate.UncommittedEvents.Select(x => x.GetType().Name)).ToList();
+        ProgressedPath = _allEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
+        CurrentStep = ProcessConfig.FindLastValidNode(ProgressedPath.Select(x => x.Item1).ToList());
         CommandOrigin = commandOrigin;
     }
 
@@ -77,29 +75,10 @@ public class ProcessState<T> where T : Aggregate
             if (nextSteps.All(x => x.ProducingEvents.All(z => z.Name != Aggregate.LastUncommitedEvent?.GetType().Name)))
                 return false;
 
-        _inMemoryEvents = _persistedEvents.Union(Aggregate.UncommittedEvents.Select(x => x.GetType().Name)).ToList();
-        ProgressedPath = _inMemoryEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
-        CurrentStep = FindCurrentNode();
+        _allEvents = Aggregate.PersistedEvents.Union(Aggregate.UncommittedEvents.Select(x => x.GetType().Name)).ToList();
+        ProgressedPath = _allEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
+        CurrentStep = ProcessConfig.FindLastValidNode(ProgressedPath.Select(x => x.Item1).ToList());
         return true;
-    }
-
-    private INode? FindCurrentNode()
-    {
-        //if (!_inMemoryEvents.Any())
-        //    return ProcessConfig.RootNode;
-
-        var currentStep = ProcessConfig.RootNode;
-        ProgressedPath.FirstOrDefault()!.Item2 = currentStep;
-
-        foreach (var eventName in _inMemoryEvents)
-        {
-            currentStep = currentStep?.FindNextNode(eventName);
-            if (currentStep == null) return null;
-
-            ProgressedPath.FirstOrDefault(x => x.Item1 == eventName)!.Item2 = currentStep;
-        }
-
-        return currentStep;
     }
 
 
@@ -109,7 +88,7 @@ public class ProcessState<T> where T : Aggregate
         if (currentStep?.CommandType == searchCommand)
             return currentStep;
 
-        foreach (var eventName in _inMemoryEvents)
+        foreach (var eventName in _allEvents)
         {
             currentStep = currentStep?.FindNextNode(eventName);
             if (currentStep == null) return null;
@@ -123,13 +102,13 @@ public class ProcessState<T> where T : Aggregate
 
     private Tuple<INode?, INode?> TraverseToEnd(Type? searchCommand = null)
     {
-        if (!_inMemoryEvents.Any())
+        if (!_allEvents.Any())
             return new Tuple<INode?, INode?>(ProcessConfig.RootNode, null);
 
         var currentStep = ProcessConfig.RootNode;
         ProgressedPath.FirstOrDefault()!.Item2 = currentStep;
 
-        foreach (var eventName in _inMemoryEvents)
+        foreach (var eventName in _allEvents)
         {
             currentStep = currentStep?.FindNextNode(eventName);
             if (currentStep == null) return new Tuple<INode?, INode?>(null, null);
