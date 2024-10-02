@@ -1,12 +1,18 @@
 ﻿using Core.BPM.BCommand;
 using MyCredo.Common;
 using MyCredo.Features.Loan;
+using MyCredo.Features.Loann;
 
 namespace MyCredo.Features.Loann;
 
 public record FinishedRequestDigitalLoan(int UserId, ChannelTypeEnum Channel) : BpmEvent;
 
 public record ConfirmedDigitalLoan(string TraceId, int UserId, ChannelTypeEnum Channel) : BpmEvent;
+
+public interface IInterface
+{
+    string? PromoCode { get; init; }
+}
 
 public record DigitalLoanInitiated(
     DigitalLoanProductTypeEnum ProductType,
@@ -19,4 +25,4 @@ public record DigitalLoanInitiated(
     bool hasGracePeriod,
     int? gracePeriod,
     bool NotCheckInRs = false
-) : BpmEvent;
+) : BpmEvent, IInterface;

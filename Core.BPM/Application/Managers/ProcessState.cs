@@ -1,23 +1,9 @@
-﻿using Core.BPM.Application.Exceptions;
-using Core.BPM.Configuration;
+﻿using Core.BPM.Configuration;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 using MediatR;
-using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 
 namespace Core.BPM.Application.Managers;
-
-public class MutableTuple<T1, T2>
-{
-    public T1 Item1 { get; set; }
-    public T2? Item2 { get; set; }
-
-    public MutableTuple(T1 item1, T2 item2)
-    {
-        Item1 = item1;
-        Item2 = item2;
-    }
-}
 
 public class ProcessState<T> where T : Aggregate
 {
@@ -47,13 +33,8 @@ public class ProcessState<T> where T : Aggregate
 
     public bool ValidateFor(Type commandType)
     {
-        var nodeFromConfig = ProcessConfig.MoveTo(commandType);
-        if (nodeFromConfig == null || nodeFromConfig.Count == 0)
-        {
-            throw new ProcessStateException($"No valid node found for the command type: {commandType.Name}");
-        }
-
-        return nodeFromConfig.FirstOrDefault()?.Validate(ProgressedPath, CurrentStep) ?? false;
+        var matchintNodes = ProcessConfig.GetNodes(commandType);
+        return matchintNodes.Any(x => x.ValidatePlacement(_allEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList(), CurrentStep));
     }
 
     private void InitializeProcessState(Type? commandOrigin = null)
@@ -80,43 +61,16 @@ public class ProcessState<T> where T : Aggregate
         CurrentStep = ProcessConfig.FindLastValidNode(ProgressedPath.Select(x => x.Item1).ToList());
         return true;
     }
+}
 
+public class MutableTuple<T1, T2>
+{
+    public T1 Item1 { get; set; }
+    public T2? Item2 { get; set; }
 
-    public INode? FindNode(Type searchCommand)
+    public MutableTuple(T1 item1, T2 item2)
     {
-        var currentStep = ProcessConfig.RootNode;
-        if (currentStep?.CommandType == searchCommand)
-            return currentStep;
-
-        foreach (var eventName in _allEvents)
-        {
-            currentStep = currentStep?.FindNextNode(eventName);
-            if (currentStep == null) return null;
-
-            if (currentStep.CommandType == searchCommand)
-                return currentStep;
-        }
-
-        return null;
-    }
-
-    private Tuple<INode?, INode?> TraverseToEnd(Type? searchCommand = null)
-    {
-        if (!_allEvents.Any())
-            return new Tuple<INode?, INode?>(ProcessConfig.RootNode, null);
-
-        var currentStep = ProcessConfig.RootNode;
-        ProgressedPath.FirstOrDefault()!.Item2 = currentStep;
-
-        foreach (var eventName in _allEvents)
-        {
-            currentStep = currentStep?.FindNextNode(eventName);
-            if (currentStep == null) return new Tuple<INode?, INode?>(null, null);
-
-            ProgressedPath.FirstOrDefault(x => x.Item1 == eventName)!.Item2 = currentStep;
-        }
-
-        var foundNode = currentStep?.CommandType == searchCommand ? currentStep : null;
-        return new Tuple<INode?, INode?>(currentStep, foundNode);
+        Item1 = item1;
+        Item2 = item2;
     }
 }

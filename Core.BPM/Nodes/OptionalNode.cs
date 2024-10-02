@@ -5,12 +5,12 @@ namespace Core.BPM.Nodes;
 
 public class OptionalNode(Type commandType, Type processType) : NodeBase(commandType, processType)
 {
-    public override bool Validate(List<MutableTuple<string, INode?>> events, INode currentNode)
+    public override bool ValidatePlacement(List<MutableTuple<string, INode?>> savedEvents, INode? currentNode)
     {
-        if (currentNode.NextSteps is not null)
-            if (currentNode.NextSteps.Any(x => x == this))
-                return true;
+        var alreadyExists = savedEvents.Any(tuple => tuple.Item1 == CommandType.Name);
+        if (alreadyExists)
+            return false;
 
-        return false;
+        return currentNode != null && !currentNode.NextSteps?.Contains(this) == true;
     }
 }

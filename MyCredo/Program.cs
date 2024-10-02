@@ -56,6 +56,7 @@ builder.Services.AddBpm(options =>
         options.Events.AddEventType(typeof(FinishedRequestDigitalLoan));
         options.Events.AddEventType(typeof(ConfirmedDigitalLoan));
         options.Events.AddEventType(typeof(DigitalLoanInitiated));
+        options.Events.MapEventType<IInterface>("asd");
         //
         options.Events.AddEventType(typeof(IssueLoanInitiated));
         options.Events.AddEventType(typeof(GeneratedContract));

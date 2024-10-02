@@ -7,10 +7,10 @@ public class BProcess(Type processType, INode rootNode)
     public readonly Type ProcessType = processType;
     public readonly INode RootNode = rootNode;
 
-    public INode? FindLastValidNode(List<string>? progressedPath)
+    public INode? FindLastValidNode(List<string> progressedPath)
     {
-        if (progressedPath == null || progressedPath.Count == 0)
-            return RootNode;
+        if (progressedPath.Count == 0)
+            return null;
 
         var currentNode = RootNode;
 
@@ -18,7 +18,7 @@ public class BProcess(Type processType, INode rootNode)
         {
             if (currentNode.ProducingEvents.Any(e => e.Name == eventName))
             {
-                // Found a match, so we don't need to move yet
+                // Found a root match, skipping...
                 continue;
             }
 
@@ -28,5 +28,30 @@ public class BProcess(Type processType, INode rootNode)
         }
 
         return currentNode; // Return the last node reached
+    }
+
+    public List<INode> GetNodes(Type commandType)
+    {
+        var matchingNodes = new List<INode>();
+        FindNodes(RootNode, commandType, matchingNodes);
+        return matchingNodes;
+    }
+
+    private void FindNodes(INode currentNode, Type commandType, List<INode> matchingNodes)
+    {
+        // Check if the current node matches the command type
+        if (currentNode.CommandType == commandType)
+        {
+            matchingNodes.Add(currentNode);
+        }
+
+        // Recursively check the next steps
+        if (currentNode.NextSteps != null)
+        {
+            foreach (var nextNode in currentNode.NextSteps)
+            {
+                FindNodes(nextNode, commandType, matchingNodes);
+            }
+        }
     }
 }

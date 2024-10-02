@@ -19,5 +19,5 @@ public interface INode
     INode? FindNextNode(string eventName);
     public BpmProducer CommandProducer() => (BpmProducer)CommandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
 
-    bool Validate(List<MutableTuple<string, INode?>> savedEvents, INode currentNode);
+    public abstract bool ValidatePlacement(List<MutableTuple<string, INode?>> savedEvents, INode? currentNode);
 }

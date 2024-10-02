@@ -59,7 +59,7 @@ public abstract class NodeBase : INode, INodeState
         PrevSteps.Add(node);
     }
 
-    public abstract bool Validate(List<MutableTuple<string, INode?>> events, INode node);
+    public abstract bool ValidatePlacement(List<MutableTuple<string, INode?>> savedEvents, INode? currentNode);
 
     protected static BpmProducer GetCommandProducer(Type commandType)
     {
