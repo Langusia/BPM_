@@ -5,9 +5,10 @@ namespace Core.BPM.Nodes;
 
 public class Node(Type commandType, Type processType) : NodeBase(commandType, processType)
 {
-    public override bool ValidatePlacement(List<MutableTuple<string, INode?>> savedEvents, INode? currentNode)
+    public override bool ValidatePlacement(List<string> savedEvents, INode? currentNode)
     {
-        var alreadyExists = savedEvents.Any(tuple => tuple.Item1 == CommandType.Name);
+        bool alreadyExists = savedEvents.Any(tuple =>
+            GetCommandProducer(CommandType).EventTypes.Select(x => x.Name).Contains(tuple));
         if (alreadyExists)
             return false;
 

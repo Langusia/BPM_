@@ -21,6 +21,9 @@ public abstract class NodeBase : INode, INodeState
     }
 
     public Type CommandType { get; }
+
+    public string CommandName => CommandType.Name;
+
     public Type ProcessType { get; }
     public BpmEventOptions Options { get; set; }
     public List<Type> ProducingEvents { get; }
@@ -59,7 +62,7 @@ public abstract class NodeBase : INode, INodeState
         PrevSteps.Add(node);
     }
 
-    public abstract bool ValidatePlacement(List<MutableTuple<string, INode?>> savedEvents, INode? currentNode);
+    public abstract bool ValidatePlacement(List<string> savedEvents, INode? currentNode);
 
     protected static BpmProducer GetCommandProducer(Type commandType)
     {

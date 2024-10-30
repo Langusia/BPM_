@@ -1,4 +1,5 @@
-﻿using Core.BPM.Configuration;
+﻿using Core.BPM.BCommand;
+using Core.BPM.Configuration;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 using MediatR;
@@ -23,7 +24,7 @@ public class ProcessState<T> where T : Aggregate
 
     public T Aggregate { get; }
     private List<string> _allEvents = [];
-    public List<MutableTuple<string, INode?>> ProgressedPath { get; private set; }
+    public List<string> ProgressedPath { get; private set; }
     public BProcess ProcessConfig { get; }
     public INode? CurrentStep { get; private set; }
     public Type CommandOrigin { get; private set; }
@@ -34,14 +35,14 @@ public class ProcessState<T> where T : Aggregate
     public bool ValidateFor(Type commandType)
     {
         var matchintNodes = ProcessConfig.GetNodes(commandType);
-        return matchintNodes.Any(x => x.ValidatePlacement(_allEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList(), CurrentStep));
+        return matchintNodes.Any(x => x.ValidatePlacement(_allEvents, CurrentStep));
     }
 
     private void InitializeProcessState(Type? commandOrigin = null)
     {
         _allEvents = Aggregate.PersistedEvents.Union(Aggregate.UncommittedEvents.Select(x => x.GetType().Name)).ToList();
-        ProgressedPath = _allEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
-        CurrentStep = ProcessConfig.FindLastValidNode(ProgressedPath.Select(x => x.Item1).ToList());
+        ProgressedPath = _allEvents;
+        CurrentStep = ProcessConfig.FindLastValidNode(ProgressedPath);
         CommandOrigin = commandOrigin;
     }
 
@@ -57,8 +58,22 @@ public class ProcessState<T> where T : Aggregate
                 return false;
 
         _allEvents = Aggregate.PersistedEvents.Union(Aggregate.UncommittedEvents.Select(x => x.GetType().Name)).ToList();
-        ProgressedPath = _allEvents.Select(x => new MutableTuple<string, INode?>(x, null)).ToList();
-        CurrentStep = ProcessConfig.FindLastValidNode(ProgressedPath.Select(x => x.Item1).ToList());
+        ProgressedPath = _allEvents;
+        CurrentStep = ProcessConfig.FindLastValidNode(ProgressedPath.ToList());
+        return true;
+    }
+
+    public bool AppendEvent(params BpmEvent[] evts)
+    {
+        if (evts.Any(x => !BProcessGraphConfiguration.GetCommandProducer(CommandOrigin).EventTypes.Contains(x.GetType())))
+            return false;
+
+        foreach (var evt in evts)
+            Aggregate.Enqueue(evt);
+
+        _allEvents = Aggregate.PersistedEvents.Union(Aggregate.UncommittedEvents.Select((Func<object, string>)(x => x.GetType().Name))).ToList();
+        ProgressedPath = _allEvents;
+        CurrentStep = ProcessConfig.FindLastValidNode(ProgressedPath.ToList());
         return true;
     }
 }

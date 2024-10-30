@@ -7,6 +7,7 @@ namespace Core.BPM.Interfaces;
 public interface INode
 {
     Type CommandType { get; }
+    string CommandName { get; }
     Type ProcessType { get; }
     BpmEventOptions Options { get; set; }
 
@@ -19,5 +20,5 @@ public interface INode
     INode? FindNextNode(string eventName);
     public BpmProducer CommandProducer() => (BpmProducer)CommandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
 
-    public abstract bool ValidatePlacement(List<MutableTuple<string, INode?>> savedEvents, INode? currentNode);
+    public abstract bool ValidatePlacement(List<string> savedEvents, INode? currentNode);
 }
