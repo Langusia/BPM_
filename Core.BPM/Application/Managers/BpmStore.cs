@@ -37,11 +37,12 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session) where TAgg
 
     public async Task SaveChangesAsync(CancellationToken ct)
     {
+        var evts = _aggregate.DequeueUncommittedEvents();
         session.SetHeader("AggregateType", _aggregateName);
         if (_newStream)
-            session.Events.StartStream<TAggregate>(_aggregate.Id, _aggregate.DequeueUncommittedEvents());
+            session.Events.StartStream<TAggregate>(_aggregate.Id, evts);
         else
-            session.Events.Append(_aggregate.Id, _aggregate.DequeueUncommittedEvents());
+            session.Events.Append(_aggregate.Id, _aggregate.Version + evts.Length, evts);
 
         await session.SaveChangesAsync(ct).ConfigureAwait(false);
     }
