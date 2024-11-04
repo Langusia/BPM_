@@ -2,14 +2,16 @@
 using Marten;
 using Marten.Events;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Core.BPM.Application.Managers;
 
-public class BpmStore<TAggregate, TCommand>(IDocumentSession session) where TAggregate : Aggregate where TCommand : IBaseRequest
+public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger logger) where TAggregate : Aggregate where TCommand : IBaseRequest
 {
     private readonly IQuerySession _qSession = session;
 
     private TAggregate? _aggregate;
+    private ILogger _logger = logger;
     private IReadOnlyList<IEvent> _persistedProcessEvents;
     private string _aggregateName;
     private BProcess? _config;
@@ -37,14 +39,24 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session) where TAgg
 
     public async Task SaveChangesAsync(CancellationToken ct)
     {
-        var evts = _aggregate.DequeueUncommittedEvents();
-        session.SetHeader("AggregateType", _aggregateName);
-        if (_newStream)
-            session.Events.StartStream<TAggregate>(_aggregate.Id, evts);
-        else
-            session.Events.Append(_aggregate.Id, _aggregate.Version + evts.Length, evts);
+        try
+        {
+            var evts = _aggregate!.DequeueUncommittedEvents();
+            if (evts is not null || evts!.Any())
+            {
+                session.SetHeader("AggregateType", _aggregateName);
+                if (_newStream)
+                    session.Events.StartStream<TAggregate>(_aggregate.Id, evts);
+                else
+                    session.Events.Append(_aggregate.Id, _aggregate.Version + evts.Length, evts);
 
-        await session.SaveChangesAsync(ct).ConfigureAwait(false);
+                await session.SaveChangesAsync(ct);
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "SAVE ERROR", _aggregate);
+        }
     }
 
     public async Task<ProcessState<TAggregate>> AggregateProcessStateAsync(Guid aggregateId, CancellationToken ct)
