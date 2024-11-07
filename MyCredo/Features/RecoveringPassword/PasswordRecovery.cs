@@ -158,13 +158,6 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
             .ContinueAnyTime<GenerateOtp>()
             .ContinueAnyTime<ValidateOtp.ValidateOtp>()
             .Continue<FinishPasswordRecovery>();
-        //.ThenContinueAnyTime<GenerateOtp>(g => g
-        //    .ThenContinueAnyTime<ValidateOtp>(v => v
-        //        .ThenContinue<ValidateSecurityQuestion>()
-        //        .Or<CheckCardInitiate>(x => x
-        //            .ThenContinue<CheckCardComplete>()))
-        //    .ThenContinueOptional<GetUserDataCommand>()
-        //    .Continue<FinishPasswordRecovery>());
     }
 
     public override void SetEventConfiguration(BpmEventConfigurationBuilder<PasswordRecovery> bpmEventConfiguration)

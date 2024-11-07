@@ -27,7 +27,7 @@ public record ValidateOtpHandler : IRequestHandler<ValidateOtp, Result<long>>
 
         //BL
 
-        processState.AppendEvent(x => x.ValidateOtp(true));
+        processState.AppendEvent(new OtpValidated(Guid.NewGuid(), true));
 
         await _bpm.SaveChangesAsync(cancellationToken);
         return 9;

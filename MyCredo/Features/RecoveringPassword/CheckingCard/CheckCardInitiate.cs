@@ -21,8 +21,8 @@ public record CheckCardInitiateHandler(BpmStore<CheckCard, CheckCardInitiate> _b
         if (!s.ValidateOrigin())
             return false;
         //
-        if (s.AppendEvent(x => x.Initiate(0, 0, "hash")) == false)
-            return false;
+        //if (s.AppendEvent(x => x.Initiate(0, 0, "hash")) == false)
+        //    return false;
 
         await _bpm.SaveChangesAsync(cancellationToken);
         return true;

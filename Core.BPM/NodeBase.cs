@@ -2,10 +2,12 @@
 using Core.BPM.Attributes;
 using Core.BPM.BCommand;
 using Core.BPM.Interfaces;
+using Core.BPM.Nodes;
+using Microsoft.CodeAnalysis.Options;
 
 namespace Core.BPM;
 
-public abstract class NodeBase : INode, INodeState
+public abstract class NodeBase : INode
 {
     public NodeBase(Type commandType, Type processType)
     {
@@ -30,6 +32,52 @@ public abstract class NodeBase : INode, INodeState
 
 
     public List<INode> NextSteps { get; set; } = [];
+
+
+    protected List<INode>? GetPreconditions()
+    {
+        // We will use a helper method to perform a depth-first search (DFS) and collect all non-optional preconditions.
+        var preconditions = new List<INode>();
+        GatherValidPreconditions(this, preconditions);
+
+        // Return null if no non-optional preconditions are found
+        return preconditions.Count > 0 ? preconditions : null;
+    }
+
+    protected virtual bool ValidatePrecondition(List<string> savedEvents)
+    {
+        var preconditions = GetPreconditions();
+        var preConditionEvts = preconditions.SelectMany(x => x.ProducingEvents.Select(x => x.Name)).ToList();
+        return savedEvents.Any(s => preConditionEvts.Contains(s));
+    }
+
+
+    private void GatherValidPreconditions(INode currentNode, List<INode> preconditions)
+    {
+        // Track if we've found at least one non-optional node at the current level
+        bool foundNonOptional = false;
+
+        // Traverse through all PrevSteps and look for non-optional nodes.
+        foreach (var prevNode in currentNode.PrevSteps)
+        {
+            // If the previous node is not optional (does not implement IOptional), add it to the list
+            if (!(prevNode is IOptional))
+            {
+                preconditions.Add(prevNode);
+                foundNonOptional = true; // Mark that we found a non-optional node
+            }
+        }
+
+        // If we found at least one non-optional node, continue recursion
+        if (!foundNonOptional)
+        {
+            foreach (var prevNode in currentNode.PrevSteps)
+            {
+                GatherValidPreconditions(prevNode, preconditions);
+                // Continue searching deeper in PrevSteps, but only for non-optional nodes
+            }
+        }
+    }
 
     public virtual INode? FindNextNode(string eventName)
     {
@@ -62,7 +110,7 @@ public abstract class NodeBase : INode, INodeState
         PrevSteps.Add(node);
     }
 
-    public abstract bool ValidatePlacement(List<string> savedEvents, INode? currentNode);
+    public abstract bool ValidatePlacement(BProcess process, List<string> savedEvents, INode? currentNode);
 
     protected static BpmProducer GetCommandProducer(Type commandType)
     {

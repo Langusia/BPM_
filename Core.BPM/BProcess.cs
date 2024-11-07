@@ -7,7 +7,7 @@ public class BProcess(Type processType, INode rootNode)
     public readonly Type ProcessType = processType;
     public readonly INode RootNode = rootNode;
 
-    public INode? FindLastValidNode(List<string> progressedPath)
+    public INode? FindLastValidNode(List<string> progressedPath, bool skipOptionals = false)
     {
         if (progressedPath.Count == 0)
             return null;

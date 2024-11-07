@@ -6,12 +6,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Core.BPM.Application.Managers;
 
-public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger logger) where TAggregate : Aggregate where TCommand : IBaseRequest
+public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger<BpmStore<TAggregate, TCommand>> logger) where TAggregate : Aggregate where TCommand : IBaseRequest
 {
     private readonly IQuerySession _qSession = session;
 
     private TAggregate? _aggregate;
-    private ILogger _logger = logger;
+    private ILogger<BpmStore<TAggregate, TCommand>> _logger = logger;
     private IReadOnlyList<IEvent> _persistedProcessEvents;
     private string _aggregateName;
     private BProcess? _config;

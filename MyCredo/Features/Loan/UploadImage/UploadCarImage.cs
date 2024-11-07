@@ -31,7 +31,7 @@ internal class UploadImageHandler : ICommandHandler<UploadImage, bool>
         var s = await _bpm.AggregateProcessStateAsync(request.ProcessId, cancellationToken);
 
 
-        var ss = s.AppendEvent(x => x.Upload());
+        //var ss = s.AppendEvent(x => x.Upload());
         return Result.Success(true);
     }
 

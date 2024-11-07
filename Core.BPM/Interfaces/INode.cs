@@ -20,5 +20,5 @@ public interface INode
     INode? FindNextNode(string eventName);
     public BpmProducer CommandProducer() => (BpmProducer)CommandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
 
-    public abstract bool ValidatePlacement(List<string> savedEvents, INode? currentNode);
+    public abstract bool ValidatePlacement(BProcess process, List<string> savedEvents, INode? currentNode);
 }
