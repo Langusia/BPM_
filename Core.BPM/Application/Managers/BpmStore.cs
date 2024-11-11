@@ -24,6 +24,7 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger<Bp
         _aggregate.Id = Guid.NewGuid();
         _aggregateName = typeof(TAggregate).Name;
         _config = BProcessGraphConfiguration.GetConfig(_aggregateName!);
+        _newStream = true;
         return new ProcessState<TAggregate>(_aggregate);
     }
 
@@ -52,6 +53,7 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger<Bp
                     await session.Events.AppendOptimistic(_aggregate.Id, token: ct, evts);
 
                 await session.SaveChangesAsync(ct);
+                _newStream = false;
             }
         }
         catch (Exception e)
