@@ -32,7 +32,7 @@ builder.Services.AddMediatR(c => { c.RegisterServicesFromAssembly(typeof(Program
 
 builder.Services.AddBpm(options =>
     {
-        options.Connection("Host=10.195.105.11; Database=CoreStandingOrders; Username=gelkanishvili; Password=fjem$efXc");
+        options.Connection("Host=10.195.105.11; Database=ExternalLoans; Username=ExternalLoansUser; Password=Vfh53F2@df4U");
         options.AutoCreateSchemaObjects = AutoCreate.CreateOrUpdate;
         options.DatabaseSchemaName = "bpm";
         options.Events.MetadataConfig.HeadersEnabled = true;

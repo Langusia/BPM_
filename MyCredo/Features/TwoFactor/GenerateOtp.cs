@@ -22,6 +22,10 @@ public class GenerateOtpHandler : IRequestHandler<GenerateOtp, long>
         if (!process.ValidateOrigin())
             return 0;
 
+        process.AppendEvent(new OtpSent(Guid.NewGuid(), ""));
+
+        //process.Fail("test");
+
         // if (process.AppendEvent(x => x.Finish(process.Aggregate.Id, "1234")))
         //     return 0;
         //if (!process.AppendEvent(x => x.GenerateOtp(process.Aggregate.Id, "1234")))

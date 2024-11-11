@@ -14,9 +14,10 @@ public class SendOtpCommandHandler(BpmStore<OtpValidation, SendOtp> _bs) : IComm
     public async Task<Result<AggregateResult<bool>>> Handle(SendOtp request, CancellationToken cancellationToken)
     {
         var state = await _bs.AggregateProcessStateAsync(request.ProcessId, cancellationToken);
-        if (state.ValidateFor<SendOtp>())
-            return null;
+        //if (state.ValidateFor<SendOtp>())
+        //    return null;
 
+        state.Fail("test");
         //BL
 
         //state.AppendEvent(x => x.SendOtp());

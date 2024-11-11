@@ -41,6 +41,7 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger<Bp
     {
         try
         {
+            var expVersion = _aggregate.Version;
             var evts = _aggregate!.DequeueUncommittedEvents();
             if (evts is not null || evts!.Any())
             {
@@ -48,7 +49,11 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger<Bp
                 if (_newStream)
                     session.Events.StartStream<TAggregate>(_aggregate.Id, evts);
                 else
-                    session.Events.Append(_aggregate.Id, _aggregate.Version + evts.Length, evts);
+                    foreach (var evt in evts)
+                    {
+                        expVersion++;        
+                        session.Events.Append(_aggregate.Id, expVersion, evt);
+                    }
 
                 await session.SaveChangesAsync(ct);
             }
