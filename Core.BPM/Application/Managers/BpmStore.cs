@@ -49,11 +49,7 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger<Bp
                 if (_newStream)
                     session.Events.StartStream<TAggregate>(_aggregate.Id, evts);
                 else
-                    foreach (var evt in evts)
-                    {
-                        expVersion++;        
-                        session.Events.Append(_aggregate.Id, expVersion, evt);
-                    }
+                    await session.Events.AppendOptimistic(_aggregate.Id, token: ct, evts);
 
                 await session.SaveChangesAsync(ct);
             }
@@ -61,6 +57,7 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger<Bp
         catch (Exception e)
         {
             _logger.LogError(e, "SAVE ERROR", _aggregate);
+            throw;
         }
     }
 
