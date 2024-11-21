@@ -123,7 +123,7 @@ public class InitiateIssueLoanProcessHandler : IRequestHandler<InitiateIssueLoan
 
     public async Task<ProcessStateDto> Handle(InitiateIssueLoanProcess request, CancellationToken cancellationToken)
     {
-        var s = await _bs.StartProcess(x => x.Initiate(), cancellationToken);
+        var s = _bs.StartProcess(x => x.Initiate());
         await _bs.SaveChangesAsync(cancellationToken);
         return new ProcessStateDto()
         {

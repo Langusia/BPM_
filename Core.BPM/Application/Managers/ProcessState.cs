@@ -2,32 +2,35 @@
 using Core.BPM.BCommand;
 using Core.BPM.Configuration;
 using Core.BPM.Interfaces;
-using Core.BPM.Nodes;
 using MediatR;
 
 namespace Core.BPM.Application.Managers;
 
 public class ProcessState<T> where T : Aggregate
 {
-    public ProcessState(T aggregate)
+    public ProcessState(T aggregate, object originalAggregate)
     {
         Aggregate = aggregate;
+        OriginalAggregate = originalAggregate;
         ProcessConfig = BProcessGraphConfiguration.GetConfig<T>();
         InitializeProcessState();
     }
 
-    public ProcessState(T aggregate, BProcess config, Type commandOrigin)
+    public ProcessState(T aggregate, object originalAggregate, BProcess config, Type commandOrigin)
     {
         Aggregate = aggregate;
+        OriginalAggregate = originalAggregate;
         ProcessConfig = config;
         InitializeProcessState(commandOrigin);
     }
 
     public T Aggregate { get; }
+    public object OriginalAggregate { get; }
     private List<string> _allEvents = [];
     public List<string> ProgressedPath { get; private set; }
     public BProcess ProcessConfig { get; }
     public INode? CurrentStep { get; private set; }
+    public StepOptions? Options { get; set; }
     public Type CommandOrigin { get; private set; }
 
     public bool ValidateOrigin() => ValidateFor(CommandOrigin);
@@ -39,11 +42,18 @@ public class ProcessState<T> where T : Aggregate
             return false;
 
         var matchingNodes = ProcessConfig.GetNodes(commandType);
-        return matchingNodes.Any(x => x.ValidatePlacement(ProcessConfig, _allEvents, CurrentStep));
+
+        if (!matchingNodes.Any(x => x.ValidatePlacement(ProcessConfig, _allEvents, CurrentStep)))
+            return false;
+
+        var valid = Options?.EvaluateAggregateCondition(OriginalAggregate);
+
+        return valid ?? true;
     }
 
     private void InitializeProcessState(Type? commandOrigin = null)
     {
+        Options = BProcessStepConfiguration.GetConfig(ProcessConfig.ProcessType);
         _allEvents = Aggregate.PersistedEvents.Union(Aggregate.UncommittedEvents.Select(x => x.GetType().Name)).ToList();
         ProgressedPath = _allEvents;
         CurrentStep = ProcessConfig.FindLastValidNode(ProgressedPath);
@@ -75,17 +85,5 @@ public class ProcessState<T> where T : Aggregate
         ProgressedPath = _allEvents;
         CurrentStep = ProcessConfig.FindLastValidNode(ProgressedPath.ToList());
         return true;
-    }
-}
-
-public class MutableTuple<T1, T2>
-{
-    public T1 Item1 { get; set; }
-    public T2? Item2 { get; set; }
-
-    public MutableTuple(T1 item1, T2 item2)
-    {
-        Item1 = item1;
-        Item2 = item2;
     }
 }

@@ -9,7 +9,7 @@ public interface INode
     Type CommandType { get; }
     string CommandName { get; }
     Type ProcessType { get; }
-    BpmEventOptions Options { get; set; }
+    StepOptions Options { get; set; }
 
     public List<Type> ProducingEvents { get; }
     List<INode>? NextSteps { get; set; }
@@ -21,4 +21,5 @@ public interface INode
     public BpmProducer CommandProducer() => (BpmProducer)CommandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
 
     public abstract bool ValidatePlacement(BProcess process, List<string> savedEvents, INode? currentNode);
+    public bool PlacementPreconditionMarked(List<string> savedEvents);
 }

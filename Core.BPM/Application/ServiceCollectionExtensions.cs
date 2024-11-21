@@ -2,6 +2,7 @@
 using Core.BPM.BCommand;
 using Core.BPM.DefinitionBuilder;
 using Core.BPM.Persistence;
+using Core.BPM.Registry;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -14,13 +15,18 @@ public static class ServiceCollectionExtensions
     {
         services.AddMarten(configureMartenStore);
         services.TryAddScoped(typeof(MartenRepository<>));
-        services.TryAddScoped(typeof(BpmGenericProcessManager<>));
         services.TryAddScoped(typeof(BpmStore<,>));
         services.TryAddScoped(typeof(MartenRepository));
         services.TryAddScoped(typeof(BpmEventConfigurationBuilder<>));
-        services.AddOptions<BpmEventConfiguration>();
-        configure?.Invoke(new BpmConfiguration());
+        services.AddOptions<StepConfigurator>();
+        var registry = new ProcessRegistry();
+        services.TryAddSingleton(registry);
+        configure?.Invoke(new BpmConfiguration(registry));
     }
+}
+
+public class BpmBuilder
+{
 }
 
 public interface IBpmConfiguration
@@ -29,15 +35,17 @@ public interface IBpmConfiguration
         where TDefinition : BpmDefinition<TAggregate>;
 }
 
-public class BpmConfiguration : IBpmConfiguration
+public class BpmConfiguration(ProcessRegistry registry) : IBpmConfiguration
 {
     public void AddAggregateDefinition<TAggregate, TDefinition>() where TAggregate : Aggregate
         where TDefinition : BpmDefinition<TAggregate>
     {
         var definition = (TDefinition)Activator.CreateInstance(typeof(TDefinition))!;
         var processDefinition = (ProcessBuilder<TAggregate>)Activator.CreateInstance(typeof(ProcessBuilder<>).MakeGenericType(typeof(TAggregate)))!;
-        var eventBuilder = (BpmEventConfigurationBuilder<TAggregate>)Activator.CreateInstance(typeof(BpmEventConfigurationBuilder<>).MakeGenericType(typeof(TAggregate)))!;
+        var stepConfigurator = (StepConfigurator<TAggregate>)Activator.CreateInstance(typeof(StepConfigurator<>).MakeGenericType(typeof(TAggregate)))!;
+
+        registry.RegisterAggregate(typeof(TAggregate));
+        definition.ConfigureSteps(stepConfigurator);
         definition.DefineProcess(processDefinition);
-        definition.SetEventConfiguration(eventBuilder);
     }
 }

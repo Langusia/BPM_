@@ -30,6 +30,30 @@ public class BProcess(Type processType, INode rootNode)
         return currentNode; // Return the last node reached
     }
 
+    public INode? GetAvailable(List<string> savedEvents)
+    {
+        if (savedEvents.Count == 0)
+            return null;
+
+        var currentNode = RootNode;
+
+        foreach (var eventName in savedEvents)
+        {
+            currentNode.PlacementPreconditionMarked(savedEvents);
+            if (currentNode.ProducingEvents.Any(e => e.Name == eventName))
+            {
+                // Found a root match, skipping...
+                continue;
+            }
+
+            currentNode = currentNode.FindNextNode(eventName);
+            if (currentNode == null)
+                break; // Stop traversal if no matching node is found for the event
+        }
+
+        return currentNode; // Return the last node reached
+    }
+
     public List<INode> GetNodes(Type commandType)
     {
         var matchingNodes = new List<INode>();

@@ -23,8 +23,8 @@ public class RequestLoanInitiateHandler(BpmStore<RequestCarPawnshop, RequestLoan
     public async Task<Result<RequestLoanInitiateResponse>> Handle(RequestLoanInitiate request, CancellationToken cancellationToken)
     {
         var agg =
-            await manager.StartProcess(x =>
-                x.InitiateCarPawnshop(request.ProductType, request.PromoCode, request.Percent, 0, request.Amount, request.EffectiveInterestRate, request.Period), cancellationToken);
+             manager.StartProcess(x =>
+                x.InitiateCarPawnshop(request.ProductType, request.PromoCode, request.Percent, 0, request.Amount, request.EffectiveInterestRate, request.Period));
 
         throw new NotImplementedException();
     }

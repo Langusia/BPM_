@@ -1,5 +1,4 @@
-﻿using Core.BPM.Application.Managers;
-using Core.BPM.Interfaces;
+﻿using Core.BPM.Interfaces;
 
 namespace Core.BPM.Nodes;
 
@@ -7,7 +6,7 @@ public class Node(Type commandType, Type processType) : NodeBase(commandType, pr
 {
     public override bool ValidatePlacement(BProcess process, List<string> savedEvents, INode? currentNode)
     {
-        var preconditionsMet = ValidatePrecondition(savedEvents);
+        var preconditionsMet = PlacementPreconditionMarked(savedEvents);
         if (!preconditionsMet)
             return false;
 

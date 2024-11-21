@@ -1,5 +1,4 @@
-﻿using Core.BPM.Application.Managers;
-using Core.BPM.Attributes;
+﻿using Core.BPM.Attributes;
 using Core.BPM.BCommand;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
@@ -27,32 +26,32 @@ public abstract class NodeBase : INode
     public string CommandName => CommandType.Name;
 
     public Type ProcessType { get; }
-    public BpmEventOptions Options { get; set; }
+    public StepOptions Options { get; set; }
+
     public List<Type> ProducingEvents { get; }
 
 
     public List<INode> NextSteps { get; set; } = [];
 
-
-    protected List<INode>? GetPreconditions()
+    public bool PlacementPreconditionMarked(List<string> savedEvents)
     {
-        // We will use a helper method to perform a depth-first search (DFS) and collect all non-optional preconditions.
-        var preconditions = new List<INode>();
-        GatherValidPreconditions(this, preconditions);
-
-        // Return null if no non-optional preconditions are found
-        return preconditions.Count > 0 ? preconditions : null;
-    }
-
-    protected virtual bool ValidatePrecondition(List<string> savedEvents)
-    {
-        var preconditions = GetPreconditions();
+        var preconditions = GetPlacementPreconditions();
         var preConditionEvts = preconditions.SelectMany(x => x.ProducingEvents.Select(x => x.Name)).ToList();
         return savedEvents.Any(s => preConditionEvts.Contains(s));
     }
 
 
-    private void GatherValidPreconditions(INode currentNode, List<INode> preconditions)
+    protected List<INode>? GetPlacementPreconditions()
+    {
+        // We will use a helper method to perform a depth-first search (DFS) and collect all non-optional preconditions.
+        var preconditions = new List<INode>();
+        GatherValidPlacementPreconditions(this, preconditions);
+
+        // Return null if no non-optional preconditions are found
+        return preconditions.Count > 0 ? preconditions : null;
+    }
+
+    private void GatherValidPlacementPreconditions(INode currentNode, List<INode> preconditions)
     {
         // Track if we've found at least one non-optional node at the current level
         bool foundNonOptional = false;
@@ -73,7 +72,7 @@ public abstract class NodeBase : INode
         {
             foreach (var prevNode in currentNode.PrevSteps)
             {
-                GatherValidPreconditions(prevNode, preconditions);
+                GatherValidPlacementPreconditions(prevNode, preconditions);
                 // Continue searching deeper in PrevSteps, but only for non-optional nodes
             }
         }
@@ -134,7 +133,4 @@ public abstract class NodeBase : INode
 
         _currNext = null;
     }
-
-    public bool DefinitionValidated { get; set; }
-    public bool CanAppend { get; set; }
 }

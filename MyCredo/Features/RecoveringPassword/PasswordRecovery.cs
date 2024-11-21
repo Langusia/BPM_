@@ -160,12 +160,10 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
             .Continue<FinishPasswordRecovery>();
     }
 
-    public override void SetEventConfiguration(BpmEventConfigurationBuilder<PasswordRecovery> bpmEventConfiguration)
+    public override void ConfigureSteps(StepConfigurator<PasswordRecovery> stepConfigurator)
     {
-        bpmEventConfiguration.AddCommandOptions<OtpSent>(x =>
-        {
-            x.PermittedTryCount = 3;
-            x.Optional = true;
-        });
+        stepConfigurator.Configure<GenerateOtp>()
+            .SetProcessPreCondition(x => x.ChannelType == ChannelTypeEnum.Unclassified)
+            .SetMaxCount(3);
     }
 }

@@ -7,6 +7,6 @@ public class AnyTimeNode(Type commandType, Type processType) : NodeBase(commandT
 {
     public override bool ValidatePlacement(BProcess process, List<string> savedEvents, INode? currentNode)
     {
-        return ValidatePrecondition(savedEvents);
+        return PlacementPreconditionMarked(savedEvents);
     }
 }

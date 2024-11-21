@@ -56,14 +56,14 @@ public static class OuterNodeBuilderExtensions
     }
 
 
-    public static INodeDefinitionBuilder Configure(this INodeDefinitionBuilder builder, Action<BpmEventOptions> configure)
+    public static INodeDefinitionBuilder Configure(this INodeDefinitionBuilder builder, Action<StepOptions> configure)
     {
         configure(builder.GetCurrent().Options);
         return builder;
     }
 
     public static INodeDefinitionBuilder ThenContinueWithConfiguring<TCommand>(this INodeDefinitionBuilder builder,
-        Action<BpmEventOptions>? configureOptions = null,
+        Action<StepOptions>? configureOptions = null,
         Action<INodeDefinitionBuilder>? configure = null)
     {
         var node = new Node(typeof(TCommand), builder.GetProcess().ProcessType);
