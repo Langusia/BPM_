@@ -4,13 +4,14 @@ using MediatR;
 
 namespace Core.BPM.DefinitionBuilder;
 
-public class ProcessBuilder<TProcess> : IProcessBuilder<TProcess>
+public class ProcessBuilder<TProcess> : IProcessBuilder<TProcess> where TProcess : Aggregate
 {
-    public INodeBuilder StartWith<TCommand>() where TCommand : IBaseRequest
+    public IProcessNodeInitialBuilder<TProcess> StartWith<TCommand>() where TCommand : IBaseRequest
     {
-        var nodeInst = new Node(typeof(TCommand), typeof(TProcess));
-        var processInst = new BProcess(typeof(TProcess), nodeInst);
+        var node = new Node(typeof(TCommand), typeof(TProcess));
+        var processInst = new BProcess(typeof(TProcess), node);
         BProcessGraphConfiguration.AddProcess(processInst);
-        return new NodeBuilder(nodeInst, processInst);
+        var builder = new ProcessNodeBuilder<TProcess>(node, processInst);
+        return builder;
     }
 }

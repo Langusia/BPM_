@@ -3,7 +3,6 @@ using Core.BPM.Application;
 using Core.BPM.Application.Managers;
 using Core.BPM.Attributes;
 using Core.BPM.DefinitionBuilder;
-using Core.BPM.Extensions;
 using MediatR;
 using MyCredo.Common;
 using MyCredo.Features.Loan.Finish;

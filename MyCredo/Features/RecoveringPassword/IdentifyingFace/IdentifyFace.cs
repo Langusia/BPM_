@@ -1,11 +1,12 @@
 ﻿using Core.BPM.Attributes;
 using Credo.Core.Shared.Library;
+using Credo.Core.Shared.Mediator;
 using MediatR;
 
 namespace MyCredo.Features.RecoveringPassword.IdentifyingFace;
 
 [BpmProducer(typeof(IdentifiedFace))]
-public record IdentifyFace(Guid DocumentId) : IRequest<Result>;
+public record IdentifyFace(Guid DocumentId) : ICommand;
 
 public record IdentifyFaceHandler() : IRequestHandler<IdentifyFace, Result>
 {

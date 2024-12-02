@@ -2,13 +2,11 @@
 using Core.BPM.Application;
 using Core.BPM.BCommand;
 using Core.BPM.DefinitionBuilder;
-using Core.BPM.Extensions;
 using MyCredo.Common;
 using MyCredo.Features.Loan.ConfirmLoanRequest;
 using MyCredo.Features.Loan.Finish;
 using MyCredo.Features.Loan.Initiating;
 using MyCredo.Features.Loan.OtpSend;
-using MyCredo.Features.Loan.OtpValidate;
 using MyCredo.Features.Loan.UploadImage;
 using MyCredo.Features.Loann;
 using MyCredo.Features.RecoveringPassword.Initiating;
@@ -114,11 +112,9 @@ public class RequestCarPawnshopDefinition : BpmDefinition<RequestCarPawnshop>
     {
         configureProcess
             .StartWith<RequestLoanInitiate>()
-            .ContinueOptional<SendOtp>()
-            .ThenContinueAnyTime<ValidateOtp>()
+            .ContinueOptional<SendOtp>(x=>x.ThenContinue<SendOtp>())
             .OrOptional<InitiatePasswordRecovery>()
             .Continue<ConfirmLoanRequest.ConfirmLoanRequest>()
-            .ThenContinueAnyTime<UploadImage.UploadImage>()
             .Continue<FinishCarPawnshop>();
     }
 }

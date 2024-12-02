@@ -2,12 +2,11 @@
 using Core.BPM.Application;
 using Core.BPM.BCommand;
 using Core.BPM.DefinitionBuilder;
-using Core.BPM.Extensions;
 using MyCredo.Common;
+using MyCredo.Features.Loan.OtpSend;
 using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
 using MyCredo.Features.RecoveringPassword.Finishing;
-using MyCredo.Features.RecoveringPassword.GetUserData;
 using MyCredo.Features.RecoveringPassword.IdentifyingFace;
 using MyCredo.Features.RecoveringPassword.Initiating;
 using MyCredo.Features.RecoveringPassword.RequestingPhoneChange;
@@ -60,7 +59,7 @@ public class PasswordRecovery : Aggregate
         Apply(@event);
     }
 
-    public void Apply(OtpSent @event)
+    public void Apply(ValidateOtp.OtpSent @event)
     {
     }
 
@@ -156,7 +155,12 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
         configure
             .StartWith<InitiatePasswordRecovery>()
             .ContinueAnyTime<GenerateOtp>()
+            .Or<IdentifyFace>()
+            .Or<FinishPasswordRecovery>()
+            .ContinueAnyTime<SendOtp>()
+            .Or<Loan.OtpValidate.ValidateOtp>()
             .ContinueAnyTime<ValidateOtp.ValidateOtp>()
+            .Or<IdentifyFace>()
             .Continue<FinishPasswordRecovery>();
     }
 
