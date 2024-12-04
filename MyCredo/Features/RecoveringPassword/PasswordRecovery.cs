@@ -153,7 +153,7 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     public override MyClass<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure
             .StartWith<InitiatePasswordRecovery>()
-            .Continue<GenerateOtp>()
+            .Continue<GenerateOtp>(x => x.Continue<Loan.OtpValidate.ValidateOtp>())
             .Or<IdentifyFace>()
             .Or<FinishPasswordRecovery>()
             .Continue<SendOtp>()

@@ -27,34 +27,39 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
         }
     }
 
-    private ProcessNodeBuilder<TProcess> Continue(INode node, Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    private ProcessNodeBuilder<TProcess> Continue(INode node, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
         if (configure is not null)
         {
-            var configuredBranch = configure.Invoke(new ProcessNodeBuilder<TProcess>(rootNode, process, this));
+            var nextBranch1 = new ProcessNodeBuilder<TProcess>(node, process, this);
+            var configuredBranch = configure.Invoke(nextBranch1);
             return (ProcessNodeBuilder<TProcess>)configuredBranch;
         }
 
+
+        //prev = start
         if (PrevBuilder is null)
         {
             return new ProcessNodeBuilder<TProcess>(node, Process, this);
         }
 
+        var nextBranch = new ProcessNodeBuilder<TProcess>(node, process, this);
+
         BindPrevs();
-        return new ProcessNodeBuilder<TProcess>(node, process, this);
+        return nextBranch;
     }
 
-    public IProcessNodeModifierBuilder<TProcess> Continue<TCommand>(Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifierBuilder<TProcess> Continue<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
         return Continue(new Node(typeof(TCommand), GetProcess().ProcessType), configure);
     }
 
-    public IProcessNodeModifierBuilder<TProcess> ContinueAnyTime<TCommand>(Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifierBuilder<TProcess> ContinueAnyTime<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
         return Continue(new AnyTimeNode(typeof(TCommand), GetProcess().ProcessType), configure);
     }
 
-    public IProcessNodeModifierBuilder<TProcess> ContinueOptional<TCommand>(Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifierBuilder<TProcess> ContinueOptional<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
         return Continue(new OptionalNode(typeof(TCommand), GetProcess().ProcessType), configure);
     }

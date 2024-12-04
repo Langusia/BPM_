@@ -112,7 +112,7 @@ public class RequestCarPawnshopDefinition : BpmDefinition<RequestCarPawnshop>
     {
         return configureProcess
             .StartWith<RequestLoanInitiate>()
-            .ContinueOptional<SendOtp>(x => x.ThenContinue<SendOtp>())
+            .ContinueOptional<SendOtp>()
             .OrOptional<InitiatePasswordRecovery>()
             .Continue<ConfirmLoanRequest.ConfirmLoanRequest>()
             .Continue<FinishCarPawnshop>()

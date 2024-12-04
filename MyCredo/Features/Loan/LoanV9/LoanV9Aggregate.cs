@@ -47,7 +47,7 @@ public class LoanV9AggregateDefinition : BpmDefinition<IssueLoan>
     {
         return configureProcess
             .StartWith<InitiateIssueLoanProcess>()
-            .Continue<GenerateContract>(x => x.ThenContinue<GenerateSchedule>())
+            .Continue<GenerateContract>()
             .Or<GenerateSchedule>(x => x.ThenContinue<GenerateContract>())
             .ContinueAnyTime<SendOtp>()
             .ContinueAnyTime<ValidateOtp>()
