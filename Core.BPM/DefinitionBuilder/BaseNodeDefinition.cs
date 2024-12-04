@@ -2,30 +2,35 @@
 
 namespace Core.BPM.DefinitionBuilder;
 
-public class BaseNodeDefinition(INode rootNode, BProcess process)
+public class BaseNodeDefinition(INode firstNode, BProcess process)
 {
     protected readonly BProcess Process = process;
-    protected INode CurrentNode = rootNode;
-    protected List<INode> CurrentBranchInstances = [rootNode];
-    protected BaseNodeDefinition? BuilderBuffer;
+    protected INode CurrentNode = firstNode;
+    protected List<INode> CurrentBranchInstances = [firstNode];
+    protected bool Lock;
 
-    private INode _rootNode = rootNode;
 
     public BProcess GetProcess() => Process;
     public INode GetCurrent() => CurrentNode;
-    public INode GetRoot() => _rootNode;
+    public INode GetRoot() => firstNode;
     public List<INode> GetBranchInstances() => CurrentBranchInstances;
 
     public List<INode> AddBranchInstance(INode node)
     {
+        node.PrevSteps = firstNode.PrevSteps;
         CurrentBranchInstances.Add(node);
         return CurrentBranchInstances;
+        //node.PrevSteps ??= [];
+        //node.PrevSteps?.Add(rootNode);
+        //rootNode.NextSteps ??= [];
+        //rootNode.NextSteps?.Add(node);
+        //return rootNode.NextSteps!;
     }
 
     public INode SetRoot(INode node)
     {
-        _rootNode = node;
-        return _rootNode;
+        firstNode = node;
+        return firstNode;
     }
 
     public INode SetCurrent(INode node)
@@ -34,13 +39,8 @@ public class BaseNodeDefinition(INode rootNode, BProcess process)
         return CurrentNode;
     }
 
-    protected void End()
-    {
-        if (BuilderBuffer is not null)
-            MergeAndReset(BuilderBuffer);
-    }
 
-    protected void MergeAndReset(BaseNodeDefinition builder)
+    protected void SetRootData(BaseNodeDefinition builder)
     {
         var nextBranchInstances = builder.GetBranchInstances();
         foreach (var nextBuilderBranchInstance in nextBranchInstances)
@@ -50,15 +50,25 @@ public class BaseNodeDefinition(INode rootNode, BProcess process)
 
         foreach (var currentBranchInstance in CurrentBranchInstances)
         {
-            currentBranchInstance.AddNextSteps(CurrentBranchInstances);
+            currentBranchInstance.AddNextSteps(nextBranchInstances);
         }
 
         CurrentBranchInstances = builder.GetBranchInstances();
-        BuilderBuffer = null;
     }
 
-    protected void MergeAndReset(BaseNodeDefinition fromBuilder, BaseNodeDefinition toBuilder)
+    protected void Merge(BaseNodeDefinition builder)
     {
-        
+        var nextBranchInstances = builder.GetBranchInstances();
+        foreach (var nextBuilderBranchInstance in nextBranchInstances)
+        {
+            nextBuilderBranchInstance.AddPrevSteps(CurrentBranchInstances);
+        }
+
+        foreach (var currentBranchInstance in CurrentBranchInstances)
+        {
+            currentBranchInstance.AddNextSteps(nextBranchInstances);
+        }
+
+        CurrentBranchInstances = builder.GetBranchInstances();
     }
 }

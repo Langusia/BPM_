@@ -1,4 +1,5 @@
 ﻿using Core.BPM.Configuration;
+using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 using MediatR;
 
@@ -11,7 +12,7 @@ public class ProcessBuilder<TProcess> : IProcessBuilder<TProcess> where TProcess
         var node = new Node(typeof(TCommand), typeof(TProcess));
         var processInst = new BProcess(typeof(TProcess), node);
         BProcessGraphConfiguration.AddProcess(processInst);
-        var builder = new ProcessNodeBuilder<TProcess>(node, processInst);
+        var builder = new ProcessNodeBuilder<TProcess>(node, processInst, null);
         return builder;
     }
 }

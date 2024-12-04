@@ -2,8 +2,8 @@
 
 public interface IProcessNodeInitialBuilder<TProcess> : IProcessNodeBuilder<TProcess> where TProcess : Aggregate
 {
-    IProcessNodeModifierBuilder<TProcess> Case(Predicate<TProcess> predicate, Action<IProcessNodeInitialBuilder<TProcess>> configure);
-    IProcessNodeModifierBuilder<TProcess> Continue<Command>(Action<IProcessScopedNodeInitialBuilder<TProcess>>? configure = null);
-    IProcessNodeModifierBuilder<TProcess> ContinueAnyTime<Command>(Action<IProcessScopedNodeInitialBuilder<TProcess>>? configure = null);
-    IProcessNodeModifierBuilder<TProcess> ContinueOptional<Command>(Action<IProcessScopedNodeInitialBuilder<TProcess>>? configure = null);
+    IProcessNodeModifierBuilder<TProcess> Case(Predicate<TProcess> predicate, Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null);
+    IProcessNodeModifierBuilder<TProcess> Continue<Command>(Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null);
+    IProcessNodeModifierBuilder<TProcess> ContinueAnyTime<Command>(Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null);
+    IProcessNodeModifierBuilder<TProcess> ContinueOptional<Command>(Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null);
 }

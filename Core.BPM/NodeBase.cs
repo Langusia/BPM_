@@ -90,7 +90,7 @@ public abstract class NodeBase : INode
         NextSteps.Add(node);
     }
 
-    public void AddNextSteps(List<INode> nodes)
+    public void AddNextSteps(List<INode>? nodes)
     {
         NextSteps ??= [];
         NextSteps.AddRange(nodes);
@@ -116,7 +116,7 @@ public abstract class NodeBase : INode
         PrevSteps.Add(node);
     }
 
-    public void AddPrevSteps(List<INode> nodes)
+    public void AddPrevSteps(List<INode>? nodes)
     {
         PrevSteps ??= [];
         PrevSteps.AddRange(nodes);
