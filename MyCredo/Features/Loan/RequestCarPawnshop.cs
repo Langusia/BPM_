@@ -108,13 +108,14 @@ public record CarPawnshopInitiated(
 
 public class RequestCarPawnshopDefinition : BpmDefinition<RequestCarPawnshop>
 {
-    public override void DefineProcess(IProcessBuilder<RequestCarPawnshop> configureProcess)
+    public override MyClass<RequestCarPawnshop> DefineProcess(IProcessBuilder<RequestCarPawnshop> configureProcess)
     {
-        configureProcess
+        return configureProcess
             .StartWith<RequestLoanInitiate>()
-            .ContinueOptional<SendOtp>(x=>x.ThenContinue<SendOtp>())
+            .ContinueOptional<SendOtp>(x => x.ThenContinue<SendOtp>())
             .OrOptional<InitiatePasswordRecovery>()
             .Continue<ConfirmLoanRequest.ConfirmLoanRequest>()
-            .Continue<FinishCarPawnshop>();
+            .Continue<FinishCarPawnshop>()
+            .End();
     }
 }

@@ -43,15 +43,16 @@ public class IssueLoan : Aggregate
 
 public class LoanV9AggregateDefinition : BpmDefinition<IssueLoan>
 {
-    public override void DefineProcess(IProcessBuilder<IssueLoan> configureProcess)
+    public override MyClass<IssueLoan> DefineProcess(IProcessBuilder<IssueLoan> configureProcess)
     {
-        configureProcess
+        return configureProcess
             .StartWith<InitiateIssueLoanProcess>()
             .Continue<GenerateContract>(x => x.ThenContinue<GenerateSchedule>())
             .Or<GenerateSchedule>(x => x.ThenContinue<GenerateContract>())
             .ContinueAnyTime<SendOtp>()
             .ContinueAnyTime<ValidateOtp>()
-            .Continue<FinishCarPawnshop>();
+            .Continue<FinishCarPawnshop>()
+            .End();
         //configureProcess
         //    .StartWith<InitiateIssueLoanProcess>()
         //    .ThenContinue<GenerateContract>(x => 

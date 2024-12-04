@@ -28,10 +28,9 @@ public class CheckCard : Aggregate
 
 public class CheckCardDefinition : BpmDefinition<CheckCard>
 {
-    public override void DefineProcess(IProcessBuilder<CheckCard> configureProcess)
+    public override MyClass<CheckCard> DefineProcess(IProcessBuilder<CheckCard> configureProcess)
     {
-        // configureProcess.StartWith<InitiatedCardCheck>()
-        //     .Continue<FinishCheckCard>();
+        return null;
     }
 }
 

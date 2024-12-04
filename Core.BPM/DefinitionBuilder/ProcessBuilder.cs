@@ -15,3 +15,5 @@ public class ProcessBuilder<TProcess> : IProcessBuilder<TProcess> where TProcess
         return builder;
     }
 }
+
+public class MyClass<T> where T : Aggregate;

@@ -14,9 +14,11 @@ public interface INode
     public List<Type> ProducingEvents { get; }
     List<INode>? NextSteps { get; set; }
     void AddNextStep(INode node);
+    void AddNextSteps(List<INode> node);
     void AddNextStepToTail(INode node);
     List<INode>? PrevSteps { get; set; }
     void AddPrevStep(INode node);
+    void AddPrevSteps(List<INode> nodes);
     INode? FindNextNode(string eventName);
     public BpmProducer CommandProducer() => (BpmProducer)CommandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
 

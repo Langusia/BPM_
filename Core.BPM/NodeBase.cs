@@ -78,6 +78,7 @@ public abstract class NodeBase : INode
         }
     }
 
+
     public virtual INode? FindNextNode(string eventName)
     {
         return NextSteps.FirstOrDefault(step => step.ProducingEvents.Any(e => e.Name == eventName));
@@ -87,6 +88,12 @@ public abstract class NodeBase : INode
     {
         NextSteps ??= [];
         NextSteps.Add(node);
+    }
+
+    public void AddNextSteps(List<INode> nodes)
+    {
+        NextSteps ??= [];
+        NextSteps.AddRange(nodes);
     }
 
     public void AddNextStepToTail(INode node)
@@ -107,6 +114,12 @@ public abstract class NodeBase : INode
     {
         PrevSteps ??= [];
         PrevSteps.Add(node);
+    }
+
+    public void AddPrevSteps(List<INode> nodes)
+    {
+        PrevSteps ??= [];
+        PrevSteps.AddRange(nodes);
     }
 
     public abstract bool ValidatePlacement(BProcess process, List<string> savedEvents, INode? currentNode);

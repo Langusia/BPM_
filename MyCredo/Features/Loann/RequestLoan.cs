@@ -123,11 +123,12 @@ public class RequestDigitalLoan : Aggregate
 
 public class RequestDigitalLoanDefinition : BpmDefinition<RequestDigitalLoan>
 {
-    public override void DefineProcess(IProcessBuilder<RequestDigitalLoan> configureProcess)
+    public override MyClass<RequestDigitalLoan> DefineProcess(IProcessBuilder<RequestDigitalLoan> configureProcess)
     {
-        configureProcess
+        return configureProcess
             .StartWith<DigitalLoanInitiate>()
             .Continue<ConfirmDigitalLoan>()
-            .Continue<FinishDigitalLoan>();
+            .Continue<FinishDigitalLoan>()
+            .End();
     }
 }

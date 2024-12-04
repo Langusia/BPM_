@@ -6,6 +6,7 @@ using Core.BPM.Registry;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using StepConfigurator = Core.BPM.BCommand.StepConfigurator;
 
 namespace Core.BPM.Application;
 

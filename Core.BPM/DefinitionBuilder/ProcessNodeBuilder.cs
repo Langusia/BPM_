@@ -6,6 +6,8 @@ namespace Core.BPM.DefinitionBuilder;
 public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process) : BaseNodeDefinition(rootNode, process),
     IProcessNodeModifierBuilder<TProcess>, IProcessNodeInitialBuilder<TProcess>, IProcessScopedNodeInitialBuilder<TProcess> where TProcess : Aggregate
 {
+    private BaseNodeDefinition? ScopedBuilderBuffer;
+
     public IProcessNodeModifierBuilder<TProcess> Continue<TCommand>(Action<IProcessScopedNodeInitialBuilder<TProcess>>? configure = null)
     {
         Continue(new Node(typeof(TCommand), GetProcess().ProcessType), configure);
@@ -32,17 +34,50 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process) : Ba
 
     private void Continue(INode node, Action<IProcessScopedNodeInitialBuilder<TProcess>>? configure)
     {
-        RootNode.AddNextStepToTail(node);
-        node.AddPrevStep(CurrentNode);
+        if (BuilderBuffer is not null)
+        {
+            MergeAndReset(BuilderBuffer);
+            BuilderBuffer = new ProcessNodeBuilder<TProcess>(node, Process);
+        }
+        else
+        {
+            var s = new ProcessNodeBuilder<TProcess>(node, Process);
+            BuilderBuffer = s;
+            if (configure is not null)
+            {
+                configure?.Invoke((IProcessScopedNodeInitialBuilder<TProcess>)BuilderBuffer);
+            }
+        }
+    }
+
+    private IProcessNodeModifierBuilder<TProcess> ThenContinue<TCommand>(INode node, Action<IProcessScopedNodeInitialBuilder<TProcess>>? configure = null)
+    {
+        BuilderBuffer = this;
+
+
+        if (ScopedBuilderBuffer is not null)
+        {
+            ScopedBuilderBuffer = this;
+        }
+        else
+        {
+            BuilderBuffer = new ProcessNodeBuilder<TProcess>(node, Process);
+            if (configure is not null)
+            {
+                configure?.Invoke((IProcessScopedNodeInitialBuilder<TProcess>)BuilderBuffer);
+            }
+        }
+
+        var lastBranchNode = CurrentBranchInstances.Last();
+        lastBranchNode.AddNextStep(node);
+        lastBranchNode = node;
 
         if (configure is not null)
         {
-            var nextNodeBuilder = new ProcessNodeBuilder<TProcess>(node, Process);
-            configure?.Invoke(nextNodeBuilder);
+            configure?.Invoke(this);
         }
 
-        RootNode = CurrentNode;
-        CurrentNode = node;
+        return this;
     }
 
     public IProcessNodeModifierBuilder<TProcess> Or<TCommand>(Action<IProcessScopedNodeInitialBuilder<TProcess>>? configure = null)
@@ -65,16 +100,14 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process) : Ba
 
     private IProcessNodeModifierBuilder<TProcess> Or(INode node, Action<IProcessScopedNodeInitialBuilder<TProcess>>? configure)
     {
-        SetCurrent(node);
-        node.AddPrevStep(RootNode);
-        CurrentTailNodes.Add(CurrentNode);
-        foreach (var currentTailNode in CurrentTailNodes)
-        {
-            currentTailNode.AddNextStep(node);
-        }
-        //RootNode.AddNextStep(node);
+        BuilderBuffer?.AddBranchInstance(node);
 
-        configure?.Invoke(this);
+        if (configure is not null)
+        {
+            var nextNodeBuilder = new ProcessNodeBuilder<TProcess>(node, Process);
+            configure?.Invoke(nextNodeBuilder);
+            MergeAndReset(nextNodeBuilder);
+        }
 
         return this;
     }
@@ -97,19 +130,10 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process) : Ba
         return this;
     }
 
-    private IProcessNodeModifierBuilder<TProcess> ThenContinue<TCommand>(INode node, Action<IProcessScopedNodeInitialBuilder<TProcess>>? configure = null)
+
+    public MyClass<TProcess> End()
     {
-        CurrentNode.AddNextStepToTail(node);
-        node.AddPrevStep(CurrentNode);
-
-        if (configure is not null)
-        {
-            var nextNodeBuilder = new ProcessNodeBuilder<TProcess>(node, Process);
-            configure?.Invoke(nextNodeBuilder);
-        }
-
-        SetCurrent(node);
-
-        return this;
+        End();
+        return new MyClass<TProcess>();
     }
 }

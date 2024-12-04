@@ -150,19 +150,18 @@ public class PasswordRecovery : Aggregate
 
 public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
-    public override void DefineProcess(IProcessBuilder<PasswordRecovery> configure)
-    {
+    public override MyClass<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure
             .StartWith<InitiatePasswordRecovery>()
-            .ContinueAnyTime<GenerateOtp>()
+            .ContinueAnyTime<GenerateOtp>(x => x.ThenContinue<Loan.OtpValidate.ValidateOtp>())
             .Or<IdentifyFace>()
             .Or<FinishPasswordRecovery>()
             .ContinueAnyTime<SendOtp>()
             .Or<Loan.OtpValidate.ValidateOtp>()
             .ContinueAnyTime<ValidateOtp.ValidateOtp>()
             .Or<IdentifyFace>()
-            .Continue<FinishPasswordRecovery>();
-    }
+            .Continue<FinishPasswordRecovery>()
+            .End();
 
     public override void ConfigureSteps(StepConfigurator<PasswordRecovery> stepConfigurator)
     {
