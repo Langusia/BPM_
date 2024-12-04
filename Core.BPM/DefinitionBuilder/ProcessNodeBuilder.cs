@@ -6,36 +6,17 @@ namespace Core.BPM.DefinitionBuilder;
 public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, ProcessNodeBuilder<TProcess>? PrevBuilder) : BaseNodeDefinition(rootNode, process),
     IProcessNodeModifierBuilder<TProcess>, IProcessNodeInitialBuilder<TProcess>, IProcessScopedNodeInitialBuilder<TProcess> where TProcess : Aggregate
 {
-    public void MergePreviousToCurrentBranches(ProcessNodeBuilder<TProcess> bb)
-    {
-        foreach (var currentBranchInstance in CurrentBranchInstances)
-        {
-            bb.CurrentBranchInstances.Add(currentBranchInstance);
-        }
-    }
-
-    public void BindPrevs()
+    private void BindPrevs()
     {
         foreach (var currentBranchInstance in CurrentBranchInstances)
         {
             currentBranchInstance.AddPrevSteps(PrevBuilder?.CurrentBranchInstances);
         }
-    }
 
-    public void BindNexts(ProcessNodeBuilder<TProcess> builder)
-    {
-        foreach (var currentBranchInstance in builder.CurrentBranchInstances)
+        foreach (var currentBranchInstance in PrevBuilder.CurrentBranchInstances)
         {
             currentBranchInstance.AddNextSteps(CurrentBranchInstances);
         }
-    }
-
-    public void MergeNextStepsToCurrentBranches(ProcessNodeBuilder<TProcess> bb)
-    {
-        //foreach (var currentBranchInstance in OriginBranchInstances)
-        //{
-        //    currentBranchInstance.AddNextSteps(bb.CurrentBranchInstances);
-        //}
     }
 
     public void MergePreviousToRootScope()
@@ -51,27 +32,16 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
         if (configure is not null)
         {
             var configuredBranch = configure.Invoke(new ProcessNodeBuilder<TProcess>(rootNode, process, this));
-            //((ProcessNodeBuilder<TProcess>)configuredBranch).MergePreviousToCurrentBranches(configuredBranch);
             return (ProcessNodeBuilder<TProcess>)configuredBranch;
         }
 
         if (PrevBuilder is null)
         {
-            var s = new ProcessNodeBuilder<TProcess>(node, Process, this);
-            Merge(s);
-            return s;
-        }
-        
-        var newBuilder = new ProcessNodeBuilder<TProcess>(node, Process, this);
-        if (!Lock)
-        {
-            Lock = true;
-            newBuilder.BindPrevs();
-            return this;
+            return new ProcessNodeBuilder<TProcess>(node, Process, this);
         }
 
-        BindNexts(newBuilder);
-        return newBuilder;
+        BindPrevs();
+        return new ProcessNodeBuilder<TProcess>(node, process, this);
     }
 
     public IProcessNodeModifierBuilder<TProcess> Continue<TCommand>(Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
@@ -125,14 +95,6 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
     private IProcessNodeModifierBuilder<TProcess> Or(INode node, Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
         AddBranchInstance(node);
-
-        //if (configure is not null)
-        //{
-        //    var nextNodeBuilder = new ProcessNodeBuilder<TProcess>(node, Process);
-        //    configure?.Invoke(nextNodeBuilder);
-        //    MergeAndReset(nextNodeBuilder);
-        //}
-
         return this;
     }
 
@@ -157,8 +119,7 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
 
     public MyClass<TProcess> End()
     {
-        if (PrevBuilder is not null)
-            Merge(PrevBuilder);
+        BindPrevs();
         return new MyClass<TProcess>();
     }
 }

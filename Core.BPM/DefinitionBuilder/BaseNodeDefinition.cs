@@ -7,7 +7,6 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
     protected readonly BProcess Process = process;
     protected INode CurrentNode = firstNode;
     protected List<INode> CurrentBranchInstances = [firstNode];
-    protected bool Lock;
 
 
     public BProcess GetProcess() => Process;
@@ -20,11 +19,6 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
         node.PrevSteps = firstNode.PrevSteps;
         CurrentBranchInstances.Add(node);
         return CurrentBranchInstances;
-        //node.PrevSteps ??= [];
-        //node.PrevSteps?.Add(rootNode);
-        //rootNode.NextSteps ??= [];
-        //rootNode.NextSteps?.Add(node);
-        //return rootNode.NextSteps!;
     }
 
     public INode SetRoot(INode node)
@@ -37,38 +31,5 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
     {
         CurrentNode = node;
         return CurrentNode;
-    }
-
-
-    protected void SetRootData(BaseNodeDefinition builder)
-    {
-        var nextBranchInstances = builder.GetBranchInstances();
-        foreach (var nextBuilderBranchInstance in nextBranchInstances)
-        {
-            nextBuilderBranchInstance.AddPrevSteps(CurrentBranchInstances);
-        }
-
-        foreach (var currentBranchInstance in CurrentBranchInstances)
-        {
-            currentBranchInstance.AddNextSteps(nextBranchInstances);
-        }
-
-        CurrentBranchInstances = builder.GetBranchInstances();
-    }
-
-    protected void Merge(BaseNodeDefinition builder)
-    {
-        var nextBranchInstances = builder.GetBranchInstances();
-        foreach (var nextBuilderBranchInstance in nextBranchInstances)
-        {
-            nextBuilderBranchInstance.AddPrevSteps(CurrentBranchInstances);
-        }
-
-        foreach (var currentBranchInstance in CurrentBranchInstances)
-        {
-            currentBranchInstance.AddNextSteps(nextBranchInstances);
-        }
-
-        CurrentBranchInstances = builder.GetBranchInstances();
     }
 }
