@@ -10,6 +10,30 @@ namespace MyCredo.Features.TwoFactor;
 [BpmProducer(typeof(OtpValidated))]
 public record ValidateOtp(Guid DocumentId) : IRequest<Result<long>>;
 
+[BpmProducer(typeof(OtpValidated))]
+public record A(Guid DocumentId) : IRequest<Result<long>>;
+
+[BpmProducer(typeof(OtpValidated))]
+public record B(Guid DocumentId) : IRequest<Result<long>>;
+
+[BpmProducer(typeof(OtpValidated))]
+public record C(Guid DocumentId) : IRequest<Result<long>>;
+
+[BpmProducer(typeof(OtpValidated))]
+public record D(Guid DocumentId) : IRequest<Result<long>>;
+
+[BpmProducer(typeof(OtpValidated))]
+public record E(Guid DocumentId) : IRequest<Result<long>>;
+
+[BpmProducer(typeof(OtpValidated))]
+public record F(Guid DocumentId) : IRequest<Result<long>>;
+
+[BpmProducer(typeof(OtpValidated))]
+public record G(Guid DocumentId) : IRequest<Result<long>>;
+
+[BpmProducer(typeof(OtpValidated))]
+public record H(Guid DocumentId) : IRequest<Result<long>>;
+
 public record ValidateOtpHandler : IRequestHandler<ValidateOtp, Result<long>>
 {
     private readonly BpmStore<TwoFactor, ValidateOtp> _bpm;

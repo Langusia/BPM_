@@ -5,7 +5,7 @@ namespace Core.BPM;
 public class BProcess(Type processType, INode rootNode)
 {
     public readonly Type ProcessType = processType;
-    public readonly INode RootNode = rootNode;
+    public INode RootNode = rootNode;
 
     public INode? FindLastValidNode(List<string> progressedPath, bool skipOptionals = false)
     {

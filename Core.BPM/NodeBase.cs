@@ -96,6 +96,11 @@ public abstract class NodeBase : INode
         NextSteps.AddRange(nodes);
     }
 
+    public void SetNextSteps(List<INode>? nodes)
+    {
+        NextSteps = nodes;
+    }
+
     public void AddNextStepToTail(INode node)
     {
         if (NextSteps.Count == 0)
@@ -106,6 +111,13 @@ public abstract class NodeBase : INode
             GetLastNodes(tails, this);
             tails.Distinct().ToList().ForEach(x => x.AddNextStep(node));
         }
+    }
+
+    public List<INode> FetchLastNodes(INode node)
+    {
+        var tails = new List<INode>();
+        GetLastNodes(tails, node);
+        return tails.ToList();
     }
 
     public List<INode> PrevSteps { get; set; }
@@ -122,6 +134,11 @@ public abstract class NodeBase : INode
         PrevSteps.AddRange(nodes);
     }
 
+    public void SetPrevSteps(List<INode>? nodes)
+    {
+        PrevSteps = nodes;
+    }
+
     public abstract bool ValidatePlacement(BProcess process, List<string> savedEvents, INode? currentNode);
 
     protected static BpmProducer GetCommandProducer(Type commandType)
@@ -133,6 +150,12 @@ public abstract class NodeBase : INode
 
     protected void GetLastNodes(List<INode> lastNodes, INode start)
     {
+        if (start.NextSteps is null || start.NextSteps.Count == 0)
+        {
+            lastNodes.Add(start);
+            return;
+        }
+
         foreach (var nextStep in start.NextSteps)
         {
             if (nextStep.NextSteps is null || nextStep.NextSteps.Count == 0)

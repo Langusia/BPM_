@@ -15,11 +15,14 @@ public interface INode
     List<INode>? NextSteps { get; set; }
     void AddNextStep(INode node);
     void AddNextSteps(List<INode>? node);
+    void SetNextSteps(List<INode>? node);
     void AddNextStepToTail(INode node);
     List<INode>? PrevSteps { get; set; }
     void AddPrevStep(INode node);
     void AddPrevSteps(List<INode>? nodes);
+    void SetPrevSteps(List<INode>? nodes);
     INode? FindNextNode(string eventName);
+    List<INode> FetchLastNodes(INode node);
     public BpmProducer CommandProducer() => (BpmProducer)CommandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
 
     public abstract bool ValidatePlacement(BProcess process, List<string> savedEvents, INode? currentNode);

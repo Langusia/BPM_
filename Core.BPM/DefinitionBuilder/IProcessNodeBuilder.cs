@@ -1,6 +1,6 @@
 ﻿namespace Core.BPM.DefinitionBuilder;
 
-public interface IProcessNodeBuilder<T> where T : Aggregate
+public interface IProcessNodeBuilder<T> : IProcessBuilder where T : Aggregate
 {
     MyClass<T> End();
 }

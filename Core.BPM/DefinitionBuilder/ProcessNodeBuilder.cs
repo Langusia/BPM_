@@ -3,103 +3,78 @@ using Core.BPM.Nodes;
 
 namespace Core.BPM.DefinitionBuilder;
 
-public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, ProcessNodeBuilder<TProcess>? PrevBuilder) : BaseNodeDefinition(rootNode, process),
-    IProcessNodeModifierBuilder<TProcess>, IProcessNodeInitialBuilder<TProcess>, IProcessScopedNodeInitialBuilder<TProcess> where TProcess : Aggregate
+public class ProcessNodeBuilder(INode rootNode, BProcess process)
+    : BaseNodeDefinition(rootNode, process),
+        IProcessNodeModifierBuilder<TProcess>, IProcessNodeInitialBuilder<TProcess>, IProcessScopedNodeInitialBuilder<TProcess> where TProcess : Aggregate
 {
-    private void BindPrevs()
+    private ProcessNodeBuilder<TProcess> Continue(ProcessNodeBuilder<TProcess> nextBuilder,
+        Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
-        foreach (var currentBranchInstance in CurrentBranchInstances)
-        {
-            currentBranchInstance.AddPrevSteps(PrevBuilder?.CurrentBranchInstances);
-        }
-
-        foreach (var currentBranchInstance in PrevBuilder.CurrentBranchInstances)
-        {
-            currentBranchInstance.AddNextSteps(CurrentBranchInstances);
-        }
-    }
-
-    public void MergePreviousToRootScope()
-    {
-        foreach (var currentBranchInstance in CurrentBranchInstances)
-        {
-            currentBranchInstance.AddPrevStep(rootNode);
-        }
-    }
-
-    private ProcessNodeBuilder<TProcess> Continue(INode node, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
-    {
+        nextBuilder.CurrentBranchInstances.ForEach(x => x.SetPrevSteps(CurrentBranchInstances));
         if (configure is not null)
-        {
-            var nextBranch1 = new ProcessNodeBuilder<TProcess>(node, process, this);
-            var configuredBranch = configure.Invoke(nextBranch1);
-            return (ProcessNodeBuilder<TProcess>)configuredBranch;
-        }
+            return (ProcessNodeBuilder<TProcess>)configure.Invoke(nextBuilder);
 
+        return nextBuilder;
+    }
 
-        //prev = start
-        if (PrevBuilder is null)
-        {
-            return new ProcessNodeBuilder<TProcess>(node, Process, this);
-        }
-
-        var nextBranch = new ProcessNodeBuilder<TProcess>(node, process, this);
-
-        BindPrevs();
-        return nextBranch;
+    private IProcessNodeModifierBuilder<TProcess> ThenContinue<TCommand>(INode node,
+        Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    {
+        return null;
     }
 
     public IProcessNodeModifierBuilder<TProcess> Continue<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
-        return Continue(new Node(typeof(TCommand), GetProcess().ProcessType), configure);
+        return Continue(new ProcessNodeBuilder<TProcess>(new Node(typeof(TCommand), GetProcess().ProcessType), Process), configure);
     }
 
     public IProcessNodeModifierBuilder<TProcess> ContinueAnyTime<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
-        return Continue(new AnyTimeNode(typeof(TCommand), GetProcess().ProcessType), configure);
+        return Continue(new ProcessNodeBuilder<TProcess>(new AnyTimeNode(typeof(TCommand), GetProcess().ProcessType), Process), configure);
     }
 
     public IProcessNodeModifierBuilder<TProcess> ContinueOptional<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
-        return Continue(new OptionalNode(typeof(TCommand), GetProcess().ProcessType), configure);
+        return Continue(new ProcessNodeBuilder<TProcess>(new OptionalNode(typeof(TCommand), GetProcess().ProcessType), Process), configure);
     }
 
-    public IProcessNodeModifierBuilder<TProcess> Case(Predicate<TProcess> predicate, Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifierBuilder<TProcess> Case(Predicate<TProcess> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
         throw new NotImplementedException();
     }
 
 
-    private IProcessNodeModifierBuilder<TProcess> ThenContinue<TCommand>(INode node,
-        Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
-    {
-        var nextBuilder = new ProcessNodeBuilder<TProcess>(rootNode, Process, this);
-        nextBuilder.MergePreviousToRootScope();
-
-        return this;
-    }
-
-    public IProcessNodeModifierBuilder<TProcess> Or<TCommand>(Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifierBuilder<TProcess> Or<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
         var node = new Node(typeof(TCommand), typeof(TProcess));
+
         return Or(node, configure);
     }
 
-    public IProcessNodeModifierBuilder<TProcess> OrOptional<TCommand>(Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifierBuilder<TProcess> OrOptional<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
         var node = new OptionalNode(typeof(TCommand), typeof(TProcess));
         return Or(node, configure);
     }
 
-    public IProcessNodeModifierBuilder<TProcess> OrAnyTime<TCommand>(Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifierBuilder<TProcess> OrAnyTime<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
         var node = new OptionalNode(typeof(TCommand), typeof(TProcess));
         return Or(node, configure);
     }
 
-    private IProcessNodeModifierBuilder<TProcess> Or(INode node, Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    private IProcessNodeModifierBuilder<TProcess> Or(INode node, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
+        if (configure is not null)
+        {
+            var configured = (ProcessNodeBuilder<TProcess>)configure.Invoke(new ProcessNodeBuilder<TProcess>(node, Process));
+            configured.CurrentBranchInstances.ForEach(AddBranchInstance);
+            return this;
+        }
+
         AddBranchInstance(node);
+        //if (configuredBranchInstance is not null)
+        //    AddBranchInstance(configuredBranchInstance.CurrentBranchInstances ?? node);
         return this;
     }
 
@@ -121,10 +96,25 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
         return ThenContinue<TCommand>(newNode, configure);
     }
 
+    private void ReverseGraph()
+    {
+        var currentNodeSet = CurrentBranchInstances;
+        GoToRootSetNexts(currentNodeSet);
+    }
+
+    private void GoToRootSetNexts(List<INode> currentNodeSet)
+    {
+        foreach (var currentBranchInstance in currentNodeSet)
+        {
+            currentBranchInstance.PrevSteps?.ForEach(x => x.SetNextSteps(currentNodeSet));
+            if (currentBranchInstance.PrevSteps is not null)
+                GoToRootSetNexts(currentBranchInstance.PrevSteps);
+        }
+    }
 
     public MyClass<TProcess> End()
     {
-        BindPrevs();
+        ReverseGraph();
         return new MyClass<TProcess>();
     }
 }

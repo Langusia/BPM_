@@ -152,15 +152,17 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
     public override MyClass<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure
-            .StartWith<InitiatePasswordRecovery>()
-            .Continue<GenerateOtp>(x => x.Continue<Loan.OtpValidate.ValidateOtp>())
-            .Or<IdentifyFace>()
-            .Or<FinishPasswordRecovery>()
-            .Continue<SendOtp>()
-            .Or<Loan.OtpValidate.ValidateOtp>()
-            .Continue<ValidateOtp.ValidateOtp>()
-            .Or<IdentifyFace>()
-            .Continue<FinishPasswordRecovery>()
+            .StartWith<A>()
+            .Continue<B>(x =>
+                x.Continue<C>(z =>
+                        z.Continue<D>(y =>
+                                y.Continue<E>()
+                                    .Or<F>())
+                            .Or<G>())
+                    .Or<H>())
+            .Or<H>()
+            .Continue<A>()
+            .Or<B>()
             .End();
 
     public override void ConfigureSteps(StepConfigurator<PasswordRecovery> stepConfigurator)
