@@ -34,6 +34,9 @@ public record G(Guid DocumentId) : IRequest<Result<long>>;
 [BpmProducer(typeof(OtpValidated))]
 public record H(Guid DocumentId) : IRequest<Result<long>>;
 
+[BpmProducer(typeof(OtpValidated))]
+public record Z(Guid DocumentId) : IRequest<Result<long>>;
+
 public record ValidateOtpHandler : IRequestHandler<ValidateOtp, Result<long>>
 {
     private readonly BpmStore<TwoFactor, ValidateOtp> _bpm;
