@@ -148,12 +148,12 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
     }
 
 
-    private List<INode> GetAllWays()
+    private INode? GetAllWays()
     {
         var currentNodeSet = CurrentBranchInstances;
         List<INode> result = new List<INode>();
         GoToRootSetNexts(currentNodeSet, result);
-        return result;
+        return result?.FirstOrDefault();
     }
 
     private void GoToRootSetNexts(List<INode> currentNodeSet, List<INode> res)
@@ -166,15 +166,19 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
                 continue;
             }
 
-            currentBranchInstance.PrevSteps?.ForEach(x => x.AddNextStep(currentBranchInstance));
+            foreach (var currentBranchInstancePrevStep in currentBranchInstance.PrevSteps)
+            {
+                if (!currentBranchInstancePrevStep.NextSteps!.Contains(currentBranchInstance))
+                    currentBranchInstancePrevStep.AddNextStep(currentBranchInstance);
+            }
+
+            //currentBranchInstance.PrevSteps?.ForEach(x => x.AddNextStep(currentBranchInstance));
             GoToRootSetNexts(currentBranchInstance.PrevSteps!, res);
         }
     }
 
     public MyClass<TProcess> End()
     {
-        var s = CurrentBranchInstances;
-
         var res = GetAllWays();
         return new MyClass<TProcess>();
     }
