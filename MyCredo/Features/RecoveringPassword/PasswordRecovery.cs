@@ -154,12 +154,15 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
         configure
             .StartWith<A>()
             .Continue<B>(x =>
-                x.ThenContinue<C>(z =>
-                        z.ThenContinue<D>(y =>
-                            y.ThenContinue<E>(s =>
-                                    s.ThenContinue<Z>())
-                                .Or<F>()
-                                .Or<Z>())
+                x.Continue<A>(z =>
+                        z.Continue<B>(y =>
+                            y.Continue<C>(s =>
+                                    s.Continue<D>())
+                                .Or<E>()
+                                .Or<F>(b =>
+                                    b.Continue<G>()
+                                        .Or<H>()
+                                        .Continue<Z>()))
                     ).Or<H>()
                     .Continue<F>()
                     .Or<G>())
