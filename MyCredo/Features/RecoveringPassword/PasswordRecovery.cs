@@ -164,6 +164,11 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
                                         .Or<H>()
                                         .Continue<Z>()))
                     ).Or<H>()
+                    .Case(x => x.PersonalNumber == "123", z =>
+                        z.ContinueOptional<A>()
+                            .Continue<B>())
+                    .Case<ValidateOtp.TwoFactor>(x => x.IsValid, x =>
+                        x.Continue<CheckCard>())
                     .Continue<F>()
                     .Or<G>())
             .Or<H>()

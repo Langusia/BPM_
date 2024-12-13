@@ -11,7 +11,6 @@ public class ProcessRegistry
     {
         var applyMethods = new Dictionary<Type, Action<object, object>>();
 
-        // Find all Apply(EventType) methods
         var methods = aggregateType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             .Where(m => m.Name == "Apply" && m.GetParameters().Length == 1);
 
@@ -19,7 +18,6 @@ public class ProcessRegistry
         {
             var eventType = method.GetParameters()[0].ParameterType;
 
-            // Create a delegate for the Apply method
             var applyDelegate = CreateApplyDelegate(aggregateType, eventType, method);
             applyMethods[eventType] = applyDelegate;
         }

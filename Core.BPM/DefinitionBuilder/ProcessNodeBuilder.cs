@@ -8,16 +8,12 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
         IProcessNodeModifierBuilder<TProcess>, IProcessNodeInitialBuilder<TProcess>, IProcessScopedNodeInitialBuilder<TProcess> where TProcess : Aggregate
 {
     public ProcessNodeBuilder<TProcess>? _nb = nb;
-
-    //public Stack<ProcessNodeBuilder<TProcess>?> _ns = ns;
     public ProcessNodeBuilder<TProcess>? OrScopeBuilder;
 
     private ProcessNodeBuilder<TProcess> Continue(ProcessNodeBuilder<TProcess> nextBuilder,
         Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
         nextBuilder.CurrentBranchInstances.ForEach(x => x.SetPrevSteps(CurrentBranchInstances));
-        //_ns.Push(this);
-
         _nb = this;
         if (configure is not null)
         {
@@ -33,14 +29,11 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
         Func<IProcessScopedNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
         nextBuilder.CurrentBranchInstances.ForEach(x => x.SetPrevSteps(CurrentBranchInstances));
-        //_ns.Push(this);
-
         if (configure is not null)
         {
             var configuredBuilder = (ProcessNodeBuilder<TProcess>)configure.Invoke(nextBuilder);
             configuredBuilder.OrScopeBuilder = this;
 
-            //configuredBuilder.SetRoot(nextBuilder.GetRoot());
             return configuredBuilder;
         }
 
@@ -49,13 +42,9 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
 
     private IProcessNodeModifierBuilder<TProcess> Or(INode node, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
-        ProcessNodeBuilder<TProcess>? configuredBranchInstance;
-        var s = CurrentBranchInstances;
         if (configure is not null)
         {
             var configured = (ProcessNodeBuilder<TProcess>)configure.Invoke(new ProcessNodeBuilder<TProcess>(node, Process, null));
-            var ss = CurrentBranchInstances;
-            //configured.CurrentBranchInstances.ForEach(AddBranchInstance);
             if (OrScopeBuilder is null)
                 node.SetPrevSteps(GetRoot().PrevSteps);
             else
@@ -64,16 +53,9 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
             }
 
             CurrentBranchInstances.AddRange(configured.CurrentBranchInstances);
-
-            var sss = CurrentBranchInstances;
-            //if (configuredBranchInstance is not null)
-            //    AddBranchInstance(configuredBranchInstance.CurrentBranchInstances ?? node);
             return this;
         }
 
-        //AddBranchInstance(node);
-        //_nb ??= _ns.Pop();
-        ////_nb.AddBranchInstance(node);
         if (OrScopeBuilder is null)
             node.SetPrevSteps(GetRoot().PrevSteps);
         else
@@ -82,11 +64,12 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
         }
 
         CurrentBranchInstances.Add(node);
-
-
-        //if (configuredBranchInstance is not null)
-        //    AddBranchInstance(configuredBranchInstance.CurrentBranchInstances ?? node);
         return this;
+    }
+
+    public IProcessNodeModifierBuilder<TProcess> Case<TAggregate>(Predicate<TAggregate> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>> configure) where TAggregate : Aggregate
+    {
+        throw new NotImplementedException();
     }
 
     public IProcessNodeModifierBuilder<TProcess> Continue<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
@@ -112,8 +95,6 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
 
     public IProcessNodeModifierBuilder<TProcess> Or<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
     {
-        var s = CurrentBranchInstances;
-
         var node = new Node(typeof(TCommand), typeof(TProcess));
 
         return Or(node, configure);
@@ -172,14 +153,13 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, Proc
                     currentBranchInstancePrevStep.AddNextStep(currentBranchInstance);
             }
 
-            //currentBranchInstance.PrevSteps?.ForEach(x => x.AddNextStep(currentBranchInstance));
             GoToRootSetNexts(currentBranchInstance.PrevSteps!, res);
         }
     }
 
     public MyClass<TProcess> End()
     {
-        var res = GetAllWays();
+        Process.RootNode = GetAllWays();
         return new MyClass<TProcess>();
     }
 }
