@@ -1,4 +1,5 @@
-﻿using Core.BPM.Application.Managers;
+﻿using Core.BPM.AggregateConditions;
+using Core.BPM.Application.Managers;
 using Core.BPM.Attributes;
 using Core.BPM.BCommand;
 
@@ -11,6 +12,7 @@ public interface INode
     Type ProcessType { get; }
     StepOptions Options { get; set; }
 
+    public List<IAggregateCondition>? AggregateConditions { get; set; }
     public List<Type> ProducingEvents { get; }
     List<INode>? NextSteps { get; set; }
     void AddNextStep(INode node);

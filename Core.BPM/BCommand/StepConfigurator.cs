@@ -10,7 +10,7 @@ public class StepConfigurator
 
 public class StepConfigurator<TAggregate> where TAggregate : Aggregate
 {
-    public StepBuilder<TAggregate, T> Configure<T>() where T : IBaseRequest
+    public StepBuilder<TAggregate, T> Configure<T>() where T : IBaseRequest 
     {
         var stepOptions = new StepOptions<TAggregate>(typeof(TAggregate), typeof(T));
         BProcessStepConfiguration.AddStepConfig(stepOptions);

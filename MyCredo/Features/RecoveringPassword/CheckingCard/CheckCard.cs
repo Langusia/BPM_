@@ -1,10 +1,12 @@
 ﻿using Core.BPM;
 using Core.BPM.Application;
+using Core.BPM.Attributes;
 using Core.BPM.DefinitionBuilder;
 using Marten.Events.Projections.Flattened;
 
 namespace MyCredo.Features.RecoveringPassword.CheckingCard;
 
+[BpmProducer(typeof(CheckCardInitiated))]
 public class CheckCard : Aggregate
 {
     public long UserId { get; set; }

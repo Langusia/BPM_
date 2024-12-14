@@ -1,8 +1,8 @@
-﻿using Core.BPM.Attributes;
+﻿using Core.BPM.AggregateConditions;
+using Core.BPM.Attributes;
 using Core.BPM.BCommand;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
-using Microsoft.CodeAnalysis.Options;
 
 namespace Core.BPM;
 
@@ -22,16 +22,22 @@ public abstract class NodeBase : INode
     }
 
     public Type CommandType { get; }
-
     public string CommandName => CommandType.Name;
 
     public Type ProcessType { get; }
     public StepOptions Options { get; set; }
 
     public List<Type> ProducingEvents { get; }
+    public List<IAggregateCondition>? AggregateConditions { get; set; }
 
 
     public List<INode> NextSteps { get; set; } = [];
+
+    public void AddAggregateCondition<TAggregate>(Predicate<TAggregate> predicate) where TAggregate : Aggregate
+    {
+        AggregateConditions ??= new List<IAggregateCondition>();
+        AggregateConditions.Add(new AggregateCondition<TAggregate>(predicate));
+    }
 
     public bool PlacementPreconditionMarked(List<string> savedEvents)
     {

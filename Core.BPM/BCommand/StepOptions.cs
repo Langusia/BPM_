@@ -31,13 +31,10 @@ public class StepOptions : IStepOptions
     }
 }
 
-public class StepOptions<TAggregate> : StepOptions where TAggregate : Aggregate
+public class StepOptions<TAggregate>(Type aggregateType, Type commandType) : StepOptions(aggregateType, commandType)
+    where TAggregate : Aggregate
 {
     public Predicate<TAggregate>? AggregateCondition { get; set; }
-
-    public StepOptions(Type aggregateType, Type commandType) : base(aggregateType, commandType)
-    {
-    }
 
     public override bool EvaluateAggregateCondition(object aggregate)
     {
