@@ -1,18 +1,19 @@
 ﻿using Core.BPM.AggregateConditions;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
+using Core.BPM.Persistence.Exceptions;
 
 namespace Core.BPM.DefinitionBuilder;
 
 public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List<IAggregateCondition>? aggregateConditions = null)
     : BaseNodeDefinition(rootNode, process),
-        IProcessNodeModifierBuilder<TProcess>, IProcessNodeInitialBuilder<TProcess> where TProcess : Aggregate
+        IProcessNodeModifiableBuilder<TProcess>, IProcessNodeNonModifiableBuilder<TProcess>, IProcessNodeInitialBuilder<TProcess> where TProcess : Aggregate
 {
     private ProcessNodeBuilder<TProcess>? _orScopeBuilder;
     private List<IAggregateCondition>? _aggregateConditions = aggregateConditions;
 
     private ProcessNodeBuilder<TProcess> Continue(ProcessNodeBuilder<TProcess> nextBuilder,
-        Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+        Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
         nextBuilder.CurrentBranchInstances.ForEach(x =>
         {
@@ -29,7 +30,7 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
         return nextBuilder;
     }
 
-    private IProcessNodeModifierBuilder<TProcess> Or(INode node, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    private IProcessNodeModifiableBuilder<TProcess> Or(INode node, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
         if (configure is not null)
         {
@@ -56,11 +57,12 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
         }
 
         node.AggregateConditions = _aggregateConditions;
+
         CurrentBranchInstances.Add(node);
         return this;
     }
 
-    private IProcessNodeModifierBuilder<TProcess> CaseInternal<T>(Predicate<T> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>> configure)
+    private IProcessNodeModifiableBuilder<TProcess> CaseInternal<T>(Predicate<T> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
         where T : Aggregate
     {
         _aggregateConditions ??= [];
@@ -70,48 +72,48 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
         return configured;
     }
 
-    public IProcessNodeModifierBuilder<TProcess> Case<TAggregate>(Predicate<TAggregate> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>> configure)
+    public IProcessNodeModifiableBuilder<TProcess> Case<TAggregate>(Predicate<TAggregate> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
         where TAggregate : Aggregate
     {
         return CaseInternal(predicate, configure);
     }
 
-    public IProcessNodeModifierBuilder<TProcess> Case(Predicate<TProcess> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>> configure)
+    public IProcessNodeModifiableBuilder<TProcess> Case(Predicate<TProcess> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
     {
         return CaseInternal(predicate, configure);
     }
 
 
-    public IProcessNodeModifierBuilder<TProcess> Continue<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifiableBuilder<TProcess> Continue<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
         return Continue(new ProcessNodeBuilder<TProcess>(new Node(typeof(TCommand), GetProcess().ProcessType), Process, _aggregateConditions), configure);
     }
 
-    public IProcessNodeModifierBuilder<TProcess> ContinueAnyTime<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifiableBuilder<TProcess> ContinueAnyTime<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
         return Continue(new ProcessNodeBuilder<TProcess>(new AnyTimeNode(typeof(TCommand), GetProcess().ProcessType), Process, _aggregateConditions), configure);
     }
 
-    public IProcessNodeModifierBuilder<TProcess> ContinueOptional<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeNonModifiableBuilder<TProcess> ContinueOptional<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
         return Continue(new ProcessNodeBuilder<TProcess>(new OptionalNode(typeof(TCommand), GetProcess().ProcessType), Process, _aggregateConditions), configure);
     }
 
 
-    public IProcessNodeModifierBuilder<TProcess> Or<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifiableBuilder<TProcess> Or<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
         var node = new Node(typeof(TCommand), typeof(TProcess));
 
         return Or(node, configure);
     }
 
-    public IProcessNodeModifierBuilder<TProcess> OrOptional<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifiableBuilder<TProcess> OrOptional<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
         var node = new OptionalNode(typeof(TCommand), typeof(TProcess));
         return Or(node, configure);
     }
 
-    public IProcessNodeModifierBuilder<TProcess> OrAnyTime<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifierBuilder<TProcess>>? configure = null)
+    public IProcessNodeModifiableBuilder<TProcess> OrAnyTime<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
         var node = new OptionalNode(typeof(TCommand), typeof(TProcess));
         return Or(node, configure);
@@ -122,11 +124,12 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
     {
         var currentNodeSet = CurrentBranchInstances;
         List<INode> result = new List<INode>();
-        GoToRootSetNexts(currentNodeSet, result);
+        List<INode> resultMandatory = new List<INode>();
+        GoToRootSetNexts(currentNodeSet, result, resultMandatory);
         return result?.FirstOrDefault();
     }
 
-    private void GoToRootSetNexts(List<INode> currentNodeSet, List<INode> res)
+    private void GoToRootSetNexts(List<INode> currentNodeSet, List<INode> res, List<INode> resMandatory)
     {
         foreach (var currentBranchInstance in currentNodeSet)
         {
@@ -139,10 +142,15 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
             foreach (var currentBranchInstancePrevStep in currentBranchInstance.PrevSteps)
             {
                 if (!currentBranchInstancePrevStep.NextSteps!.Contains(currentBranchInstance))
+                {
+                    if (currentBranchInstancePrevStep.NextSteps.Select(x => x.CommandType).Contains(currentBranchInstance.CommandType))
+                        throw new SameCommandFoundException(currentBranchInstance.CommandType.Name);
+
                     currentBranchInstancePrevStep.AddNextStep(currentBranchInstance);
+                }
             }
 
-            GoToRootSetNexts(currentBranchInstance.PrevSteps!, res);
+            GoToRootSetNexts(currentBranchInstance.PrevSteps!, res, resMandatory);
         }
     }
 

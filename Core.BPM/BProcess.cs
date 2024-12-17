@@ -6,6 +6,7 @@ public class BProcess(Type processType, INode rootNode)
 {
     public readonly Type ProcessType = processType;
     public INode RootNode = rootNode;
+    public INode RootNodeMandatoryPath = rootNode;
 
     public INode? FindLastValidNode(List<string> progressedPath, bool skipOptionals = false)
     {

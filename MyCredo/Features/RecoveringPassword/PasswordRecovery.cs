@@ -153,8 +153,9 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     public override MyClass<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure
             .StartWith<A>()
+            .ContinueOptional<B>()
             .Case(x => x.PersonalNumber == "123", z =>
-                z.Case<ValidateOtp.TwoFactor>(x => x.IsValid, x =>
+                z.Case<ValidateOtp.TwoFactor>(x => x.IsValid != true && x.Test == "", x =>
                     x.Continue<A>()
                         .Continue<B>()
                         .Or<C>()))
@@ -170,10 +171,10 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
                                             x.Continue<Z>())
                                         .Or<H>()
                                         .Continue<Z>()))
-                    ).Or<H>()
+                    ).Or<A>()
                     .Continue<F>()
                     .Or<G>())
-            .Or<H>()
+            .Or<C>()
             .Continue<Z>()
             .Or<B>()
             .End();
