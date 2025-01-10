@@ -27,6 +27,7 @@ public abstract class NodeBase : INode
     public Type ProcessType { get; }
     public StepOptions Options { get; set; }
 
+    public List<INode>? KeyNodes { get; set; }
     public List<Type> ProducingEvents { get; }
     public List<IAggregateCondition>? AggregateConditions { get; set; }
 

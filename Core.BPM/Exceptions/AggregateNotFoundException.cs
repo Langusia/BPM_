@@ -1,4 +1,4 @@
-﻿namespace Core.BPM.Persistence.Exceptions;
+﻿namespace Core.BPM.Exceptions;
 
 public class AggregateNotFoundException : Exception
 {

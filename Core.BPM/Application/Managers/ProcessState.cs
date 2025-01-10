@@ -32,6 +32,7 @@ public class ProcessState<T> where T : Aggregate
     public INode? CurrentStep { get; private set; }
     public StepOptions? Options { get; set; }
     public Type CommandOrigin { get; private set; }
+    public List<INode> Map { get; private set; }
 
     public bool ValidateOrigin() => ValidateFor(CommandOrigin);
     public bool ValidateFor<TCommand>() where TCommand : IBaseRequest => ValidateFor(typeof(TCommand));
@@ -50,6 +51,7 @@ public class ProcessState<T> where T : Aggregate
 
         return valid ?? true;
     }
+
 
     private void InitializeProcessState(Type? commandOrigin = null)
     {

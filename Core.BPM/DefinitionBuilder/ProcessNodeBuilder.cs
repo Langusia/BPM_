@@ -1,7 +1,7 @@
 ﻿using Core.BPM.AggregateConditions;
+using Core.BPM.Exceptions;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
-using Core.BPM.Persistence.Exceptions;
 
 namespace Core.BPM.DefinitionBuilder;
 
@@ -38,6 +38,8 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
             if (_orScopeBuilder is null)
             {
                 node.SetPrevSteps(GetRoot().PrevSteps);
+
+                process.AddDistinctCommand(node, GetRoot().PrevSteps);
             }
             else
             {
@@ -83,6 +85,14 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
         return CaseInternal(predicate, configure);
     }
 
+    public IProcessNodeModifiableBuilder<TProcess> Or(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
+    {
+        var nextBuilder = new ProcessNodeBuilder<TProcess>(rootNode, process);
+        var configured = (ProcessNodeBuilder<TProcess>)configure.Invoke(nextBuilder);
+
+        return configured;
+    }
+
 
     public IProcessNodeModifiableBuilder<TProcess> Continue<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
@@ -94,9 +104,14 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
         return Continue(new ProcessNodeBuilder<TProcess>(new AnyTimeNode(typeof(TCommand), GetProcess().ProcessType), Process, _aggregateConditions), configure);
     }
 
-    public IProcessNodeNonModifiableBuilder<TProcess> ContinueOptional<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
+    public IProcessNodeNonModifiableBuilder<TProcess> UnlockOptional<TCommand>()
     {
-        return Continue(new ProcessNodeBuilder<TProcess>(new OptionalNode(typeof(TCommand), GetProcess().ProcessType), Process, _aggregateConditions), configure);
+        return Continue(new ProcessNodeBuilder<TProcess>(new OptionalNode(typeof(TCommand), GetProcess().ProcessType), Process, _aggregateConditions));
+
+        var node = new OptionalNode(typeof(TCommand), GetProcess().ProcessType);
+        Process.AddOptional(node, CurrentBranchInstances);
+        Process.AddDistinctCommand(node, CurrentBranchInstances);
+        return this;
     }
 
 
@@ -106,6 +121,7 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
 
         return Or(node, configure);
     }
+
 
     public IProcessNodeModifiableBuilder<TProcess> OrOptional<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
@@ -120,22 +136,50 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
     }
 
 
-    private INode? GetAllWays()
+    private List<List<INode>> GetAllPossibles(INode rootNode)
     {
-        var currentNodeSet = CurrentBranchInstances;
-        List<INode> result = new List<INode>();
-        List<INode> resultMandatory = new List<INode>();
-        GoToRootSetNexts(currentNodeSet, result, resultMandatory);
-        return result?.FirstOrDefault();
+        List<List<INode>> result = [[rootNode]];
+        IterateAllPossibles(rootNode, result);
+        return result;
     }
 
-    private void GoToRootSetNexts(List<INode> currentNodeSet, List<INode> res, List<INode> resMandatory)
+    private void IterateAllPossibles(INode root, List<List<INode>> results)
+    {
+        int ct = 0;
+        var init = new List<INode>(results.Last());
+        foreach (var t in root.NextSteps)
+        {
+            if (ct == 0)
+                results.Last().Add(t);
+            else
+            {
+                var nextResultSet = new List<INode>(init) { t };
+                results.Add(nextResultSet);
+            }
+
+            IterateAllPossibles(t, results);
+            ct++;
+        }
+    }
+
+    private Tuple<INode, List<INode>> GetConfiguredProcessRootReverse()
+    {
+        var currentNodeSet = CurrentBranchInstances;
+        List<INode> result = [];
+        List<INode> distresult = [];
+        IterateConfiguredProcessRoot(currentNodeSet, result, distresult);
+        return new Tuple<INode, List<INode>>(result.FirstOrDefault()!, distresult);
+    }
+
+    private void IterateConfiguredProcessRoot(List<INode> currentNodeSet, List<INode> res, List<INode> distinctNodeSet)
     {
         foreach (var currentBranchInstance in currentNodeSet)
         {
             if (currentBranchInstance.PrevSteps is null)
             {
                 res.Add(currentBranchInstance);
+                if (!distinctNodeSet.Exists(x => x.CommandType == currentBranchInstance.CommandType && x.GetType() == currentBranchInstance.GetType()))
+                    distinctNodeSet.Add(currentBranchInstance);
                 continue;
             }
 
@@ -144,19 +188,39 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
                 if (!currentBranchInstancePrevStep.NextSteps!.Contains(currentBranchInstance))
                 {
                     if (currentBranchInstancePrevStep.NextSteps.Select(x => x.CommandType).Contains(currentBranchInstance.CommandType))
-                        throw new SameCommandFoundException(currentBranchInstance.CommandType.Name);
+                        throw new SameCommandOnSameLevelDiffBranchFoundException(currentBranchInstance.CommandType.Name);
+
+                    if (!distinctNodeSet.Exists(x => x.CommandType == currentBranchInstance.CommandType && x.GetType() == currentBranchInstance.GetType()))
+                        distinctNodeSet.Add(currentBranchInstance);
+                    if (distinctNodeSet.Exists(x => x.CommandType == currentBranchInstance.CommandType && x.GetType() != currentBranchInstance.GetType()))
+                        throw new SameCommandDiffNodeTypeException(currentBranchInstance.CommandType.Name);
 
                     currentBranchInstancePrevStep.AddNextStep(currentBranchInstance);
                 }
             }
 
-            GoToRootSetNexts(currentBranchInstance.PrevSteps!, res, resMandatory);
+            IterateConfiguredProcessRoot(currentBranchInstance.PrevSteps!, res, distinctNodeSet);
         }
     }
 
     public MyClass<TProcess> End()
     {
-        Process.RootNode = GetAllWays();
+        var res = GetConfiguredProcessRootReverse();
+        Process.RootNode = res.Item1;
+        Process.AllDistinctCommands = res.Item2;
+        var allPossibles = GetAllPossibles(Process.RootNode);
+        var countMore = allPossibles.SelectMany(x => x.GroupBy(x => x.CommandType).Select(c => new
+        {
+            node = c.First(),
+            count = c.Count()
+        }).Where(z => z.count > 1)).ToList();
+
+        if (countMore.Any())
+            throw new SameCommandForBranchFoundException(countMore.Select(x => x.node.CommandType.Name).Distinct().ToArray());
+
+        Process.AllPossibles = allPossibles;
+
+
         return new MyClass<TProcess>();
     }
 }

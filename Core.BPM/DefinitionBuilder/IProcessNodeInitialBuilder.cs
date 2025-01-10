@@ -8,7 +8,9 @@ public interface IProcessNodeInitialBuilder<TProcess> : IProcessNodeBuilder<TPro
         where TAggregate : Aggregate;
 
     IProcessNodeModifiableBuilder<TProcess> Continue<Command>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null);
+
     IProcessNodeModifiableBuilder<TProcess> ContinueAnyTime<Command>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null);
+
     //noneModifiable
-    IProcessNodeNonModifiableBuilder<TProcess> ContinueOptional<Command>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null);
+    IProcessNodeNonModifiableBuilder<TProcess> UnlockOptional<Command>();
 }

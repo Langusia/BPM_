@@ -1,5 +1,6 @@
 ﻿using Core.BPM.Application.Managers;
 using Core.BPM.Attributes;
+using Core.BPM.BCommand;
 using Credo.Core.Shared.Library;
 using MediatR;
 using MyCredo.Features.Loan.OtpValidate;
@@ -10,32 +11,50 @@ namespace MyCredo.Features.TwoFactor;
 [BpmProducer(typeof(OtpValidated))]
 public record ValidateOtp(Guid DocumentId) : IRequest<Result<long>>;
 
-[BpmProducer(typeof(OtpValidated))]
+[BpmProducer(typeof(Ad))]
 public record A(Guid DocumentId) : IRequest<Result<long>>;
 
-[BpmProducer(typeof(OtpValidated))]
+public record Ad(Guid DocumentId) : BpmEvent;
+
+[BpmProducer(typeof(Bd))]
 public record B(Guid DocumentId) : IRequest<Result<long>>;
 
-[BpmProducer(typeof(OtpValidated))]
+public record Bd(Guid DocumentId) : BpmEvent;
+
+[BpmProducer(typeof(Cd))]
 public record C(Guid DocumentId) : IRequest<Result<long>>;
 
-[BpmProducer(typeof(OtpValidated))]
+public record Cd(Guid DocumentId) : BpmEvent;
+
+[BpmProducer(typeof(Dd))]
 public record D(Guid DocumentId) : IRequest<Result<long>>;
 
-[BpmProducer(typeof(OtpValidated))]
+public record Dd(Guid DocumentId) : BpmEvent;
+
+[BpmProducer(typeof(Ed))]
 public record E(Guid DocumentId) : IRequest<Result<long>>;
 
-[BpmProducer(typeof(OtpValidated))]
+public record Ed(Guid DocumentId) : BpmEvent;
+
+[BpmProducer(typeof(Fd))]
 public record F(Guid DocumentId) : IRequest<Result<long>>;
 
-[BpmProducer(typeof(OtpValidated))]
+public record Fd(Guid DocumentId) : BpmEvent;
+
+[BpmProducer(typeof(Gd))]
 public record G(Guid DocumentId) : IRequest<Result<long>>;
 
-[BpmProducer(typeof(OtpValidated))]
+public record Gd(Guid DocumentId) : BpmEvent;
+
+[BpmProducer(typeof(Hd))]
 public record H(Guid DocumentId) : IRequest<Result<long>>;
 
-[BpmProducer(typeof(OtpValidated))]
+public record Hd(Guid DocumentId) : BpmEvent;
+
+[BpmProducer(typeof(Zd))]
 public record Z(Guid DocumentId) : IRequest<Result<long>>;
+
+public record Zd(Guid DocumentId) : BpmEvent;
 
 public record ValidateOtpHandler : IRequestHandler<ValidateOtp, Result<long>>
 {

@@ -1,9 +1,10 @@
 ﻿using Core.BPM;
 using Core.BPM.Application;
+using Core.BPM.Application.Managers;
 using Core.BPM.BCommand;
+using Core.BPM.Configuration;
 using Core.BPM.DefinitionBuilder;
 using MyCredo.Common;
-using MyCredo.Features.Loan.OtpSend;
 using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
 using MyCredo.Features.RecoveringPassword.Finishing;
@@ -150,34 +151,26 @@ public class PasswordRecovery : Aggregate
 
 public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
-    public override MyClass<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
-        configure
-            .StartWith<A>()
-            .ContinueOptional<B>()
+    public override MyClass<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure)
+    {
+        var cfg = configure.StartWith<A>()
             .Case(x => x.PersonalNumber == "123", z =>
                 z.Case<ValidateOtp.TwoFactor>(x => x.IsValid != true && x.Test == "", x =>
-                    x.Continue<A>()
-                        .Continue<B>()
-                        .Or<C>()))
-            .Continue<Z>(x =>
-                x.Continue<H>(z =>
-                        z.Continue<B>(y =>
-                            y.Continue<C>(s =>
-                                    s.Continue<A>())
-                                .Or<E>()
-                                .Or<F>(b =>
-                                    b.Continue<G>()
-                                        .Case(z => z.IsOtpValid, x =>
-                                            x.Continue<Z>())
-                                        .Or<H>()
-                                        .Continue<Z>()))
-                    ).Or<A>()
-                    .Continue<F>()
-                    .Or<G>())
-            .Or<C>()
-            .Continue<Z>()
+                    x.ContinueAnyTime<Z>(z => z.Continue<B>())
+                        .Or<F>()))
             .Or<B>()
+            //.Continue<B>(x => x.Continue<C>())
+            .Or<C>(x => x.Continue<B>())
+            .Or<D>(x => x.Continue<C>())
             .End();
+
+        var cf = BProcessGraphConfiguration.GetConfig<PasswordRecovery>();
+        var rs = cf.UnlockedPaths().ToList();
+
+
+        return cfg;
+    }
+
 
     public override void ConfigureSteps(StepConfigurator<PasswordRecovery> stepConfigurator)
     {

@@ -12,7 +12,9 @@ public interface INode
     Type ProcessType { get; }
     StepOptions Options { get; set; }
 
-    public List<IAggregateCondition>? AggregateConditions { get; set; }
+    List<IAggregateCondition>? AggregateConditions { get; set; }
+    List<INode>? KeyNodes { get; set; }
+
     public List<Type> ProducingEvents { get; }
     List<INode>? NextSteps { get; set; }
     void AddNextStep(INode node);

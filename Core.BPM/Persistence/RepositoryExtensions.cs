@@ -1,4 +1,4 @@
-﻿using Core.BPM.Persistence.Exceptions;
+﻿using Core.BPM.Exceptions;
 using IEvent = Marten.Events.IEvent;
 
 namespace Core.BPM.Persistence;

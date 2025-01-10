@@ -13,25 +13,6 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
     public INode GetCurrent() => CurrentNode;
     public INode GetRoot() => firstNode;
 
-    public List<INode> GetBranchTails()
-    {
-        List<INode> lastNodes = [];
-
-        foreach (var branchInstance in CurrentBranchInstances)
-        {
-            lastNodes.AddRange(branchInstance.FetchLastNodes(branchInstance));
-        }
-
-        return lastNodes;
-    }
-
-    public void AddBranchInstance(INode node)
-    {
-        node.PrevSteps = firstNode.PrevSteps;
-        CurrentBranchInstances.Add(node);
-        //return CurrentBranchLastInstances;
-    }
-
     public INode SetRoot(INode node)
     {
         firstNode = node;
