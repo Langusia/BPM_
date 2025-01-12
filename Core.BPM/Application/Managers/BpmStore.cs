@@ -1,5 +1,6 @@
 ﻿using Core.BPM.Configuration;
 using Core.BPM.Persistence;
+using Core.BPM.Registry;
 using Marten;
 using Marten.Events;
 using MediatR;
@@ -7,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Core.BPM.Application.Managers;
 
-public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger<BpmStore<TAggregate, TCommand>> logger, MartenRepository martenRepository)
+public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger<BpmStore<TAggregate, TCommand>> logger, BpmRepository martenRepository)
     where TAggregate : Aggregate where TCommand : IBaseRequest
 {
     private TAggregate? _aggregate;
@@ -16,6 +17,7 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger<Bp
     private string _aggregateName;
     private BProcess? _config;
     private bool _newStream;
+
 
     public ProcessState<TAggregate> StartProcess(Action<TAggregate> action)
     {
@@ -70,9 +72,78 @@ public class BpmStore<TAggregate, TCommand>(IDocumentSession session, ILogger<Bp
         object originalAggregate = _aggregate;
         if (typeof(TAggregate) != _config.ProcessType)
         {
-            originalAggregate = await martenRepository.AggregateStreamFromRegistryAsync(_config.ProcessType, _persistedProcessEvents.Select(x => x.Data), null);
+            originalAggregate = martenRepository.AggregateStreamFromRegistry(_config.ProcessType, _persistedProcessEvents.Select(x => x.Data));
         }
 
         return new ProcessState<TAggregate>(_aggregate!, originalAggregate, _config, typeof(TCommand));
+    }
+}
+
+
+
+public interface IProcess
+{
+    T? AggregateAs<T>(bool includeUnsaved) where T : Aggregate;
+    object AppendEvents(params object[] events);
+    bool Validate();
+}
+
+public interface IBpmStore
+{
+    IProcess StartProcess<T>(params object[] events) where T : Aggregate;
+    IProcess StartProcess(Type aggregateType, params object[] events);
+    Task<IProcess> FetchProcessAsync(Guid aggregateId, CancellationToken ct);
+
+    Task SaveChangesAsync(CancellationToken token);
+}
+
+public class BpmStore(IBpmRepository repository) : IBpmStore
+{
+    private readonly Queue<IProcess> _processes = [];
+
+    public IProcess StartProcess<T>(params object[] events) where T : Aggregate
+    {
+        return StartProcess(typeof(T), events);
+    }
+
+    public IProcess StartProcess(Type aggregateType, params object[] events)
+    {
+        var process = new Process(Guid.NewGuid(), aggregateType.Name, true, events, repository);
+        _processes.Enqueue(process);
+        return process;
+    }
+
+    public async Task<IProcess> FetchProcessAsync(Guid aggregateId, CancellationToken ct)
+    {
+        var stream = await repository.FetchStreamAsync(aggregateId, ct);
+        var aggregateName = stream.FirstOrDefault()?.Headers?["AggregateType"].ToString();
+        if (string.IsNullOrEmpty(aggregateName))
+            throw new Exception();
+
+        var process = new Process(aggregateId, aggregateName, false, null, repository);
+        _processes.Enqueue(process);
+        return process;
+    }
+
+    public T AggregateAs<T>(bool includeUnsaved) where T : Aggregate
+    {
+        throw new NotImplementedException();
+    }
+
+    public object AppendEvents(params object[] events)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Validate()
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task SaveChangesAsync(CancellationToken token)
+    {
+        var headers = new Dictionary<string, object> { { "AggregateType", _aggregateName } };
+        await repository.AppendEvents(_aggregateId, _uncommittedEvents.ToArray(), _newStream, headers, token);
+        _uncommittedEvents.Clear();
     }
 }

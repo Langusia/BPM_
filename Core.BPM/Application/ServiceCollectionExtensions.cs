@@ -15,9 +15,8 @@ public static class ServiceCollectionExtensions
     public static void AddBpm(this IServiceCollection services, Action<StoreOptions> configureMartenStore, Action<IBpmConfiguration>? configure = null)
     {
         services.AddMarten(configureMartenStore);
-        services.TryAddScoped(typeof(MartenRepository<>));
         services.TryAddScoped(typeof(BpmStore<,>));
-        services.TryAddScoped(typeof(MartenRepository));
+        services.TryAddScoped(typeof(BpmRepository));
         services.TryAddScoped(typeof(BpmEventConfigurationBuilder<>));
         services.AddOptions<StepConfigurator>();
         var registry = new ProcessRegistry();
