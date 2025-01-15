@@ -18,6 +18,8 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped(typeof(BpmStore<,>));
         services.TryAddScoped(typeof(BpmRepository));
         services.TryAddScoped(typeof(BpmEventConfigurationBuilder<>));
+        services.TryAddScoped<IBpmRepository, BpmRepository>();
+        services.TryAddScoped<IBpmStore, BpmStore>();
         services.AddOptions<StepConfigurator>();
         var registry = new ProcessRegistry();
         services.TryAddSingleton(registry);

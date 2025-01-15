@@ -151,25 +151,16 @@ public class PasswordRecovery : Aggregate
 
 public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
-    public override MyClass<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure)
-    {
-        var cfg = configure.StartWith<A>()
-            .Case(x => x.PersonalNumber == "123", z =>
-                z.Case<ValidateOtp.TwoFactor>(x => x.IsValid != true && x.Test == "", x =>
-                    x.ContinueAnyTime<Z>(z => z.Continue<B>())
-                        .Or<F>()))
+    public override MyClass<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
+        configure.StartWith<InitiatePasswordRecovery>()
+            .Case(x => x.PersonalNumber == "01010102020", z =>
+                z.ContinueAnyTime<Z>(z => z.Continue<B>())
+                    .Or<F>())
             .Or<B>()
             //.Continue<B>(x => x.Continue<C>())
             .Or<C>(x => x.Continue<B>())
             .Or<D>(x => x.Continue<C>())
             .End();
-
-        var cf = BProcessGraphConfiguration.GetConfig<PasswordRecovery>();
-        var rs = cf.UnlockedPaths().ToList();
-
-
-        return cfg;
-    }
 
 
     public override void ConfigureSteps(StepConfigurator<PasswordRecovery> stepConfigurator)

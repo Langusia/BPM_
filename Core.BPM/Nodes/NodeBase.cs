@@ -2,9 +2,8 @@
 using Core.BPM.Attributes;
 using Core.BPM.BCommand;
 using Core.BPM.Interfaces;
-using Core.BPM.Nodes;
 
-namespace Core.BPM;
+namespace Core.BPM.Nodes;
 
 public abstract class NodeBase : INode
 {

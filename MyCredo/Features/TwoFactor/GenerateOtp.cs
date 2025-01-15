@@ -1,6 +1,7 @@
 ﻿using Core.BPM.Application.Managers;
 using Core.BPM.Attributes;
 using MediatR;
+using MyCredo.Features.Loan.LoanV9;
 using MyCredo.Features.RecoveringPassword;
 
 namespace MyCredo.Features.TwoFactor;
@@ -10,12 +11,20 @@ public record GenerateOtp(Guid ProcessId) : IRequest<long>;
 
 class MyClass
 {
-    private readonly IStore _store;
+    private readonly IBpmStore _store;
 
-    public void See()
+    public async void See()
     {
-        var process = _store.FetchProcess();
+        var process = await _store.FetchProcessAsync(Guid.Empty, CancellationToken.None);
+        var s = process.AggregateAs<TwoFactor>(true);
+        process.Validate<GenerateOtp>(true);
         process.AppendEvents(new OtpSent(Guid.Empty, "hash"));
+
+        var ss = process.AggregateAs<TwoFactor>(true);
+        var sss = process.AggregateAs<IssueLoan>(true);
+        var nextNodes = process.GetNextSteps();
+        await _store.SaveChangesAsync(CancellationToken.None);
+
 
         var passwordRecoveryAgg = process.AggregateAs<PasswordRecovery>(false);
         var twoFactorAgg = process.AggregateAs<TwoFactor>(false);

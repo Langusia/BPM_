@@ -25,12 +25,44 @@ public class BpmRepository : IBpmRepository
 
     public object AggregateStreamFromRegistry(Type aggregateType, IEnumerable<object> events)
     {
-        var eventList = events?.ToList();
+        var eventList = events.ToList();
         var aggregate = CreateAggregate(aggregateType);
 
         foreach (var @event in eventList)
         {
             var applyMethod = _registry.GetApplyMethod(aggregateType, @event.GetType());
+            applyMethod(aggregate, @event);
+        }
+
+        return aggregate;
+    }
+
+    public object? AggregateOrNullStreamFromRegistry(Type aggregateType, IEnumerable<object> events)
+    {
+        var eventList = events.ToList();
+        var aggregate = CreateAggregate(aggregateType);
+
+        foreach (var @event in eventList)
+        {
+            var applyMethod = _registry.GetApplyMethodOrNull(aggregateType, @event.GetType());
+            if (applyMethod is null)
+                return null;
+            applyMethod(aggregate, @event);
+        }
+
+        return aggregate;
+    }
+
+    public object? AggregateOrDefaultStreamFromRegistry(Type aggregateType, IEnumerable<object> events)
+    {
+        var eventList = events.ToList();
+        var aggregate = CreateAggregate(aggregateType);
+
+        foreach (var @event in eventList)
+        {
+            var applyMethod = _registry.GetApplyMethodOrNull(aggregateType, @event.GetType());
+            if (applyMethod is null)
+                return aggregate;
             applyMethod(aggregate, @event);
         }
 
@@ -56,9 +88,12 @@ public class BpmRepository : IBpmRepository
                 _documentSession.Events.StartStream(aggregateId, events);
             else
                 await _documentSession.Events.AppendExclusive(aggregateId, ct, events);
-
-            await _documentSession.SaveChangesAsync(ct);
         }
+    }
+
+    public async Task SaveChangesAsync(CancellationToken ct = default)
+    {
+        await _documentSession.SaveChangesAsync(ct);
     }
 
     public async Task<long> Update(Aggregate aggregate, long? expectedVersion = null, CancellationToken ct = default)

@@ -12,23 +12,3 @@ public class AggregateCondition<TAggregate>(Predicate<TAggregate> aggregatePredi
         throw new Exception();
     }
 }
-
-public class AggregateConditionWrapper()
-{
-    private List<IAggregateCondition> _aggregateConditions;
-
-    public void AddCondition<T>(Predicate<T> aggregateCondition) where T : Aggregate
-    {
-        _aggregateConditions.Add(new AggregateCondition<T>(aggregateCondition));
-    }
-
-    public bool EvaluateAllAggregatePredicates(object aggregate)
-    {
-        foreach (var aggregateCondition in _aggregateConditions)
-        {
-            aggregateCondition.EvaluateAggregateCondition(null);
-        }
-
-        throw new Exception();
-    }
-}

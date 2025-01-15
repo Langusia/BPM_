@@ -40,6 +40,22 @@ public class ProcessRegistry
         return applyMethod;
     }
 
+
+    public Action<object, object>? GetApplyMethodOrNull(Type aggregateType, Type eventType)
+    {
+        if (!_applyMethodCache.TryGetValue(aggregateType, out var eventMethods))
+        {
+            return null;
+        }
+
+        if (!eventMethods.TryGetValue(eventType, out var applyMethod))
+        {
+            return null;
+        }
+
+        return applyMethod;
+    }
+
     private Action<object, object> CreateApplyDelegate(Type aggregateType, Type eventType, MethodInfo methodInfo)
     {
         // Parameters: (object aggregate, object @event)

@@ -9,10 +9,4 @@ public class OptionalNode(Type commandType, Type processType) : NodeBase(command
     {
         return PlacementPreconditionMarked(savedEvents);
     }
-
-    public List<List<INode>> Filter(List<List<INode>> filterFrom, List<INode> storedNodes)
-    {
-        
-        throw new NotImplementedException();
-    }
 }

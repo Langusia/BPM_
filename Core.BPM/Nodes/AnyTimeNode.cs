@@ -9,9 +9,4 @@ public class AnyTimeNode(Type commandType, Type processType) : NodeBase(commandT
     {
         return PlacementPreconditionMarked(savedEvents);
     }
-
-    public List<List<INode>> Filter(List<List<INode>> filterFrom, List<INode> storedNodes)
-    {
-        throw new NotImplementedException();
-    }
 }
