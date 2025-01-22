@@ -58,24 +58,13 @@ public record Zd(Guid DocumentId) : BpmEvent;
 
 public record ValidateOtpHandler : IRequestHandler<ValidateOtp, Result<long>>
 {
-    private readonly BpmStore<TwoFactor, ValidateOtp> _bpm;
-
-    public ValidateOtpHandler(BpmStore<TwoFactor, ValidateOtp> bpm)
+    public ValidateOtpHandler()
     {
-        _bpm = bpm;
     }
 
     public async Task<Result<long>> Handle(ValidateOtp request, CancellationToken cancellationToken)
     {
-        var processState = await _bpm.AggregateProcessStateAsync(request.DocumentId, cancellationToken);
-        if (!processState.ValidateFor<ValidateOtp>())
-            return null;
-
         //BL
-
-        processState.AppendEvent(new OtpValidated(Guid.NewGuid(), true));
-
-        await _bpm.SaveChangesAsync(cancellationToken);
         return 9;
     }
 }

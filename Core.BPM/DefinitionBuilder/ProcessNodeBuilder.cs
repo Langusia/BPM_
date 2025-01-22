@@ -74,6 +74,13 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
         return configured;
     }
 
+    public IProcessNodeModifiableBuilder<TProcess> ParallelScope(Action<IParallelScopeBuilder<TProcess>> configure)
+    {
+        var parallelBuilder = new ParallelScopeBuilder<TProcess>(this);
+        configure(parallelBuilder);
+        return parallelBuilder.EndParallelScope();
+    }
+
     public IProcessNodeModifiableBuilder<TProcess> Case<TAggregate>(Predicate<TAggregate> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
         where TAggregate : Aggregate
     {

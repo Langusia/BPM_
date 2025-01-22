@@ -1,5 +1,6 @@
 ﻿using Core.BPM.Application.Managers;
 using Core.BPM.Attributes;
+using JasperFx.CodeGeneration.Model;
 using MediatR;
 using MyCredo.Features.Loan.LoanV9;
 using MyCredo.Features.RecoveringPassword;
@@ -9,52 +10,28 @@ namespace MyCredo.Features.TwoFactor;
 [BpmProducer(typeof(OtpSent))]
 public record GenerateOtp(Guid ProcessId) : IRequest<long>;
 
-class MyClass
-{
-    private readonly IBpmStore _store;
-
-    public async void See()
-    {
-        var process = await _store.FetchProcessAsync(Guid.Empty, CancellationToken.None);
-        var s = process.AggregateAs<TwoFactor>(true);
-        process.Validate<GenerateOtp>(true);
-        process.AppendEvents(new OtpSent(Guid.Empty, "hash"));
-
-        var ss = process.AggregateAs<TwoFactor>(true);
-        var sss = process.AggregateAs<IssueLoan>(true);
-        var nextNodes = process.GetNextSteps();
-        await _store.SaveChangesAsync(CancellationToken.None);
-
-
-        var passwordRecoveryAgg = process.AggregateAs<PasswordRecovery>(false);
-        var twoFactorAgg = process.AggregateAs<TwoFactor>(false);
-    }
-}
-
 public class GenerateOtpHandler : IRequestHandler<GenerateOtp, long>
 {
-    private readonly BpmStore<TwoFactor, GenerateOtp> _bpm;
+    private readonly IBpmStore _bpm;
 
-    public GenerateOtpHandler(BpmStore<TwoFactor, GenerateOtp> bpm)
+    public GenerateOtpHandler(IBpmStore bpm)
     {
         _bpm = bpm;
     }
 
     public async Task<long> Handle(GenerateOtp request, CancellationToken cancellationToken)
     {
-        var process = await _bpm.AggregateProcessStateAsync(request.ProcessId, cancellationToken);
-        if (!process.ValidateOrigin())
-            return 0;
+        var process = await _bpm.FetchProcessAsync(request.ProcessId, cancellationToken);
+        var v = process.Validate<GenerateOtp>();
+        var vc = process.Validate<GenerateContract>();
+
+        var agg = process.AggregateOrDefaultAs<TwoFactor>();
+        var agg3 = process.AggregateOrNullAs<TwoFactor>();
+        var agg1 = process.AggregateAs<PasswordRecovery>();
+        var sss = process.AppendEvents(new OtpSent(Guid.NewGuid(), "test"));
+        agg = process.AggregateAs<TwoFactor>();
 
 
-        process.AppendEvent(new OtpSent(Guid.NewGuid(), ""));
-
-        //process.Fail("test");
-
-        // if (process.AppendEvent(x => x.Finish(process.Aggregate.Id, "1234")))
-        //     return 0;
-        //if (!process.AppendEvent(x => x.GenerateOtp(process.Aggregate.Id, "1234")))
-        //    return 0;
         await _bpm.SaveChangesAsync(cancellationToken);
         return 9;
     }

@@ -27,12 +27,19 @@ public class BpmRepository : IBpmRepository
     {
         var eventList = events.ToList();
         var aggregate = CreateAggregate(aggregateType);
-
+        int count = 0;
         foreach (var @event in eventList)
         {
             var applyMethod = _registry.GetApplyMethod(aggregateType, @event.GetType());
-            applyMethod(aggregate, @event);
+            if (applyMethod is not null)
+            {
+                count++;
+                applyMethod(aggregate, @event);
+            }
         }
+
+        if (count == 0)
+            throw new InvalidOperationException($"No Apply methods found for aggregate {aggregateType.Name}.");
 
         return aggregate;
     }

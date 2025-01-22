@@ -151,15 +151,36 @@ public class PasswordRecovery : Aggregate
 
 public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
+    //public override void DefineProcess(IProcessBuilder<IssueLoan> configureProcess)
+    //{
+    //    configureProcess
+    //        .StartWith<InitiateIssueLoanProcess>()
+    //        .ThenContinue<GenerateContract>(x =>
+    //            x.ThenContinue<GenerateSchedule>(y =>
+    //                y.ThenContinueOptional<GenerateInsuranceDocuments>()))
+    //        .Or<GenerateSchedule>(x =>
+    //            x.ThenContinue<GenerateContract>(y =>
+    //                y.ThenContinueOptional<GenerateInsuranceDocuments>()))
+    //        .ContinueAnyTime<SendOtp>()
+    //        .ContinueAnyTime<ValidateOtp>()
+    //        .Continue<MarkDocumentsAsAssigned>()
+    //        .Continue<FinishIssueLoan>();
+    //}
     public override MyClass<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            .Case(x => x.PersonalNumber == "01010102020", z =>
-                z.ContinueAnyTime<Z>(z => z.Continue<B>())
-                    .Or<F>())
-            .Or<B>()
-            //.Continue<B>(x => x.Continue<C>())
-            .Or<C>(x => x.Continue<B>())
-            .Or<D>(x => x.Continue<C>())
+            .Continue<GenerateOtp>(x =>
+                x.Continue<C>())
+            .ParallelScope(x =>
+                x.AddStep<D>(z =>
+                    z.ContinueAnyTime<Z>()))
+            .Or<C>(x =>
+                x.Continue<B>()
+                    .UnlockOptional<F>()
+                    .Continue<C>())
+            .UnlockOptional<D>()
+            .ContinueAnyTime<F>()
+            .ContinueAnyTime<Z>()
+            .Continue<A>()
             .End();
 
 

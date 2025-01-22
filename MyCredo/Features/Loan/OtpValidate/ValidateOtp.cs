@@ -10,7 +10,6 @@ namespace MyCredo.Features.Loan.OtpValidate;
 public record ValidateOtp(Guid ProcessId, int UserId, ChannelTypeEnum Channel, string Otp) : ICommand<AggregateResult<bool>>;
 
 internal class ValidateOtpCommandHandler(
-    BpmStore<OtpValidation, ValidateOtp> _bpmManager
 ) : ICommandHandler<ValidateOtp, AggregateResult<bool>>
 {
     public async Task<Result<AggregateResult<bool>>> Handle(ValidateOtp request, CancellationToken cancellationToken)

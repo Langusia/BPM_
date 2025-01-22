@@ -15,7 +15,6 @@ public static class ServiceCollectionExtensions
     public static void AddBpm(this IServiceCollection services, Action<StoreOptions> configureMartenStore, Action<IBpmConfiguration>? configure = null)
     {
         services.AddMarten(configureMartenStore);
-        services.TryAddScoped(typeof(BpmStore<,>));
         services.TryAddScoped(typeof(BpmRepository));
         services.TryAddScoped(typeof(BpmEventConfigurationBuilder<>));
         services.TryAddScoped<IBpmRepository, BpmRepository>();
@@ -35,6 +34,8 @@ public interface IBpmConfiguration
 {
     void AddAggregateDefinition<TAggregate, TDefinition>() where TAggregate : Aggregate
         where TDefinition : BpmDefinition<TAggregate>;
+
+    void AddAggregate<TAggregate>() where TAggregate : Aggregate;
 }
 
 public class BpmConfiguration(ProcessRegistry registry) : IBpmConfiguration
@@ -49,5 +50,10 @@ public class BpmConfiguration(ProcessRegistry registry) : IBpmConfiguration
         registry.RegisterAggregate(typeof(TAggregate));
         definition.ConfigureSteps(stepConfigurator);
         definition.DefineProcess(processDefinition);
+    }
+
+    public void AddAggregate<TAggregate>() where TAggregate : Aggregate
+    {
+        registry.RegisterAggregate(typeof(TAggregate));
     }
 }

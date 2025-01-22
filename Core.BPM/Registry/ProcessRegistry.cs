@@ -25,7 +25,7 @@ public class ProcessRegistry
         _applyMethodCache[aggregateType] = applyMethods;
     }
 
-    public Action<object, object> GetApplyMethod(Type aggregateType, Type eventType)
+    public Action<object, object>? GetApplyMethod(Type aggregateType, Type eventType)
     {
         if (!_applyMethodCache.TryGetValue(aggregateType, out var eventMethods))
         {
@@ -34,7 +34,7 @@ public class ProcessRegistry
 
         if (!eventMethods.TryGetValue(eventType, out var applyMethod))
         {
-            throw new InvalidOperationException($"No Apply method found for event type {eventType.Name} on aggregate {aggregateType.Name}.");
+            //
         }
 
         return applyMethod;

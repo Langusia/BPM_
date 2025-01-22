@@ -64,6 +64,7 @@ builder.Services.AddBpm(options =>
     }, x =>
     {
         x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
+        x.AddAggregate<TwoFactor>();
         //x.AddAggregateDefinition<RequestCarPawnshop, RequestCarPawnshopDefinition>();
         //x.AddAggregateDefinition<RequestDigitalLoan, RequestDigitalLoanDefinition>();
         //x.AddAggregateDefinition<IssueLoan, LoanV9AggregateDefinition>();

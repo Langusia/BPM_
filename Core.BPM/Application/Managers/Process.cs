@@ -8,21 +8,29 @@ namespace Core.BPM.Application.Managers;
 
 public class Process : IProcess, IProcessStore
 {
+    public Guid Id { get; }
+
+    private readonly BProcess _processConfig;
     private readonly IBpmRepository _repository;
+
     private readonly List<object> _storedEvents = [];
     private readonly Queue<object> _uncommittedEvents = [];
-    private readonly Guid _aggregateId;
+
     private readonly string _aggregateName;
-    private readonly BProcess _processConfig;
     private bool _isNewProcess;
 
-    public Process(Guid aggregateId, string rootAggregateName, bool isNewProcess, IEnumerable<object>? events, IBpmRepository repository)
+    public Process(Guid aggregateId, string rootAggregateName, bool isNewProcess, IEnumerable<object>? events, IEnumerable<object>? upcomingEvents, IBpmRepository repository)
     {
         _processConfig = BProcessGraphConfiguration.GetConfig(rootAggregateName) ?? throw new Exception();
         if (events is not null)
             _storedEvents = events.ToList();
+        if (upcomingEvents != null)
+            foreach (var upcomingEvent in upcomingEvents)
+            {
+                _uncommittedEvents.Enqueue(upcomingEvent);
+            }
 
-        _aggregateId = aggregateId;
+        Id = aggregateId;
         _aggregateName = rootAggregateName;
         _isNewProcess = isNewProcess;
 
@@ -37,7 +45,7 @@ public class Process : IProcess, IProcessStore
             stream = stream.Union(_uncommittedEvents).ToList();
 
         var aggregate = (T)_repository.AggregateStreamFromRegistry(typeof(T), stream);
-        aggregate.Id = _aggregateId;
+        aggregate.Id = Id;
         return aggregate;
     }
 
@@ -49,7 +57,7 @@ public class Process : IProcess, IProcessStore
 
 
         var aggregate = (T)_repository.AggregateOrDefaultStreamFromRegistry(typeof(T), stream);
-        aggregate.Id = _aggregateId;
+        aggregate.Id = Id;
         return aggregate;
     }
 
@@ -65,17 +73,22 @@ public class Process : IProcess, IProcessStore
             return null;
 
         var aggregate = (T)aggregateObj;
-        aggregate.Id = _aggregateId;
+        aggregate.Id = Id;
 
         return aggregate;
     }
 
     public bool AppendEvents(params object[] events)
     {
-        _uncommittedEvents.Enqueue(events);
+        //TODO: checking must be more advanced
         var filtered = UnlockedPaths();
         if (filtered.All(f => events.Select(e => e.GetType().Name).Any(z => !f.ProducingEvents.Select(c => c.Name).Contains(z))))
             return false;
+
+        foreach (var @event in events)
+        {
+            _uncommittedEvents.Enqueue(@event);
+        }
 
         return true;
     }
@@ -193,7 +206,7 @@ public class Process : IProcess, IProcessStore
     public async Task AppendUncommittedToDb(CancellationToken ct)
     {
         var headers = new Dictionary<string, object> { { "AggregateType", _aggregateName } };
-        await _repository.AppendEvents(_aggregateId, _uncommittedEvents.ToArray(), _isNewProcess, headers, ct);
+        await _repository.AppendEvents(Id, _uncommittedEvents.ToArray(), _isNewProcess, headers, ct);
         _isNewProcess = false;
     }
 

@@ -14,16 +14,11 @@ public record ConfirmDigitalLoan() : IRequest;
 [BpmProducer(typeof(FinishedRequestDigitalLoan))]
 public record FinishDigitalLoan(Guid ProcessId) : IRequest;
 
-public record FinishDigitalLoanHandler(BpmStore<RequestDigitalLoan, FinishDigitalLoan> manager) : IRequestHandler<FinishDigitalLoan>
+public record FinishDigitalLoanHandler() : IRequestHandler<FinishDigitalLoan>
 {
-    private BpmStore<RequestDigitalLoan, FinishDigitalLoan> manager = manager;
-
     public async Task Handle(FinishDigitalLoan request, CancellationToken cancellationToken)
     {
-        var aggregateState = await manager.AggregateProcessStateAsync(request.ProcessId, cancellationToken);
-        var matched = aggregateState.ValidateFor<ConfirmLoanRequest>();
-        if (!matched)
-            return;
+        return;
 
         return;
     }

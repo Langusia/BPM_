@@ -18,14 +18,10 @@ public record RequestLoanInitiate : ICommand<RequestLoanInitiateResponse>
     public string TraceId { get; set; }
 }
 
-public class RequestLoanInitiateHandler(BpmStore<RequestCarPawnshop, RequestLoanInitiate> manager) : ICommandHandler<RequestLoanInitiate, RequestLoanInitiateResponse>
+public class RequestLoanInitiateHandler() : ICommandHandler<RequestLoanInitiate, RequestLoanInitiateResponse>
 {
     public async Task<Result<RequestLoanInitiateResponse>> Handle(RequestLoanInitiate request, CancellationToken cancellationToken)
     {
-        var agg =
-             manager.StartProcess(x =>
-                x.InitiateCarPawnshop(request.ProductType, request.PromoCode, request.Percent, 0, request.Amount, request.EffectiveInterestRate, request.Period));
-
         throw new NotImplementedException();
     }
 }

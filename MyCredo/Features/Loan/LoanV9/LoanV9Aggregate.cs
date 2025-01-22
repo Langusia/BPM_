@@ -74,17 +74,13 @@ public record GenerateSchedule : IRequest<bool>
 
 public class GenerateScheduleHandler : IRequestHandler<GenerateSchedule, bool>
 {
-    private readonly BpmStore<IssueLoan, GenerateSchedule> _bpm;
-
-    public GenerateScheduleHandler(BpmStore<IssueLoan, GenerateSchedule> bpm)
+    public GenerateScheduleHandler()
     {
-        _bpm = bpm;
     }
 
     public async Task<bool> Handle(GenerateSchedule request, CancellationToken cancellationToken)
     {
         var id = Guid.Parse("36f3284a-bd03-4d90-b30a-4281cdd5be38");
-        var s = await _bpm.AggregateProcessStateAsync(id, cancellationToken);
         throw new NotImplementedException();
     }
 }
@@ -94,16 +90,12 @@ public record GenerateContract(Guid Id) : IRequest<ProcessStateDto>;
 
 public class GenerateContractHandler : IRequestHandler<GenerateContract, ProcessStateDto>
 {
-    private readonly BpmStore<IssueLoan, GenerateContract> _bs;
-
-    public GenerateContractHandler(BpmStore<IssueLoan, GenerateContract> bs)
+    public GenerateContractHandler()
     {
-        _bs = bs;
     }
 
     public async Task<ProcessStateDto> Handle(GenerateContract request, CancellationToken cancellationToken)
     {
-        var s = await _bs.AggregateProcessStateAsync(request.Id, cancellationToken);
         //s.AppendEvent()
         //await _bs.SaveChangesAsync(cancellationToken);
         return null;
@@ -115,21 +107,14 @@ public record InitiateIssueLoanProcess : IRequest<ProcessStateDto>;
 
 public class InitiateIssueLoanProcessHandler : IRequestHandler<InitiateIssueLoanProcess, ProcessStateDto>
 {
-    private readonly BpmStore<IssueLoan, InitiateIssueLoanProcess> _bs;
-
-    public InitiateIssueLoanProcessHandler(BpmStore<IssueLoan, InitiateIssueLoanProcess> bs)
+    public InitiateIssueLoanProcessHandler()
     {
-        _bs = bs;
     }
 
     public async Task<ProcessStateDto> Handle(InitiateIssueLoanProcess request, CancellationToken cancellationToken)
     {
-        var s = _bs.StartProcess(x => x.Initiate());
-        await _bs.SaveChangesAsync(cancellationToken);
         return new ProcessStateDto()
         {
-            Id = s.Aggregate.Id,
-            NextNodes = s.CurrentStep.NextSteps.Select(x => x.CommandType.ToString()).ToList()
         };
     }
 }
