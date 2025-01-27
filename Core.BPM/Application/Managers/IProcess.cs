@@ -9,6 +9,8 @@ namespace Core.BPM.Application.Managers;
 public interface IProcess
 {
     Guid Id { get; }
+    string AggregateName { get; }
+
 
     /// <summary>
     /// Retrieves the aggregate as the specified type.

@@ -216,14 +216,14 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
         Process.RootNode = res.Item1;
         Process.AllDistinctCommands = res.Item2;
         var allPossibles = GetAllPossibles(Process.RootNode);
-        var countMore = allPossibles.SelectMany(x => x.GroupBy(x => x.CommandType).Select(c => new
-        {
-            node = c.First(),
-            count = c.Count()
-        }).Where(z => z.count > 1)).ToList();
-
-        if (countMore.Any())
-            throw new SameCommandForBranchFoundException(countMore.Select(x => x.node.CommandType.Name).Distinct().ToArray());
+        //var countMore = allPossibles.SelectMany(x => x.GroupBy(x => x.CommandType).Select(c => new
+        //{
+        //    node = c.First(),
+        //    count = c.Count()
+        //}).Where(z => z.count > 1)).ToList();
+        //
+        //if (countMore.Any())
+        //    throw new SameCommandForBranchFoundException(countMore.Select(x => x.node.CommandType.Name).Distinct().ToArray());
 
         Process.AllPossibles = allPossibles;
 
