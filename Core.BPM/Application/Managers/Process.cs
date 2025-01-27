@@ -9,6 +9,7 @@ namespace Core.BPM.Application.Managers;
 public class Process : IProcess, IProcessStore
 {
     public Guid Id { get; }
+    public string AggregateName { get; }
 
     private readonly BProcess _processConfig;
     private readonly IBpmRepository _repository;
@@ -16,7 +17,6 @@ public class Process : IProcess, IProcessStore
     private readonly List<object> _storedEvents = [];
     private readonly Queue<object> _uncommittedEvents = [];
 
-    private readonly string _aggregateName;
     private bool _isNewProcess;
 
     public Process(Guid aggregateId, string rootAggregateName, bool isNewProcess, IEnumerable<object>? events, IEnumerable<object>? upcomingEvents, IBpmRepository repository)
@@ -31,7 +31,7 @@ public class Process : IProcess, IProcessStore
             }
 
         Id = aggregateId;
-        _aggregateName = rootAggregateName;
+        AggregateName = rootAggregateName;
         _isNewProcess = isNewProcess;
 
         _repository = repository;
@@ -205,7 +205,7 @@ public class Process : IProcess, IProcessStore
 
     public async Task AppendUncommittedToDb(CancellationToken ct)
     {
-        var headers = new Dictionary<string, object> { { "AggregateType", _aggregateName } };
+        var headers = new Dictionary<string, object> { { "AggregateType", AggregateName } };
         await _repository.AppendEvents(Id, _uncommittedEvents.ToArray(), _isNewProcess, headers, ct);
         _isNewProcess = false;
     }
