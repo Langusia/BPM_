@@ -21,13 +21,6 @@ public interface IProcess
     /// <exception cref="InvalidOperationException">Thrown when no Apply methods are found for the aggregate type.</exception>
     T AggregateAs<T>(bool includeUncommittedEvents = true) where T : Aggregate;
 
-    /// <summary>
-    /// Retrieves the aggregate as the specified type, returning a default instance if none exists.
-    /// </summary>
-    /// <typeparam name="T">Type of aggregate.</typeparam>
-    /// <param name="includeUncommittedEvents">Whether to include uncommitted events in the aggregation.</param>
-    /// <returns>The constructed aggregate or a default instance.</returns>
-    T AggregateOrDefaultAs<T>(bool includeUncommittedEvents = true) where T : Aggregate;
 
     /// <summary>
     /// Retrieves the aggregate as the specified type, returning null if none exists.
@@ -36,6 +29,8 @@ public interface IProcess
     /// <param name="includeUncommittedEvents">Whether to include uncommitted events in the aggregation.</param>
     /// <returns>The constructed aggregate or null if not found.</returns>
     T? AggregateOrNullAs<T>(bool includeUncommittedEvents = true) where T : Aggregate;
+
+    bool TryAggregateAs<T>(out T? aggregate, bool includeUncommitted = true) where T : Aggregate;
 
     /// <summary>
     /// Appends new events to the uncommitted event queue.

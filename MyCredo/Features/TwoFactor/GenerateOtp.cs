@@ -25,11 +25,14 @@ public class GenerateOtpHandler : IRequestHandler<GenerateOtp, long>
         var v = process.Validate<GenerateOtp>();
         var vc = process.Validate<GenerateContract>();
 
-        var agg = process.AggregateOrDefaultAs<TwoFactor>();
         var agg3 = process.AggregateOrNullAs<TwoFactor>();
         var agg1 = process.AggregateAs<PasswordRecovery>();
         var sss = process.AppendEvents(new OtpSent(Guid.NewGuid(), "test"));
-        agg = process.AggregateAs<TwoFactor>();
+        var s = new PasswordRecovery();
+        if (!process.TryAggregateAs<PasswordRecovery>(out var aggregate))
+        {
+            return 0;
+        }
 
 
         await _bpm.SaveChangesAsync(cancellationToken);

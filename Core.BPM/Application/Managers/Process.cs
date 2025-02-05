@@ -49,34 +49,48 @@ public class Process : IProcess, IProcessStore
         return aggregate;
     }
 
-    public T AggregateOrDefaultAs<T>(bool includeUncommitted) where T : Aggregate
+    public T? AggregateOrNullAs<T>(bool includeUncommittedEvents = true) where T : Aggregate
     {
-        var stream = _storedEvents;
-        if (includeUncommitted)
-            stream = stream.Union(_uncommittedEvents).ToList();
-
-
-        var aggregate = (T)_repository.AggregateOrDefaultStreamFromRegistry(typeof(T), stream);
-        aggregate.Id = Id;
-        return aggregate;
+        throw new NotImplementedException();
     }
 
-    public T? AggregateOrNullAs<T>(bool includeUncommitted) where T : Aggregate
+    public T? AggregateOrNullAsAs<T>(bool includeUncommitted = true) where T : Aggregate
     {
-        var stream = _storedEvents;
-        if (includeUncommitted)
-            stream = stream.Union(_uncommittedEvents).ToList();
+        try
+        {
+            var stream = _storedEvents;
+            if (includeUncommitted)
+                stream = stream.Union(_uncommittedEvents).ToList();
 
-
-        var aggregateObj = _repository.AggregateOrNullStreamFromRegistry(typeof(T), stream);
-        if (aggregateObj is null)
+            var aggregate = (T)_repository.AggregateStreamFromRegistry(typeof(T), stream);
+            aggregate.Id = Id;
+            return aggregate;
+        }
+        catch (Exception)
+        {
             return null;
-
-        var aggregate = (T)aggregateObj;
-        aggregate.Id = Id;
-
-        return aggregate;
+        }
     }
+
+    public bool TryAggregateAs<T>(out T? aggregate, bool includeUncommitted = true) where T : Aggregate
+    {
+        aggregate = null;
+        try
+        {
+            var stream = _storedEvents;
+            if (includeUncommitted)
+                stream = stream.Union(_uncommittedEvents).ToList();
+
+            aggregate = (T)_repository.AggregateStreamFromRegistry(typeof(T), stream);
+            aggregate.Id = Id;
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
 
     public bool AppendEvents(params object[] events)
     {
@@ -168,14 +182,28 @@ public class Process : IProcess, IProcessStore
                 var lastGroupCommandType = storedGroups.Last().node.CommandType;
                 var lastIndex = path.IndexOf(path.First(node => node.CommandType == lastGroupCommandType));
 
-                var nextSteps = path[lastIndex].NextSteps;
+                var nextSteps = new List<INode>(); // Replace NodeType with the actual node type
+                for (int i = lastIndex + 1; i < path.Count; i++)
+                {
+                    var node = path[i];
+
+                    if (node is IOptional)
+                    {
+                        nextSteps.Add(node);
+                    }
+                    else
+                    {
+                        nextSteps.Add(node);
+                        break;
+                    }
+                }
+
                 if (nextSteps != null)
                     return nextSteps
                         .Union(path.Where((node, index) => index <= lastIndex && node is IOptional or IMulti));
 
                 return path.Where((node, index) => index <= lastIndex && node is IOptional or IMulti);
-            })
-            .ToList();
+            }).ToList();
     }
 
     private List<INode> FilterByAggregateConditions(List<INode> nodes, Dictionary<Type, object> aggregateDictionary, List<object> allEvents)

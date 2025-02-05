@@ -22,7 +22,6 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
         var agg = process.AggregateAs<PasswordRecovery>();
         await store.SaveChangesAsync(cancellationToken);
 
-        var aggD = process.AggregateOrDefaultAs<PasswordRecovery>();
         var aggN = process.AggregateOrNullAs<PasswordRecovery>();
 
         var s = process.GetNextSteps();

@@ -7,6 +7,7 @@ public class BProcess(Type processType, INode rootNode)
 {
     public readonly Type ProcessType = processType;
     public INode RootNode = rootNode;
+    public IExecutionBlock RootB;
     private List<INode>? _optionals;
 
     public List<List<INode>> AllPossibles { get; set; }
