@@ -166,7 +166,7 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     //        .Continue<MarkDocumentsAsAssigned>()
     //        .Continue<FinishIssueLoan>();
     //}
-    public override MyClass<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
+    public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
             .UnlockOptional<A>()
             .UnlockOptional<B>()

@@ -1,3 +1,3 @@
 ﻿namespace Core.BPM.Application.Events;
 
-public record ProcessFailed(string Description);
+public record ProcessFailed(string FailOrigin, object Data, string Description);

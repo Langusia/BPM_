@@ -2,5 +2,5 @@
 
 public interface IProcessNodeBuilder<T> : IProcessBuilder where T : Aggregate
 {
-    MyClass<T> End();
+    ProcessConfig<T> End(Action<BProcessConfig>? configureProcess = null);
 }

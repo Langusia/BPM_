@@ -37,7 +37,9 @@ public interface IProcess
     /// </summary>
     /// <param name="events">Events to append.</param>
     /// <returns>True if the events were appended successfully, otherwise false.</returns>
-    bool AppendEvents(params object[] events);
+    BpmResult AppendEvents(params object[] events);
+
+    BpmResult AppendFail<T>(string description, object data);
 
     /// <summary>
     /// Validates if the given command type can be executed within the process.
@@ -45,12 +47,12 @@ public interface IProcess
     /// <typeparam name="T">The command type to validate.</typeparam>
     /// <param name="includeUncommittedEvents">Whether to include uncommitted events in validation.</param>
     /// <returns>True if the command type is valid, otherwise false.</returns>
-    bool Validate<T>(bool includeUncommittedEvents = true) where T : IBaseRequest;
+    BpmResult Validate<T>(bool includeUncommittedEvents = true) where T : IBaseRequest;
 
     /// <summary>
     /// Retrieves the next available steps in the process.
     /// </summary>
     /// <param name="includeUncommittedEvents">Whether to consider unsaved events in the computation.</param>
     /// <returns>A list of next possible steps, or null if no steps are available.</returns>
-    List<INode>? GetNextSteps(bool includeUncommittedEvents = true);
+    BpmResult<List<INode>?> GetNextSteps(bool includeUncommittedEvents = true);
 }

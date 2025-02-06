@@ -108,7 +108,7 @@ public record CarPawnshopInitiated(
 
 public class RequestCarPawnshopDefinition : BpmDefinition<RequestCarPawnshop>
 {
-    public override MyClass<RequestCarPawnshop> DefineProcess(IProcessBuilder<RequestCarPawnshop> configureProcess)
+    public override ProcessConfig<RequestCarPawnshop> DefineProcess(IProcessBuilder<RequestCarPawnshop> configureProcess)
     {
         return configureProcess
             .StartWith<RequestLoanInitiate>()

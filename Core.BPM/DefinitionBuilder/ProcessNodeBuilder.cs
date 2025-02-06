@@ -142,7 +142,6 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
         return Or(node, configure);
     }
 
-
     private List<List<INode>> GetAllPossibles(INode rootNode)
     {
         List<List<INode>> result = [[rootNode]];
@@ -210,24 +209,17 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
         }
     }
 
-    public MyClass<TProcess> End()
+    public ProcessConfig<TProcess> End(Action<BProcessConfig>? configureProcess)
     {
         var res = GetConfiguredProcessRootReverse();
         Process.RootNode = res.Item1;
         Process.AllDistinctCommands = res.Item2;
         var allPossibles = GetAllPossibles(Process.RootNode);
-        //var countMore = allPossibles.SelectMany(x => x.GroupBy(x => x.CommandType).Select(c => new
-        //{
-        //    node = c.First(),
-        //    count = c.Count()
-        //}).Where(z => z.count > 1)).ToList();
-        //
-        //if (countMore.Any())
-        //    throw new SameCommandForBranchFoundException(countMore.Select(x => x.node.CommandType.Name).Distinct().ToArray());
 
         Process.AllPossibles = allPossibles;
+        if (configureProcess is not null)
+            configureProcess(process.Config);
 
-
-        return new MyClass<TProcess>();
+        return new ProcessConfig<TProcess>();
     }
 }

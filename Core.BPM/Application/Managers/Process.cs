@@ -1,7 +1,9 @@
-﻿using Core.BPM.Configuration;
+﻿using Core.BPM.Application.Events;
+using Core.BPM.Configuration;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 using Core.BPM.Persistence;
+using FastExpressionCompiler;
 using MediatR;
 
 namespace Core.BPM.Application.Managers;
@@ -11,6 +13,7 @@ public class Process : IProcess, IProcessStore
     public Guid Id { get; }
     public string AggregateName { get; }
 
+    private readonly DateTimeOffset? _startTime;
     private readonly BProcess _processConfig;
     private readonly IBpmRepository _repository;
 
@@ -19,8 +22,10 @@ public class Process : IProcess, IProcessStore
 
     private bool _isNewProcess;
 
-    public Process(Guid aggregateId, string rootAggregateName, bool isNewProcess, IEnumerable<object>? events, IEnumerable<object>? upcomingEvents, IBpmRepository repository)
+    public Process(Guid aggregateId, string rootAggregateName, bool isNewProcess, IEnumerable<object>? events, IEnumerable<object>? upcomingEvents, DateTimeOffset? startTime,
+        IBpmRepository repository)
     {
+        _startTime = startTime;
         _processConfig = BProcessGraphConfiguration.GetConfig(rootAggregateName) ?? throw new Exception();
         if (events is not null)
             _storedEvents = events.ToList();
@@ -49,12 +54,7 @@ public class Process : IProcess, IProcessStore
         return aggregate;
     }
 
-    public T? AggregateOrNullAs<T>(bool includeUncommittedEvents = true) where T : Aggregate
-    {
-        throw new NotImplementedException();
-    }
-
-    public T? AggregateOrNullAsAs<T>(bool includeUncommitted = true) where T : Aggregate
+    public T? AggregateOrNullAs<T>(bool includeUncommitted = true) where T : Aggregate
     {
         try
         {
@@ -92,38 +92,71 @@ public class Process : IProcess, IProcessStore
     }
 
 
-    public bool AppendEvents(params object[] events)
+    public BpmResult AppendEvents(params object[] events)
     {
-        //TODO: checking must be more advanced
-        var filtered = UnlockedPaths();
-        if (filtered.All(f => events.Select(e => e.GetType().Name).Any(z => !f.ProducingEvents.Select(c => c.Name).Contains(z))))
-            return false;
+        if (CheckExpiration(out var bpmResult))
+            return bpmResult;
+
+        var filteredResult = UnlockedPaths();
+        if (!filteredResult.IsSuccess)
+            return filteredResult;
+
+        if (filteredResult.Data?.All(f => events.Select(e => e.GetType().Name).Any(z => !f.ProducingEvents.Select(c => c.Name).Contains(z))) ?? true)
+            return Result.Fail(Code.InvalidEvent);
 
         foreach (var @event in events)
         {
             _uncommittedEvents.Enqueue(@event);
         }
 
-        return true;
+        return Result.Success();
     }
 
-    public bool Validate<T>(bool includeUncommitted) where T : IBaseRequest
+    private bool CheckExpiration(out BpmResult bpmResult)
     {
-        var filtered = UnlockedPaths(includeUncommitted);
-        return filtered.Any(x => x.CommandType == typeof(T));
+        bpmResult = Result.Success();
+        if (_startTime is not null)
+            if (_processConfig.Config.ExpirationSeconds is not null)
+                if ((DateTimeOffset.UtcNow - _startTime).Value.TotalSeconds > _processConfig.Config.ExpirationSeconds)
+                {
+                    bpmResult = Result.Fail(Code.Expired);
+                    return true;
+                }
+
+        return false;
     }
 
-    public List<INode> GetNextSteps(bool includeUnsavedEvents = true)
+    public BpmResult AppendFail<T>(string description, object data)
+    {
+        if (CheckExpiration(out var bpmResult))
+            return bpmResult;
+
+        _uncommittedEvents.Enqueue(new ProcessFailed(typeof(T).Name, data, description));
+        return Result.Success();
+    }
+
+    public BpmResult Validate<T>(bool includeUncommitted) where T : IBaseRequest
+    {
+        var filteredResult = UnlockedPaths(includeUncommitted);
+        if (!filteredResult.IsSuccess)
+            return filteredResult;
+
+        return filteredResult.Data?.Any(x => x.CommandType == typeof(T)) ?? false ? Result.Success() : Result.Fail(Code.NoSuccess);
+    }
+
+    public BpmResult<List<INode>?> GetNextSteps(bool includeUnsavedEvents = true)
     {
         return UnlockedPaths(includeUnsavedEvents);
     }
 
 
-    private List<INode> UnlockedPaths(bool includeUnsavedEvents = true)
+    private BpmResult<List<INode>?> UnlockedPaths(bool includeUnsavedEvents = true)
     {
         var stream = _storedEvents;
         if (includeUnsavedEvents)
             stream = stream.Union(_uncommittedEvents).ToList();
+        if (stream.Any(x => x is ProcessFailed))
+            return Result.Fail<List<INode>?>(Code.ProcessFailed, []);
 
         // Step 1: Map events to corresponding nodes
         var mappedNodes = MapEventsToNodes(stream, _processConfig);
@@ -141,7 +174,7 @@ public class Process : IProcess, IProcessStore
         var aggregateDictionary = new Dictionary<Type, object>();
         filtered = FilterByAggregateConditions(filtered, aggregateDictionary, stream);
 
-        return filtered.Distinct().ToList();
+        return Result.Success(filtered.Distinct().ToList());
     }
 
     private List<INode> MapEventsToNodes(List<object> allEvents, BProcess process)

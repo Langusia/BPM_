@@ -43,7 +43,7 @@ public class IssueLoan : Aggregate
 
 public class LoanV9AggregateDefinition : BpmDefinition<IssueLoan>
 {
-    public override MyClass<IssueLoan> DefineProcess(IProcessBuilder<IssueLoan> configureProcess)
+    public override ProcessConfig<IssueLoan> DefineProcess(IProcessBuilder<IssueLoan> configureProcess)
     {
         return configureProcess
             .StartWith<InitiateIssueLoanProcess>()

@@ -16,4 +16,4 @@ public class ProcessBuilder<TProcess> : IProcessBuilder<TProcess> where TProcess
     }
 }
 
-public class MyClass<T> where T : Aggregate;
+public class ProcessConfig<T> where T : Aggregate;

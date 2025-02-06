@@ -25,6 +25,7 @@ public class GenerateOtpHandler : IRequestHandler<GenerateOtp, long>
         var v = process.Validate<GenerateOtp>();
         var vc = process.Validate<GenerateContract>();
 
+        process.AppendFail<GenerateOtp>("asd", request);
         var agg3 = process.AggregateOrNullAs<TwoFactor>();
         var agg1 = process.AggregateAs<PasswordRecovery>();
         var sss = process.AppendEvents(new OtpSent(Guid.NewGuid(), "test"));

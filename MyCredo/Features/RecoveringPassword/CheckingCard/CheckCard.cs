@@ -30,7 +30,7 @@ public class CheckCard : Aggregate
 
 public class CheckCardDefinition : BpmDefinition<CheckCard>
 {
-    public override MyClass<CheckCard> DefineProcess(IProcessBuilder<CheckCard> configureProcess)
+    public override ProcessConfig<CheckCard> DefineProcess(IProcessBuilder<CheckCard> configureProcess)
     {
         return null;
     }

@@ -13,7 +13,7 @@ public class BpmStore(IBpmRepository repository) : IBpmStore
 
     public IProcess StartProcess(Type aggregateType, params object[] events)
     {
-        var process = new Process(Guid.NewGuid(), aggregateType.Name, true, null, events, repository);
+        var process = new Process(Guid.NewGuid(), aggregateType.Name, true, null, events, null, repository);
         _processes.Enqueue(process);
         return process;
     }
@@ -25,7 +25,7 @@ public class BpmStore(IBpmRepository repository) : IBpmStore
         if (string.IsNullOrEmpty(aggregateName))
             throw new Exception();
 
-        var process = new Process(aggregateId, aggregateName, false, stream.Select(x => x.Data).ToArray(), null, repository);
+        var process = new Process(aggregateId, aggregateName, false, stream.Select(x => x.Data).ToArray(), null, stream.FirstOrDefault().Timestamp, repository);
         _processes.Enqueue(process);
         return process;
     }
