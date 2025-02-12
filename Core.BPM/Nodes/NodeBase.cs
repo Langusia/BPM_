@@ -1,6 +1,8 @@
 ﻿using Core.BPM.AggregateConditions;
 using Core.BPM.Attributes;
 using Core.BPM.BCommand;
+using Core.BPM.Evaluators;
+using Core.BPM.Exceptions;
 using Core.BPM.Interfaces;
 
 namespace Core.BPM.Nodes;
@@ -9,15 +11,18 @@ public abstract class NodeBase : INode
 {
     public NodeBase(Type commandType, Type processType)
     {
-        var producer = GetCommandProducer(commandType);
-        if (producer is null)
-            throw new InvalidOperationException($"Command {commandType.Name} does not have a producer attribute.");
-        if (producer.EventTypes.Length == 0)
-            throw new InvalidOperationException($"Command {commandType.Name} does not have any event types.");
+        if (commandType != typeof(GroupNode))
+        {
+            var producer = GetCommandProducer(commandType);
+            if (producer is null)
+                throw new InvalidOperationException($"Command {commandType.Name} does not have a producer attribute.");
+            if (producer.EventTypes.Length == 0)
+                throw new InvalidOperationException($"Command {commandType.Name} does not have any event types.");
+            ProducingEvents = producer.EventTypes.ToList();
+        }
 
         CommandType = commandType;
         ProcessType = processType;
-        ProducingEvents = producer.EventTypes.ToList();
     }
 
     public Type CommandType { get; }
@@ -33,12 +38,6 @@ public abstract class NodeBase : INode
 
     public List<INode> NextSteps { get; set; } = [];
 
-    public void AddAggregateCondition<TAggregate>(Predicate<TAggregate> predicate) where TAggregate : Aggregate
-    {
-        AggregateConditions ??= new List<IAggregateCondition>();
-        AggregateConditions.Add(new AggregateCondition<TAggregate>(predicate));
-    }
-
     public bool PlacementPreconditionMarked(List<string> savedEvents)
     {
         var preconditions = GetPlacementPreconditions();
@@ -46,6 +45,7 @@ public abstract class NodeBase : INode
         return savedEvents.Any(s => preConditionEvts.Contains(s));
     }
 
+    
 
     protected List<INode>? GetPlacementPreconditions()
     {
@@ -90,6 +90,11 @@ public abstract class NodeBase : INode
         return NextSteps.FirstOrDefault(step => step.ProducingEvents.Any(e => e.Name == eventName));
     }
 
+    public virtual INodeStateEvaluator GetEvaluator()
+    {
+        throw new NotImplementedException();
+    }
+
     public void AddNextStep(INode node)
     {
         NextSteps ??= [];
@@ -126,7 +131,7 @@ public abstract class NodeBase : INode
         return tails.ToList();
     }
 
-    public List<INode> PrevSteps { get; set; }
+    public List<INode>? PrevSteps { get; set; }
 
     public void AddPrevStep(INode node)
     {
@@ -142,10 +147,10 @@ public abstract class NodeBase : INode
 
     public void SetPrevSteps(List<INode>? nodes)
     {
+        PrevSteps = null;
         PrevSteps = nodes;
     }
 
-    public abstract bool ValidatePlacement(BProcess process, List<string> savedEvents, INode? currentNode);
 
     protected static BpmProducer GetCommandProducer(Type commandType)
     {

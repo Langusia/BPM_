@@ -1,34 +1,17 @@
-﻿using Core.BPM.AggregateConditions;
-using Core.BPM.Application.Managers;
-using Core.BPM.Attributes;
-using Core.BPM.BCommand;
+﻿using Core.BPM.Evaluators;
+using Core.BPM.AggregateConditions;
 
 namespace Core.BPM.Interfaces;
 
 public interface INode
 {
     Type CommandType { get; }
-    string CommandName { get; }
-    Type ProcessType { get; }
-    StepOptions Options { get; set; }
-
     List<IAggregateCondition>? AggregateConditions { get; set; }
-    List<INode>? KeyNodes { get; set; }
-
     public List<Type> ProducingEvents { get; }
     List<INode>? NextSteps { get; set; }
     void AddNextStep(INode node);
-    void AddNextSteps(List<INode>? node);
-    void SetNextSteps(List<INode>? node);
-    void AddNextStepToTail(INode node);
     List<INode>? PrevSteps { get; set; }
-    void AddPrevStep(INode node);
-    void AddPrevSteps(List<INode>? nodes);
     void SetPrevSteps(List<INode>? nodes);
     INode? FindNextNode(string eventName);
-    List<INode> FetchLastNodes(INode node);
-    public BpmProducer CommandProducer() => (BpmProducer)CommandType.GetCustomAttributes(typeof(BpmProducer), false).FirstOrDefault()!;
-
-    public abstract bool ValidatePlacement(BProcess process, List<string> savedEvents, INode? currentNode);
-    public bool PlacementPreconditionMarked(List<string> savedEvents);
+    INodeStateEvaluator GetEvaluator();
 }

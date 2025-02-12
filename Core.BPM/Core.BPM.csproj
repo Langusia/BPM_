@@ -15,4 +15,16 @@
         <PackageReference Include="Marten" Version="7.7.0"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Nodes\Evaluators\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="Nodes\Evaluators\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Nodes\Evaluators\**" />
+    </ItemGroup>
+
 </Project>

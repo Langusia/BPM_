@@ -168,10 +168,15 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     //}
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            .UnlockOptional<A>()
-            .UnlockOptional<B>()
-            .Continue<GenerateOtp>()
-            .Continue<Z>()
+            .Group("g1", x =>
+            {
+                x.AddStep<C>(x =>
+                    x.Continue<C>()
+                        .Or<Z>());
+                x.AddStep<B>(x =>
+                    x.Continue<Z>());
+            })
+            
             .End();
 
 
