@@ -3,6 +3,7 @@ using Core.BPM.Attributes;
 using Marten;
 using MediatR;
 using MyCredo.Common;
+using MyCredo.Features.TwoFactor;
 
 namespace MyCredo.Features.RecoveringPassword.Initiating;
 
@@ -19,13 +20,11 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
     public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
         var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, request.ChannelType));
-        var agg = process.AggregateAs<PasswordRecovery>();
-        await store.SaveChangesAsync(cancellationToken);
-
-        var aggN = process.AggregateOrNullAs<PasswordRecovery>();
+        process.AppendEvents(new Fd(Guid.Empty));
+        process.AppendEvents(new Bd(Guid.Empty));
 
         var s = process.GetNextSteps();
 
-        return agg.Id;
+        return Guid.Empty;
     }
 }

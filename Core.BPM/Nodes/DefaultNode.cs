@@ -1,10 +1,8 @@
-﻿using Core.BPM.Application.Managers;
-using Core.BPM.Evaluators;
-using Core.BPM.Interfaces;
+﻿using Core.BPM.Evaluators;
 
 namespace Core.BPM.Nodes;
 
-public class Node(Type commandType, Type processType) : NodeBase(commandType, processType), INode
+public class Node(Type commandType, Type processType) : NodeBase(commandType, processType)
 {
-    public INodeStateEvaluator GetEvaluator() => new NodeStateEvaluator();
+    public override INodeStateEvaluator GetEvaluator() => new NodeStateEvaluator(this);
 }

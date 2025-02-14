@@ -2,7 +2,7 @@
 
 namespace Core.BPM.Evaluators;
 
-public class NodeStateEvaluator(INode node) : INodeStateEvaluator
+public class AnyTimeNodeStateEvaluator(INode node) : INodeStateEvaluator
 {
     public bool IsCompleted(List<object> storedEvents)
     {
@@ -11,7 +11,6 @@ public class NodeStateEvaluator(INode node) : INodeStateEvaluator
 
     public (bool, List<INode>) CanExecute(List<object> storedEvents)
     {
-        return ((node.PrevSteps?.Any(prev => prev.GetEvaluator().IsCompleted(storedEvents)) ?? true)
-                && !storedEvents.Any(x => node.ContainsEvent(x)), [node]);
+        return (node.PrevSteps?.Any(prev => prev.GetEvaluator().IsCompleted(storedEvents)) ?? true, [node]);
     }
 }

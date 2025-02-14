@@ -168,15 +168,20 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     //}
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            .Group("g1", x =>
+            .Group(x =>
             {
-                x.AddStep<C>(x =>
-                    x.Continue<C>()
-                        .Or<Z>());
                 x.AddStep<B>(x =>
+                    x.Continue<C>()
+                        .Or<D>());
+                x.AddStep<A>(x =>
                     x.Continue<Z>());
             })
-            
+            .If(x => x.ChannelType == ChannelTypeEnum.Unclassified, z =>
+                z.Continue<A>())
+            .Else(z =>
+                z.Continue<B>())
+            .OrAnyTime<F>()
+            .Continue<B>()
             .End();
 
 

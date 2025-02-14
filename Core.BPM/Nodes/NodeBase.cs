@@ -45,7 +45,6 @@ public abstract class NodeBase : INode
         return savedEvents.Any(s => preConditionEvts.Contains(s));
     }
 
-    
 
     protected List<INode>? GetPlacementPreconditions()
     {
@@ -90,9 +89,31 @@ public abstract class NodeBase : INode
         return NextSteps.FirstOrDefault(step => step.ProducingEvents.Any(e => e.Name == eventName));
     }
 
-    public virtual INodeStateEvaluator GetEvaluator()
+    public virtual INodeStateEvaluator GetEvaluator() => new NodeStateEvaluator(this);
+    public virtual bool ContainsEvent(object @event) => GetCommandProducer(CommandType).EventTypes.Select(x => x.Name).Contains(@event.GetType().Name);
+
+    public List<INode> GetAllNodes()
     {
-        throw new NotImplementedException();
+        var root = this;
+        HashSet<INode> visitedNodes = new();
+        List<INode> allNodes = new();
+
+        void Traverse(INode node)
+        {
+            if (node == null || visitedNodes.Contains(node))
+                return;
+
+            visitedNodes.Add(node);
+            allNodes.Add(node);
+
+            foreach (var next in node.NextSteps ?? [])
+            {
+                Traverse(next);
+            }
+        }
+
+        Traverse(root);
+        return allNodes;
     }
 
     public void AddNextStep(INode node)
@@ -158,6 +179,35 @@ public abstract class NodeBase : INode
     }
 
     private INode _currNext;
+    private bool _isComplete;
+
+    public (bool isComplete, List<INode> availableNodes) CheckBranchCompletionAndGetAvailableNodes(INode start, List<object> storedEvents)
+    {
+        List<INode> availableNodes = new();
+        bool isAnyBranchComplete = false;
+
+        void Traverse(INode node)
+        {
+            var evaluator = node.GetEvaluator();
+            bool nodeCompleted = evaluator.IsCompleted(storedEvents);
+            if (node.NextSteps == null || node.NextSteps.Count == 0)
+                isAnyBranchComplete |= nodeCompleted;
+
+            var canExecute = evaluator.CanExecute(storedEvents);
+            if (canExecute.canExec)
+                availableNodes.AddRange(canExecute.availableNodes.Where(x => !availableNodes.Contains(x)));
+
+            foreach (var next in node.NextSteps ?? [])
+            {
+                Traverse(next);
+            }
+        }
+
+        Traverse(start);
+
+        return (isAnyBranchComplete, availableNodes);
+    }
+
 
     protected void GetLastNodes(List<INode> lastNodes, INode start)
     {

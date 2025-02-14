@@ -75,16 +75,25 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
         return configured;
     }
 
+    public IConditionalModifiableBuilder<TProcess> If(Predicate<TProcess> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
+    {
+        var condition = new AggregateCondition<TProcess>(predicate);
+        var node = new ConditionalNode(ProcessConfig.ProcessType, condition);
+        var builder = new ConditionalNodeBuilder<TProcess>(CurrentNode, process, [condition]);
+        configure.Invoke(builder);
+        throw new NotImplementedException();
+    }
+
     public IProcessNodeModifiableBuilder<TProcess> Case<TAggregate>(Predicate<TAggregate> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
         where TAggregate : Aggregate
     {
         return CaseInternal(predicate, configure);
     }
 
-    public IProcessNodeModifiableBuilder<TProcess> Group(string groupId, Action<IGroupBuilder<TProcess>> configure)
+    public IProcessNodeModifiableBuilder<TProcess> Group(Action<IGroupBuilder<TProcess>> configure)
     {
-        var node = new GroupNode(groupId, ProcessConfig.ProcessType);
-        var builder = new GroupNodeBuilder<TProcess>(process, CurrentNode, groupId, node);
+        var node = new GroupNode(ProcessConfig.ProcessType);
+        var builder = new GroupNodeBuilder<TProcess>(process, CurrentNode, node);
 
         configure.Invoke(builder);
         builder.EndGroup();
@@ -146,7 +155,7 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
 
     public IProcessNodeModifiableBuilder<TProcess> OrAnyTime<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
-        var node = new OptionalNode(typeof(TCommand), typeof(TProcess));
+        var node = new AnyTimeNode(typeof(TCommand), typeof(TProcess));
         return Or(node, configure);
     }
 
@@ -158,9 +167,10 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, List
         var allPossibles = GetAllPossibles(ProcessConfig.RootNode);
 
         ProcessConfig.AllPossibles = allPossibles;
+        var s = process.AllNodes;
+        var ss = process.AllNodes.Distinct().ToList();
         if (configureProcess is not null)
             configureProcess(process.Config);
-
         return new ProcessConfig<TProcess>();
     }
 }

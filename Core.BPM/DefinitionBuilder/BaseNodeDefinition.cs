@@ -26,7 +26,8 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
         var currentNodeSet = CurrentBranchInstances;
         List<INode> result = [];
         List<INode> distresult = [];
-        IterateConfiguredProcessRoot(currentNodeSet, result, distresult);
+        List<INode> allNodes = [];
+        IterateConfiguredProcessRoot(currentNodeSet, result, distresult, allNodes);
         return new Tuple<INode, List<INode>>(result.FirstOrDefault()!, distresult);
     }
 
@@ -49,12 +50,14 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
         }
     }
 
-    protected void IterateConfiguredProcessRoot(List<INode> currentNodeSet, List<INode> res, List<INode> distinctNodeSet)
+    protected void IterateConfiguredProcessRoot(List<INode> currentNodeSet, List<INode> res, List<INode> distinctNodeSet, List<INode> allNodes)
     {
         foreach (var currentBranchInstance in currentNodeSet)
         {
             if (currentBranchInstance.PrevSteps is null)
             {
+                allNodes.Add(currentBranchInstance);
+
                 res.Add(currentBranchInstance);
                 if (!distinctNodeSet.Exists(x => x.CommandType == currentBranchInstance.CommandType && x.GetType() == currentBranchInstance.GetType()))
                     distinctNodeSet.Add(currentBranchInstance);
@@ -63,6 +66,7 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
 
             foreach (var currentBranchInstancePrevStep in currentBranchInstance.PrevSteps)
             {
+                allNodes.Add(currentBranchInstance);
                 if (!currentBranchInstancePrevStep.NextSteps!.Contains(currentBranchInstance))
                 {
                     if (currentBranchInstancePrevStep.NextSteps.Select(x => x.CommandType).Contains(currentBranchInstance.CommandType))
@@ -77,7 +81,7 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
                 }
             }
 
-            IterateConfiguredProcessRoot(currentBranchInstance.PrevSteps!, res, distinctNodeSet);
+            IterateConfiguredProcessRoot(currentBranchInstance.PrevSteps!, res, distinctNodeSet, allNodes);
         }
     }
 }

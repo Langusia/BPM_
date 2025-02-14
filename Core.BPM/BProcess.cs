@@ -10,6 +10,7 @@ public class BProcess(Type processType, INode rootNode)
     private List<INode>? _optionals;
 
     public BProcessConfig Config { get; set; } = new();
+    public List<INode> AllNodes { get; set; } = new();
 
     public List<List<INode>> AllPossibles { get; set; }
     public List<List<INode>> AllMandatoryPossibles => AllPossibles.Select(x => x.Where(node => node is not IOptional).ToList()).ToList();

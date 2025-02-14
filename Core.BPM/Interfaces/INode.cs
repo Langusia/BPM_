@@ -14,4 +14,7 @@ public interface INode
     void SetPrevSteps(List<INode>? nodes);
     INode? FindNextNode(string eventName);
     INodeStateEvaluator GetEvaluator();
+    bool ContainsEvent(object @event);
+    List<INode> GetAllNodes();
+    (bool isComplete, List<INode> availableNodes) CheckBranchCompletionAndGetAvailableNodes(INode start, List<object> storedEvents);
 }

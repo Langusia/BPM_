@@ -97,12 +97,12 @@ public class Process : IProcess, IProcessStore
         if (CheckExpiration(out var bpmResult))
             return bpmResult;
 
-        var filteredResult = UnlockedPaths();
-        if (!filteredResult.IsSuccess)
-            return filteredResult;
-
-        if (filteredResult.Data?.All(f => events.Select(e => e.GetType().Name).Any(z => !f.ProducingEvents.Select(c => c.Name).Contains(z))) ?? true)
-            return Result.Fail(Code.InvalidEvent);
+        //var filteredResult = UnlockedPaths();
+        //if (!filteredResult.IsSuccess)
+        //    return filteredResult;
+        //
+        //if (filteredResult.Data?.All(f => events.Select(e => e.GetType().Name).Any(z => !f.ProducingEvents.Select(c => c.Name).Contains(z))) ?? true)
+        //    return Result.Fail(Code.InvalidEvent);
 
         foreach (var @event in events)
         {
@@ -146,7 +146,13 @@ public class Process : IProcess, IProcessStore
 
     public BpmResult<List<INode>?> GetNextSteps(bool includeUnsavedEvents = true)
     {
-        return UnlockedPaths(includeUnsavedEvents);
+        var stream = _storedEvents;
+        if (includeUnsavedEvents)
+            stream = stream.Union(_uncommittedEvents).ToList();
+
+        var s = _processConfig.RootNode.CheckBranchCompletionAndGetAvailableNodes(_processConfig.RootNode, stream);
+        //return UnlockedPaths(includeUnsavedEvents);
+        return null;
     }
 
 

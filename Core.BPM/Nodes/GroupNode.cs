@@ -2,10 +2,16 @@ using Core.BPM.Nodes;
 using Core.BPM.Evaluators;
 using Core.BPM.Interfaces;
 
-public class GroupNode(string groupId, Type processType) : NodeBase(typeof(GroupNode), processType), INode
+public class GroupNode(Type processType) : NodeBase(typeof(GroupNode), processType)
 {
-    public string GroupId { get; } = groupId;
-    public List<INode> SubNodes { get; set; } = [];
+    public List<INode> SubRootNodes { get; set; } = [];
+    private List<INode> _allMemberNodes = [];
 
-    public override INodeStateEvaluator GetEvaluator() => new GroupNodeStateEvaluator();
+    public void SetAllMembers(List<INode> allmembers)
+    {
+        _allMemberNodes = allmembers;
+    }
+
+    public override INodeStateEvaluator GetEvaluator() => new GroupNodeStateEvaluator(this);
+    public override bool ContainsEvent(object @event) => _allMemberNodes.Any(x => x.ContainsEvent(@event));
 }
