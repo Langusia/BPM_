@@ -1,4 +1,4 @@
-﻿namespace Core.BPM.DefinitionBuilder;
+﻿namespace Core.BPM.DefinitionBuilder.Interfaces;
 
 /// <summary>
 /// Defines a builder for parallel execution scopes in the BPM process.

@@ -1,4 +1,4 @@
-﻿using Core.BPM.BCommand;
+﻿using Core.BPM.Attributes;
 using MyCredo.Common;
 
 namespace MyCredo.Features.RecoveringPassword.Initiating;

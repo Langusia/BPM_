@@ -20,9 +20,10 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
     public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
         var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, request.ChannelType));
-        process.AppendEvents(new Fd(Guid.Empty));
-        process.AppendEvents(new Bd(Guid.Empty));
-
+       //process.AppendEvents(new Ad(Guid.Empty));
+       //process.AppendEvents(new Cd(Guid.Empty));
+       //process.AppendEvents(new Zd(Guid.Empty));
+       //
         var s = process.GetNextSteps();
 
         return Guid.Empty;

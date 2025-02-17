@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Core.BPM.DefinitionBuilder;
+namespace Core.BPM.DefinitionBuilder.Interfaces;
 
 public interface IProcessBuilder<TProcess> : IProcessBuilder where TProcess : Aggregate
 {

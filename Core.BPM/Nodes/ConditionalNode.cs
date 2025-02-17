@@ -1,16 +1,17 @@
 ﻿using Core.BPM.AggregateConditions;
-using Core.BPM.Evaluators;
+using Core.BPM.Evaluators.Factory;
 using Core.BPM.Interfaces;
 
 namespace Core.BPM.Nodes;
 
-public class ConditionalNode(Type processType, IAggregateCondition aggregateCondition) : NodeBase(typeof(ConditionalNode), processType)
+public class ConditionalNode(Type processType, IAggregateCondition aggregateCondition, INodeEvaluatorFactory nodeEvaluatorFactory)
+    : NodeBase(typeof(ConditionalNode), processType, nodeEvaluatorFactory)
 {
-    private IAggregateCondition _aggregateCondition = aggregateCondition;
+    public IAggregateCondition AggregateCondition = aggregateCondition;
 
-    public INode IfRootNode { get; set; }
-    public INode? ElseRootNode { get; set; }
+    public List<INode> IfNodeRoots { get; set; }
+    public List<INode>? ElseNodeRoots { get; set; }
 
-    public override INodeStateEvaluator GetEvaluator() => new ConditionalNodeStateEvaluator(this);
-    public override bool ContainsEvent(object @event) => IfRootNode.GetAllNodes().Union(ElseRootNode?.GetAllNodes() ?? Enumerable.Empty<INode>()).Any(x => x.ContainsEvent(@event));
+    public override bool ContainsEvent(object @event) => IfNodeRoots.SelectMany(x => x.GetAllNodes())
+        .Union(ElseNodeRoots?.SelectMany(x => x.GetAllNodes()) ?? Enumerable.Empty<INode>()).Any(x => x.ContainsEvent(@event));
 }

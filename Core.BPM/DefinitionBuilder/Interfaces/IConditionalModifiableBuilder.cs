@@ -1,4 +1,4 @@
-﻿namespace Core.BPM.DefinitionBuilder;
+﻿namespace Core.BPM.DefinitionBuilder.Interfaces;
 
 public interface IConditionalModifiableBuilder<TProcess> : IProcessNodeModifiableBuilder<TProcess> where TProcess : Aggregate
 {

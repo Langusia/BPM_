@@ -39,6 +39,7 @@ public interface IProcess
     /// <returns>True if the events were appended successfully, otherwise false.</returns>
     BpmResult AppendEvents(params object[] events);
 
+    BpmResult ForceAppendEvents(params object[] events);
     BpmResult AppendFail<T>(string description, object data);
 
     /// <summary>

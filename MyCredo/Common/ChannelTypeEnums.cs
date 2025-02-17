@@ -6,8 +6,8 @@ public enum ChannelTypeEnum
     MOBILE = 1634,
     WEB_CIB = 503,
     MOBILE_CIB = 502,
-    VIBER = 1624,
-    Unclassified = 0
+    VIBER = 0,
+    Unclassified
 }
 
 public enum CssChannelTypeEnum

@@ -1,15 +1,13 @@
-﻿using Core.BPM.BCommand;
-using Core.BPM.DefinitionBuilder;
+﻿using Core.BPM.DefinitionBuilder;
+using Core.BPM.DefinitionBuilder.Interfaces;
+using Core.BPM.Trash;
 using MediatR;
 
 namespace Core.BPM.Application;
 
-public interface IBpmDefinition<T> where T : Aggregate
-{
-    ProcessConfig<T> DefineProcess(IProcessBuilder<T> configureProcess);
-}
+public interface IBpmDefinition;
 
-public abstract class BpmDefinition<T> : IBpmDefinition<T> where T : Aggregate
+public abstract class BpmDefinition<T> : IBpmDefinition where T : Aggregate
 {
     public abstract ProcessConfig<T> DefineProcess(IProcessBuilder<T> configureProcess);
 

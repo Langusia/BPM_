@@ -1,4 +1,4 @@
-﻿using Core.BPM.BCommand;
+﻿using Core.BPM.Attributes;
 
 namespace MyCredo.Features.RecoveringPassword.GetUserData;
 

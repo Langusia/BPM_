@@ -1,7 +1,6 @@
-﻿using Core.BPM.Configuration;
-using MediatR;
+﻿using MediatR;
 
-namespace Core.BPM.BCommand;
+namespace Core.BPM.Trash;
 
 public class StepConfigurator
 {

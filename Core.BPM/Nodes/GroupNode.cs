@@ -1,8 +1,10 @@
-using Core.BPM.Nodes;
 using Core.BPM.Evaluators;
+using Core.BPM.Evaluators.Factory;
 using Core.BPM.Interfaces;
 
-public class GroupNode(Type processType) : NodeBase(typeof(GroupNode), processType)
+namespace Core.BPM.Nodes;
+
+public class GroupNode(Type processType, INodeEvaluatorFactory nodeEvaluatorFactory) : NodeBase(typeof(GroupNode), processType,nodeEvaluatorFactory)
 {
     public List<INode> SubRootNodes { get; set; } = [];
     private List<INode> _allMemberNodes = [];

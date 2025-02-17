@@ -1,9 +1,7 @@
 ﻿using Core.BPM.Application.Events;
 using Core.BPM.Configuration;
 using Core.BPM.Interfaces;
-using Core.BPM.Nodes;
 using Core.BPM.Persistence;
-using FastExpressionCompiler;
 using MediatR;
 
 namespace Core.BPM.Application.Managers;
@@ -97,12 +95,12 @@ public class Process : IProcess, IProcessStore
         if (CheckExpiration(out var bpmResult))
             return bpmResult;
 
-        //var filteredResult = UnlockedPaths();
-        //if (!filteredResult.IsSuccess)
-        //    return filteredResult;
-        //
-        //if (filteredResult.Data?.All(f => events.Select(e => e.GetType().Name).Any(z => !f.ProducingEvents.Select(c => c.Name).Contains(z))) ?? true)
-        //    return Result.Fail(Code.InvalidEvent);
+        var stream = _storedEvents;
+        stream = stream.Union(_uncommittedEvents).ToList();
+
+        var filteredResult = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
+        if (filteredResult.availableNodes.Any(x => events.All(z => !x.ContainsEvent(z))))
+            return Result.Fail(Code.InvalidEvent);
 
         foreach (var @event in events)
         {
@@ -111,6 +109,15 @@ public class Process : IProcess, IProcessStore
 
         return Result.Success();
     }
+
+    public BpmResult ForceAppendEvents(params object[] events)
+    {
+        foreach (var @event in events)
+            _uncommittedEvents.Enqueue(@event);
+
+        return Result.Success();
+    }
+
 
     private bool CheckExpiration(out BpmResult bpmResult)
     {
@@ -137,11 +144,19 @@ public class Process : IProcess, IProcessStore
 
     public BpmResult Validate<T>(bool includeUncommitted) where T : IBaseRequest
     {
-        var filteredResult = UnlockedPaths(includeUncommitted);
-        if (!filteredResult.IsSuccess)
-            return filteredResult;
+        if (CheckExpiration(out var bpmResult))
+            return bpmResult;
 
-        return filteredResult.Data?.Any(x => x.CommandType == typeof(T)) ?? false ? Result.Success() : Result.Fail(Code.NoSuccess);
+        var stream = _storedEvents;
+        if (includeUncommitted)
+            stream = stream.Union(_uncommittedEvents).ToList();
+
+
+        var filteredResult = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
+        if (filteredResult.availableNodes.Any(x => x.CommandType == typeof(T)))
+            return Result.Fail(Code.InvalidEvent);
+
+        return Result.Success();
     }
 
     public BpmResult<List<INode>?> GetNextSteps(bool includeUnsavedEvents = true)
@@ -150,125 +165,10 @@ public class Process : IProcess, IProcessStore
         if (includeUnsavedEvents)
             stream = stream.Union(_uncommittedEvents).ToList();
 
-        var s = _processConfig.RootNode.CheckBranchCompletionAndGetAvailableNodes(_processConfig.RootNode, stream);
-        //return UnlockedPaths(includeUnsavedEvents);
-        return null;
+        var result = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
+        return Result.Success(result.availableNodes.Distinct().ToList());
     }
 
-
-    private BpmResult<List<INode>?> UnlockedPaths(bool includeUnsavedEvents = true)
-    {
-        var stream = _storedEvents;
-        if (includeUnsavedEvents)
-            stream = stream.Union(_uncommittedEvents).ToList();
-        if (stream.Any(x => x is ProcessFailed))
-            return Result.Fail<List<INode>?>(Code.ProcessFailed, []);
-
-        // Step 1: Map events to corresponding nodes
-        var mappedNodes = MapEventsToNodes(stream, _processConfig);
-
-        // Step 2: Group nodes by CommandType or unique key
-        var storedGroups = GroupNodesByType(mappedNodes);
-
-        // Step 3: Filter possible paths based on stored groups
-        var possiblePaths = FilterPossiblePaths(storedGroups);
-
-        // Step 4: Extract next steps from filtered paths
-        var filtered = ExtractNextSteps(possiblePaths, storedGroups);
-
-        // Step 5: Filter nodes based on aggregate conditions
-        var aggregateDictionary = new Dictionary<Type, object>();
-        filtered = FilterByAggregateConditions(filtered, aggregateDictionary, stream);
-
-        return Result.Success(filtered.Distinct().ToList());
-    }
-
-    private List<INode> MapEventsToNodes(List<object> allEvents, BProcess process)
-    {
-        return allEvents
-            .Select(e => process.AllDistinctCommands
-                .FirstOrDefault(cmd => cmd.ProducingEvents.Any(ev => ev.Name == e.GetType().Name)))
-            .Where(node => node is not null)
-            .Cast<INode>()
-            .ToList();
-    }
-
-    private List<(INode node, int count)> GroupNodesByType(List<INode> nodes)
-    {
-        var storedNodes = nodes.Where(node => node is not IOptional).ToList();
-        return storedNodes
-            .GroupBy(node => node is IMulti ? node.CommandType.Name : Guid.NewGuid().ToString())
-            .Select(group => (node: group.First(), count: group.Count()))
-            .ToList();
-    }
-
-    private List<List<INode>> FilterPossiblePaths(List<(INode node, int count)> storedGroups)
-    {
-        var ct = storedGroups.Count;
-        return _processConfig.AllPossibles
-            .Where(path => path
-                .Except(path.Where(node => node is IOptional))
-                .Take(ct)
-                .SequenceEqual(storedGroups.Select(g => g.node), new NodeEqualityComparer()))
-            .ToList();
-    }
-
-    private List<INode> ExtractNextSteps(List<List<INode>> possiblePaths, List<(INode node, int count)> storedGroups)
-    {
-        return possiblePaths
-            .SelectMany(path =>
-            {
-                var lastGroupCommandType = storedGroups.Last().node.CommandType;
-                var lastIndex = path.IndexOf(path.First(node => node.CommandType == lastGroupCommandType));
-
-                var nextSteps = new List<INode>(); // Replace NodeType with the actual node type
-                for (int i = lastIndex + 1; i < path.Count; i++)
-                {
-                    var node = path[i];
-
-                    if (node is IOptional)
-                    {
-                        nextSteps.Add(node);
-                    }
-                    else
-                    {
-                        nextSteps.Add(node);
-                        break;
-                    }
-                }
-
-                if (nextSteps != null)
-                    return nextSteps
-                        .Union(path.Where((node, index) => index <= lastIndex && node is IOptional or IMulti));
-
-                return path.Where((node, index) => index <= lastIndex && node is IOptional or IMulti);
-            }).ToList();
-    }
-
-    private List<INode> FilterByAggregateConditions(List<INode> nodes, Dictionary<Type, object> aggregateDictionary, List<object> allEvents)
-    {
-        return nodes.Where(node =>
-        {
-            if (node.AggregateConditions == null || node.AggregateConditions.Count == 0)
-                return true;
-
-            var uniqueAggTypes = node.AggregateConditions
-                .Select(ac => ac.ConditionalAggregateType)
-                .Distinct();
-
-            foreach (var aggType in uniqueAggTypes)
-            {
-                if (!aggregateDictionary.ContainsKey(aggType))
-                {
-                    var aggregateStream = _repository.AggregateOrDefaultStreamFromRegistry(aggType, allEvents);
-                    aggregateDictionary.Add(aggType, aggregateStream);
-                }
-            }
-
-            return node.AggregateConditions.All(ac =>
-                ac.EvaluateAggregateCondition(aggregateDictionary[ac.ConditionalAggregateType]));
-        }).ToList();
-    }
 
     public async Task AppendUncommittedToDb(CancellationToken ct)
     {
@@ -281,14 +181,4 @@ public class Process : IProcess, IProcessStore
     {
         await _repository.SaveChangesAsync(ct);
     }
-}
-
-public class NodeEqualityComparer : IEqualityComparer<INode>
-{
-    public bool Equals(INode? x, INode? y)
-    {
-        return x?.CommandType == y?.CommandType;
-    }
-
-    public int GetHashCode(INode obj) => obj.GetHashCode();
 }

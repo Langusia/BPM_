@@ -11,7 +11,10 @@ public class NodeStateEvaluator(INode node) : INodeStateEvaluator
 
     public (bool, List<INode>) CanExecute(List<object> storedEvents)
     {
-        return ((node.PrevSteps?.Any(prev => prev.GetEvaluator().IsCompleted(storedEvents)) ?? true)
+        if (node.PrevSteps is null || node.PrevSteps.All(x => x == null))
+            return (!storedEvents.Any(x => node.ContainsEvent(x)), [node]);
+
+        return ((node.PrevSteps?.Where(x => x is not null).Any(prev => prev.GetEvaluator().IsCompleted(storedEvents)) ?? true)
                 && !storedEvents.Any(x => node.ContainsEvent(x)), [node]);
     }
 }

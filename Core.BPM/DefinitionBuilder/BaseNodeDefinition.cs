@@ -1,5 +1,4 @@
-﻿using Core.BPM.Exceptions;
-using Core.BPM.Interfaces;
+﻿using Core.BPM.Interfaces;
 
 namespace Core.BPM.DefinitionBuilder;
 
@@ -54,6 +53,8 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
     {
         foreach (var currentBranchInstance in currentNodeSet)
         {
+            if (currentBranchInstance is null)
+                continue;
             if (currentBranchInstance.PrevSteps is null)
             {
                 allNodes.Add(currentBranchInstance);
@@ -66,17 +67,15 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
 
             foreach (var currentBranchInstancePrevStep in currentBranchInstance.PrevSteps)
             {
+                if (currentBranchInstancePrevStep is null)
+                {
+                    res.Add(currentBranchInstance);
+                    continue;
+                }
+
                 allNodes.Add(currentBranchInstance);
                 if (!currentBranchInstancePrevStep.NextSteps!.Contains(currentBranchInstance))
                 {
-                    if (currentBranchInstancePrevStep.NextSteps.Select(x => x.CommandType).Contains(currentBranchInstance.CommandType))
-                        throw new SameCommandOnSameLevelDiffBranchFoundException(currentBranchInstance.CommandType.Name);
-
-                    if (!distinctNodeSet.Exists(x => x.CommandType == currentBranchInstance.CommandType && x.GetType() == currentBranchInstance.GetType()))
-                        distinctNodeSet.Add(currentBranchInstance);
-                    if (distinctNodeSet.Exists(x => x.CommandType == currentBranchInstance.CommandType && x.GetType() != currentBranchInstance.GetType()))
-                        throw new SameCommandDiffNodeTypeException(currentBranchInstance.CommandType.Name);
-
                     currentBranchInstancePrevStep.AddNextStep(currentBranchInstance);
                 }
             }

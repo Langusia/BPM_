@@ -1,4 +1,4 @@
-﻿namespace Core.BPM.DefinitionBuilder;
+﻿namespace Core.BPM.Trash;
 
 public interface IProcessScopedNodeInitialBuilder<TProcess> where TProcess : Aggregate
 {

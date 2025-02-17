@@ -1,4 +1,4 @@
-﻿using Core.BPM.BCommand;
+﻿using Core.BPM.Attributes;
 using MyCredo.Common;
 using MyCredo.Features.Loan;
 using MyCredo.Features.Loann;

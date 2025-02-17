@@ -1,10 +1,12 @@
 ﻿using Core.BPM;
 using Core.BPM.Application;
 using Core.BPM.Application.Managers;
-using Core.BPM.BCommand;
 using Core.BPM.Configuration;
 using Core.BPM.DefinitionBuilder;
+using Core.BPM.DefinitionBuilder.Interfaces;
+using Core.BPM.Trash;
 using MyCredo.Common;
+using MyCredo.Features.Loan;
 using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
 using MyCredo.Features.RecoveringPassword.Finishing;
@@ -161,26 +163,27 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     //        .Or<GenerateSchedule>(x =>
     //            x.ThenContinue<GenerateContract>(y =>
     //                y.ThenContinueOptional<GenerateInsuranceDocuments>()))
-    //        .ContinueAnyTime<SendOtp>()
     //        .ContinueAnyTime<ValidateOtp>()
     //        .Continue<MarkDocumentsAsAssigned>()
     //        .Continue<FinishIssueLoan>();
     //}
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
+            .UnlockOptional<D>()
             .Group(x =>
             {
                 x.AddStep<B>(x =>
-                    x.Continue<C>()
-                        .Or<D>());
+                    x.Continue<C>());
                 x.AddStep<A>(x =>
                     x.Continue<Z>());
             })
-            .If(x => x.ChannelType == ChannelTypeEnum.Unclassified, z =>
-                z.Continue<A>())
-            .Else(z =>
-                z.Continue<B>())
-            .OrAnyTime<F>()
+            .UnlockOptional<B>()
+            .If(x => x.ChannelType == ChannelTypeEnum.MOBILE_CIB, z =>
+                z.Continue<B>()
+                    .Or<D>()
+                    .Continue<Z>())
+            .Else(x =>
+                x.Continue<F>())
             .Continue<B>()
             .End();
 

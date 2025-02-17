@@ -1,4 +1,6 @@
 ﻿using Core.BPM.AggregateConditions;
+using Core.BPM.DefinitionBuilder.Interfaces;
+using Core.BPM.Evaluators.Factory;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 
@@ -9,28 +11,30 @@ public class GroupNodeBuilder<TProcess> : BaseNodeDefinition, IGroupBuilder<TPro
     private List<INode> _memberNodes;
     private readonly BProcess _process;
     private readonly GroupNode _groupNode;
+    private readonly INodeEvaluatorFactory _nodeEvaluatorFactory;
     private List<IProcessNodeModifiableBuilder<TProcess>> _builders = [];
 
-    public GroupNodeBuilder(BProcess process, INode rootNode, GroupNode groupNode) : base(rootNode, process)
+    public GroupNodeBuilder(BProcess process, INode rootNode, GroupNode groupNode, INodeEvaluatorFactory nodeEvaluatorFactory) : base(rootNode, process)
     {
         _process = process;
         _groupNode = groupNode;
+        _nodeEvaluatorFactory = nodeEvaluatorFactory;
     }
 
 
     public void AddStep<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
-        var node = new Node(typeof(TCommand), _process.ProcessType);
+        var node = new Node(typeof(TCommand), _process.ProcessType, _nodeEvaluatorFactory);
         _groupNode.SubRootNodes.Add(node);
-        var configured = configure?.Invoke(new ProcessNodeBuilder<TProcess>(node, _process));
+        var configured = configure?.Invoke(new ProcessNodeBuilder<TProcess>(node, _process, _nodeEvaluatorFactory));
         _builders.Add(configured);
     }
 
     public void AddAnyTime<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
-        var node = new AnyTimeNode(typeof(TCommand), _process.ProcessType);
+        var node = new AnyTimeNode(typeof(TCommand), _process.ProcessType, _nodeEvaluatorFactory);
         _groupNode.SubRootNodes.Add(node);
-        var configured = configure?.Invoke(new ProcessNodeBuilder<TProcess>(node, _process));
+        var configured = configure?.Invoke(new ProcessNodeBuilder<TProcess>(node, _process, _nodeEvaluatorFactory));
         _builders.Add(configured);
     }
 
@@ -46,6 +50,5 @@ public class GroupNodeBuilder<TProcess> : BaseNodeDefinition, IGroupBuilder<TPro
 
         _memberNodes = allNodes.Distinct().ToList();
         _groupNode.SetAllMembers(_memberNodes);
-        var processNodeBuilder = new ProcessNodeBuilder<TProcess>(_groupNode, _process);
     }
 }

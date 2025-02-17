@@ -1,4 +1,4 @@
-﻿namespace Core.BPM.BCommand;
+﻿namespace Core.BPM.Attributes;
 
 public record BpmEvent
 {

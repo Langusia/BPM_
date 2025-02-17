@@ -1,8 +1,7 @@
 ﻿using System.ComponentModel;
-using Core.BPM.BCommand;
 using Core.BPM.Interfaces;
 
-namespace Core.BPM.Configuration;
+namespace Core.BPM.Trash;
 
 public static class BProcessStepConfiguration
 {

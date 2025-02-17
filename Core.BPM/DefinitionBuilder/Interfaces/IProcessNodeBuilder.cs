@@ -1,4 +1,4 @@
-﻿namespace Core.BPM.DefinitionBuilder;
+﻿namespace Core.BPM.DefinitionBuilder.Interfaces;
 
 public interface IProcessNodeBuilder<T> : IProcessBuilder where T : Aggregate
 {

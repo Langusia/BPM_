@@ -1,8 +1,6 @@
-﻿using Core.BPM.Attributes;
-using Core.BPM.Configuration;
-using MediatR;
+﻿using Core.BPM.Configuration;
 
-namespace Core.BPM.BCommand;
+namespace Core.BPM.Trash;
 
 public interface IStepOptions
 {

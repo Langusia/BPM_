@@ -17,4 +17,5 @@ public interface INode
     bool ContainsEvent(object @event);
     List<INode> GetAllNodes();
     (bool isComplete, List<INode> availableNodes) CheckBranchCompletionAndGetAvailableNodes(INode start, List<object> storedEvents);
+    (bool isComplete, List<INode> availableNodes) GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents);
 }

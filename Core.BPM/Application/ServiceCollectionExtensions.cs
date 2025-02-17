@@ -1,12 +1,13 @@
 ﻿using Core.BPM.Application.Managers;
-using Core.BPM.BCommand;
 using Core.BPM.DefinitionBuilder;
+using Core.BPM.Evaluators.Factory;
 using Core.BPM.Persistence;
 using Core.BPM.Registry;
+using Core.BPM.Trash;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using StepConfigurator = Core.BPM.BCommand.StepConfigurator;
+using StepConfigurator = Core.BPM.Trash.StepConfigurator;
 
 namespace Core.BPM.Application;
 
@@ -20,14 +21,11 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<IBpmRepository, BpmRepository>();
         services.TryAddScoped<IBpmStore, BpmStore>();
         services.AddOptions<StepConfigurator>();
+        services.AddScoped<INodeEvaluatorFactory, NodeEvaluatorFactory>();
         var registry = new ProcessRegistry();
         services.TryAddSingleton(registry);
-        configure?.Invoke(new BpmConfiguration(registry));
+        configure?.Invoke(new BpmConfiguration(registry, services.BuildServiceProvider()));
     }
-}
-
-public class BpmBuilder
-{
 }
 
 public interface IBpmConfiguration
@@ -38,13 +36,14 @@ public interface IBpmConfiguration
     void AddAggregate<TAggregate>() where TAggregate : Aggregate;
 }
 
-public class BpmConfiguration(ProcessRegistry registry) : IBpmConfiguration
+public class BpmConfiguration(ProcessRegistry registry, IServiceProvider serviceProvider) : IBpmConfiguration
 {
     public void AddAggregateDefinition<TAggregate, TDefinition>() where TAggregate : Aggregate
         where TDefinition : BpmDefinition<TAggregate>
     {
         var definition = (TDefinition)Activator.CreateInstance(typeof(TDefinition))!;
-        var processDefinition = (ProcessBuilder<TAggregate>)Activator.CreateInstance(typeof(ProcessBuilder<>).MakeGenericType(typeof(TAggregate)))!;
+
+        var processDefinition = (ProcessBuilder<TAggregate>)ActivatorUtilities.CreateInstance(serviceProvider, typeof(ProcessBuilder<>).MakeGenericType(typeof(TAggregate)))!;
         var stepConfigurator = (StepConfigurator<TAggregate>)Activator.CreateInstance(typeof(StepConfigurator<>).MakeGenericType(typeof(TAggregate)))!;
 
         registry.RegisterAggregate(typeof(TAggregate));

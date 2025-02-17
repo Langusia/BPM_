@@ -1,6 +1,5 @@
 ﻿using Core.BPM.Application.Managers;
 using Core.BPM.Attributes;
-using Core.BPM.BCommand;
 using Credo.Core.Shared.Library;
 using MediatR;
 using MyCredo.Features.Loan.OtpValidate;

@@ -1,6 +1,7 @@
 ﻿using Core.BPM;
 using Core.BPM.Application;
 using Core.BPM.DefinitionBuilder;
+using Core.BPM.DefinitionBuilder.Interfaces;
 using MyCredo.Common;
 using MyCredo.Features.Loan;
 
