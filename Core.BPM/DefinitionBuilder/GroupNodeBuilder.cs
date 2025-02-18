@@ -26,16 +26,32 @@ public class GroupNodeBuilder<TProcess> : BaseNodeDefinition, IGroupBuilder<TPro
     {
         var node = new Node(typeof(TCommand), _process.ProcessType, _nodeEvaluatorFactory);
         _groupNode.SubRootNodes.Add(node);
-        var configured = configure?.Invoke(new ProcessNodeBuilder<TProcess>(node, _process, _nodeEvaluatorFactory));
-        _builders.Add(configured);
+        var builder = new ProcessNodeBuilder<TProcess>(node, _process, _nodeEvaluatorFactory);
+        if (configure is not null)
+        {
+            var configured = configure?.Invoke(builder);
+            _builders.Add(configured);
+        }
+        else
+        {
+            _builders.Add(builder);
+        }
     }
 
     public void AddAnyTime<TCommand>(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>>? configure = null)
     {
         var node = new AnyTimeNode(typeof(TCommand), _process.ProcessType, _nodeEvaluatorFactory);
         _groupNode.SubRootNodes.Add(node);
-        var configured = configure?.Invoke(new ProcessNodeBuilder<TProcess>(node, _process, _nodeEvaluatorFactory));
-        _builders.Add(configured);
+        var builder = new ProcessNodeBuilder<TProcess>(node, _process, _nodeEvaluatorFactory);
+        if (configure is not null)
+        {
+            var configured = configure?.Invoke(builder);
+            _builders.Add(configured);
+        }
+        else
+        {
+            _builders.Add(builder);
+        }
     }
 
     public void EndGroup()

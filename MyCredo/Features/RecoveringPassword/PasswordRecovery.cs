@@ -169,23 +169,12 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     //}
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            .UnlockOptional<D>()
-            .UnlockOptional<Z>()
-            .If<OtpValidationAggregate>(x => x.UserValidated, z =>
-                z.Continue<A>())
-            .Group(x =>
-            {
-                x.AddStep<B>(x =>
-                    x.Continue<C>());
-                x.AddStep<A>(x =>
-                    x.Continue<B>());
-            })
-            .UnlockOptional<Z>()
-            .If(x => x.ChannelType == ChannelTypeEnum.MOBILE_CIB, z =>
-                z.Continue<B>()
-                    .Or<D>()
-                    .Continue<Z>())
-            .Continue<F>()
+            .If(x => x.ChannelType == ChannelTypeEnum.WEB_CIB, z =>
+                z.Group(x =>
+                {
+                    x.AddStep<A>();
+                    x.AddStep<B>();
+                }))
             .End();
 
 
