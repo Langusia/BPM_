@@ -7,7 +7,7 @@ public static class Helpers
 {
     public static bool? FindFirstNonOptionalCompletion(List<INode>? prevSteps, List<object> storedEvents)
     {
-        if (prevSteps == null || prevSteps.Count == 0)
+        if (prevSteps == null || prevSteps.Count == 0 || prevSteps.All(x => x is null))
             return null; // No predecessors to check
 
         foreach (var prev in prevSteps)

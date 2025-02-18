@@ -169,12 +169,13 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     //}
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            .If(x => x.ChannelType == ChannelTypeEnum.WEB_CIB, z =>
+            .If(x => x.ChannelType == ChannelTypeEnum.MOBILE_CIB, z =>
                 z.Group(x =>
                 {
                     x.AddStep<A>();
                     x.AddStep<B>();
                 }))
+            .Continue<Z>()
             .End();
 
 
