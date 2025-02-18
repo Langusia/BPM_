@@ -7,7 +7,7 @@
         <Authors>Guram Elkanishvili</Authors>
         <Company>Credo Bank</Company>
         <Description>Credo BPM management</Description>
-        <Version>2.4.2</Version>
+        <Version>2.4.3</Version>
     </PropertyGroup>
 
     <ItemGroup>
@@ -21,6 +21,7 @@
 
     <ItemGroup>
         <EmbeddedResource Remove="Nodes\Evaluators\**"/>
+
     </ItemGroup>
 
     <ItemGroup>

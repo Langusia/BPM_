@@ -19,7 +19,7 @@ public class ConditionalNodeStateEvaluator(INode node, IBpmRepository repository
             if (conditionalNode.ElseNodeRoots is not null)
                 return conditionalNode.ElseNodeRoots?.Any(x => x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).isComplete) ?? false;
 
-            return true;
+            return Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
         }
 
         return false;
