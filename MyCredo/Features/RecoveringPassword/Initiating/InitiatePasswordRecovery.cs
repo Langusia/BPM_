@@ -19,6 +19,12 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
 {
     public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
+        var ss = await store.FetchProcessAsync(Guid.Empty, cancellationToken);
+        if (ss.TryAggregateAs<OtpValidationAggregate>(out var otpValidationAggregate))
+        {
+            otpValidationAggregate.HashedOtp = "";
+        }
+
         var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, request.ChannelType));
         process.AppendEvents(new Ad(Guid.Empty));
         process.AppendEvents(new Bd(Guid.Empty));

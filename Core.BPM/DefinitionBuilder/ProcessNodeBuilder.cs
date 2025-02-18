@@ -77,11 +77,16 @@ public class ProcessNodeBuilder<TProcess>(INode rootNode, BProcess process, INod
 
     public IConditionalModifiableBuilder<TProcess> If(Predicate<TProcess> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
     {
+        return If<TProcess>(predicate, configure);
+    }
+
+    public IConditionalModifiableBuilder<TProcess> If<T>(Predicate<T> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure) where T : Aggregate
+    {
         var b = new ProcessNodeBuilder<TProcess>(null, process, nodeEvaluatorFactory);
         var configedBranch = (configure.Invoke(b));
         var ifNodes = ((BaseNodeDefinition)configedBranch).CurrentBranchInstances;
 
-        var condition = new AggregateCondition<TProcess>(predicate);
+        var condition = new AggregateCondition<T>(predicate);
         var conditionalNode = new ConditionalNode(ProcessConfig.ProcessType, condition, nodeEvaluatorFactory);
         var cBldr = new ConditionalNodeBuilder<TProcess>(conditionalNode, process, conditionalNode, ifNodes, configedBranch, nodeEvaluatorFactory);
         cBldr.SetIfNode(ifNodes);

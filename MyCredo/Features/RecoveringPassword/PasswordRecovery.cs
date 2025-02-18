@@ -171,6 +171,8 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
         configure.StartWith<InitiatePasswordRecovery>()
             .UnlockOptional<D>()
             .UnlockOptional<Z>()
+            .If<OtpValidationAggregate>(x => x.UserValidated, z =>
+                z.Continue<A>())
             .Group(x =>
             {
                 x.AddStep<B>(x =>
