@@ -99,7 +99,7 @@ public class Process : IProcess, IProcessStore
         stream = stream.Union(_uncommittedEvents).ToList();
 
         var filteredResult = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
-        if (filteredResult.availableNodes.Any(x => events.All(z => !x.ContainsEvent(z))))
+        if (filteredResult.availableNodes.All(x => events.All(z => !x.ContainsEvent(z))))
             return Result.Fail(Code.InvalidEvent);
 
         foreach (var @event in events)
@@ -153,7 +153,7 @@ public class Process : IProcess, IProcessStore
 
 
         var filteredResult = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
-        if (filteredResult.availableNodes.Any(x => x.CommandType == typeof(T)))
+        if (filteredResult.availableNodes.All(x => x.CommandType != typeof(T)))
             return Result.Fail(Code.InvalidEvent);
 
         return Result.Success();
