@@ -170,21 +170,20 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
             .UnlockOptional<D>()
+            .UnlockOptional<Z>()
             .Group(x =>
             {
                 x.AddStep<B>(x =>
                     x.Continue<C>());
                 x.AddStep<A>(x =>
-                    x.Continue<Z>());
+                    x.Continue<B>());
             })
-            .UnlockOptional<B>()
+            .UnlockOptional<Z>()
             .If(x => x.ChannelType == ChannelTypeEnum.MOBILE_CIB, z =>
                 z.Continue<B>()
                     .Or<D>()
                     .Continue<Z>())
-            .Else(x =>
-                x.Continue<F>())
-            .Continue<B>()
+            .Continue<F>()
             .End();
 
 

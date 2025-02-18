@@ -97,7 +97,7 @@ app.MapPost("/password-recovery/initiate",
         async (IMediator mediator) => await mediator.Send(new InitiatePasswordRecovery(
             "01010102020",
             new DateTime(1995, 9, 9),
-            ChannelTypeEnum.VIBER)))
+            ChannelTypeEnum.MOBILE_CIB)))
     .WithName("InitiatePasswordRecovery")
     .WithOpenApi();
 

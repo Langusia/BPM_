@@ -10,8 +10,16 @@ public class ConditionalNodeStateEvaluator(INode node, IBpmRepository repository
     {
         if (node is ConditionalNode conditionalNode)
         {
-            return conditionalNode.IfNodeRoots.Any(x => x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).isComplete) ||
-                   (conditionalNode.ElseNodeRoots?.Any(x => x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).isComplete) ?? false);
+            var aggregate = repository.AggregateOrDefaultStreamFromRegistry(conditionalNode.AggregateCondition.ConditionalAggregateType, storedEvents);
+            if (conditionalNode.AggregateCondition.EvaluateAggregateCondition(aggregate))
+            {
+                return conditionalNode.IfNodeRoots.Any(x => x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).isComplete);
+            }
+
+            if (conditionalNode.ElseNodeRoots is not null)
+                return conditionalNode.ElseNodeRoots?.Any(x => x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).isComplete) ?? false;
+
+            return true;
         }
 
         return false;
@@ -19,7 +27,7 @@ public class ConditionalNodeStateEvaluator(INode node, IBpmRepository repository
 
     public (bool, List<INode>) CanExecute(List<object> storedEvents)
     {
-        bool canExecute = node.PrevSteps?.Any(prev => prev.GetEvaluator().IsCompleted(storedEvents)) ?? true;
+        bool canExecute = Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
         if (!canExecute)
             return (false, []);
 

@@ -7,7 +7,7 @@
         <Authors>Guram Elkanishvili</Authors>
         <Company>Credo Bank</Company>
         <Description>Credo BPM management</Description>
-        <Version>2.3.7</Version>
+        <Version>2.3.9</Version>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,15 +16,15 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Nodes\Evaluators\**" />
+        <Compile Remove="Nodes\Evaluators\**"/>
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Remove="Nodes\Evaluators\**" />
+        <EmbeddedResource Remove="Nodes\Evaluators\**"/>
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="Nodes\Evaluators\**" />
+        <None Remove="Nodes\Evaluators\**"/>
     </ItemGroup>
 
 </Project>

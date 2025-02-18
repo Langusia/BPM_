@@ -17,7 +17,10 @@ public class GroupNodeStateEvaluator(INode node) : INodeStateEvaluator
 
     public (bool, List<INode>) CanExecute(List<object> storedEvents)
     {
-        bool canExecute = node.PrevSteps?.Any(prev => prev.GetEvaluator().IsCompleted(storedEvents)) ?? true;
+        bool canExecute = Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
+        if (!canExecute)
+            return (false, []);
+
         if (node is GroupNode groupNode)
         {
             List<INode> result = [];

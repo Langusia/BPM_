@@ -1,4 +1,5 @@
 ﻿using Core.BPM.Interfaces;
+using Core.BPM.Nodes;
 
 namespace Core.BPM.Evaluators;
 
@@ -11,6 +12,10 @@ public class OptionalNodeEvaluator(INode node) : INodeStateEvaluator
 
     public (bool canExec, List<INode> availableNodes) CanExecute(List<object> storedEvents)
     {
-        return (node.PrevSteps?.Any(prev => prev.GetEvaluator().IsCompleted(storedEvents)) ?? true, [node]);
+        bool canExecute = Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
+        if (!canExecute)
+            return (false, []);
+
+        return (true, [node]);
     }
 }
