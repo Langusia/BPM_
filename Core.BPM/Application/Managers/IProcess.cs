@@ -10,6 +10,10 @@ public interface IProcess
 {
     Guid Id { get; }
     string AggregateName { get; }
+    List<object> StoredEvents { get; }
+    Queue<object> UncommittedEvents { get; }
+    List<INode>? AvailableSteps { get; }
+    DateTimeOffset? StartTime { get; }
 
 
     /// <summary>

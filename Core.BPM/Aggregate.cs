@@ -25,17 +25,6 @@ public class Aggregate : IAggregate
         return dequeuedEvents;
     }
 
-    public void SetBpmProps(BpmEvent @event)
-    {
-        if (@event.TryCount is not null)
-            if (!EventCounters.ContainsKey(@event.GetType().Name))
-                EventCounters.Add(@event.GetType().Name, 1);
-            else
-                EventCounters[@event.GetType().Name] += 1;
-
-        PersistedEvents.Add(@event.GetType().Name);
-    }
-
     public void Enqueue(object @event)
     {
         UncommittedEvents.Enqueue(@event);

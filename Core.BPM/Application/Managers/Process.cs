@@ -10,27 +10,27 @@ public class Process : IProcess, IProcessStore
 {
     public Guid Id { get; }
     public string AggregateName { get; }
+    public List<object> StoredEvents { get; } = [];
+    public Queue<object> UncommittedEvents { get; } = [];
+    public List<INode>? AvailableSteps { get; private set; }
+    public DateTimeOffset? StartTime { get; }
 
-    private readonly DateTimeOffset? _startTime;
     private readonly BProcess _processConfig;
     private readonly IBpmRepository _repository;
-
-    private readonly List<object> _storedEvents = [];
-    private readonly Queue<object> _uncommittedEvents = [];
-
     private bool _isNewProcess;
 
     public Process(Guid aggregateId, string rootAggregateName, bool isNewProcess, IEnumerable<object>? events, IEnumerable<object>? upcomingEvents, DateTimeOffset? startTime,
-        IBpmRepository repository)
+        List<INode>? availableSteps, IBpmRepository repository)
     {
-        _startTime = startTime;
+        StartTime = startTime;
+        AvailableSteps = availableSteps;
         _processConfig = BProcessGraphConfiguration.GetConfig(rootAggregateName) ?? throw new Exception();
         if (events is not null)
-            _storedEvents = events.ToList();
+            StoredEvents = events.ToList();
         if (upcomingEvents != null)
             foreach (var upcomingEvent in upcomingEvents)
             {
-                _uncommittedEvents.Enqueue(upcomingEvent);
+                UncommittedEvents.Enqueue(upcomingEvent);
             }
 
         Id = aggregateId;
@@ -43,9 +43,9 @@ public class Process : IProcess, IProcessStore
 
     public T AggregateAs<T>(bool includeUncommitted = true) where T : Aggregate
     {
-        var stream = _storedEvents;
+        var stream = StoredEvents;
         if (includeUncommitted)
-            stream = stream.Union(_uncommittedEvents).ToList();
+            stream = stream.Union(UncommittedEvents).ToList();
 
         var aggregate = (T)_repository.AggregateStreamFromRegistry(typeof(T), stream);
         aggregate.Id = Id;
@@ -56,9 +56,9 @@ public class Process : IProcess, IProcessStore
     {
         try
         {
-            var stream = _storedEvents;
+            var stream = StoredEvents;
             if (includeUncommitted)
-                stream = stream.Union(_uncommittedEvents).ToList();
+                stream = stream.Union(UncommittedEvents).ToList();
 
             var aggregate = (T)_repository.AggregateStreamFromRegistry(typeof(T), stream);
             aggregate.Id = Id;
@@ -75,9 +75,9 @@ public class Process : IProcess, IProcessStore
         aggregate = null;
         try
         {
-            var stream = _storedEvents;
+            var stream = StoredEvents;
             if (includeUncommitted)
-                stream = stream.Union(_uncommittedEvents).ToList();
+                stream = stream.Union(UncommittedEvents).ToList();
 
             aggregate = (T)_repository.AggregateStreamFromRegistry(typeof(T), stream);
             aggregate.Id = Id;
@@ -95,8 +95,10 @@ public class Process : IProcess, IProcessStore
         if (CheckExpiration(out var bpmResult))
             return bpmResult;
 
-        var stream = _storedEvents;
-        stream = stream.Union(_uncommittedEvents).ToList();
+        var stream = StoredEvents;
+        stream = stream.Union(UncommittedEvents).ToList();
+        if (CheckFail(stream, out var failResult))
+            return failResult;
 
         var filteredResult = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
         if (filteredResult.availableNodes.All(x => events.All(z => !x.ContainsEvent(z))))
@@ -104,16 +106,17 @@ public class Process : IProcess, IProcessStore
 
         foreach (var @event in events)
         {
-            _uncommittedEvents.Enqueue(@event);
+            UncommittedEvents.Enqueue(@event);
         }
 
+        AvailableSteps = filteredResult.availableNodes;
         return Result.Success();
     }
 
     public BpmResult ForceAppendEvents(params object[] events)
     {
         foreach (var @event in events)
-            _uncommittedEvents.Enqueue(@event);
+            UncommittedEvents.Enqueue(@event);
 
         return Result.Success();
     }
@@ -122,13 +125,25 @@ public class Process : IProcess, IProcessStore
     private bool CheckExpiration(out BpmResult bpmResult)
     {
         bpmResult = Result.Success();
-        if (_startTime is not null)
+        if (StartTime is not null)
             if (_processConfig.Config.ExpirationSeconds is not null)
-                if ((DateTimeOffset.UtcNow - _startTime).Value.TotalSeconds > _processConfig.Config.ExpirationSeconds)
+                if ((DateTimeOffset.UtcNow - StartTime).Value.TotalSeconds > _processConfig.Config.ExpirationSeconds)
                 {
                     bpmResult = Result.Fail(Code.Expired);
                     return true;
                 }
+
+        return false;
+    }
+
+    private bool CheckFail(List<object> stream, out BpmResult bpmResult)
+    {
+        bpmResult = Result.Success();
+        if (stream.Any(x => x is ProcessFailed))
+        {
+            bpmResult = Result.Fail(Code.ProcessFailed);
+            return true;
+        }
 
         return false;
     }
@@ -138,7 +153,7 @@ public class Process : IProcess, IProcessStore
         if (CheckExpiration(out var bpmResult))
             return bpmResult;
 
-        _uncommittedEvents.Enqueue(new ProcessFailed(typeof(T).Name, data, description));
+        UncommittedEvents.Enqueue(new ProcessFailed(typeof(T).Name, data, description));
         return Result.Success();
     }
 
@@ -147,25 +162,29 @@ public class Process : IProcess, IProcessStore
         if (CheckExpiration(out var bpmResult))
             return bpmResult;
 
-        var stream = _storedEvents;
+        var stream = StoredEvents;
         if (includeUncommitted)
-            stream = stream.Union(_uncommittedEvents).ToList();
-
+            stream = stream.Union(UncommittedEvents).ToList();
+        if (CheckFail(stream, out var failResult))
+            return failResult;
 
         var filteredResult = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
         if (filteredResult.availableNodes.All(x => x.CommandType != typeof(T)))
             return Result.Fail(Code.InvalidEvent);
+
+        AvailableSteps = filteredResult.availableNodes;
 
         return Result.Success();
     }
 
     public BpmResult<List<INode>?> GetNextSteps(bool includeUnsavedEvents = true)
     {
-        var stream = _storedEvents;
+        var stream = StoredEvents;
         if (includeUnsavedEvents)
-            stream = stream.Union(_uncommittedEvents).ToList();
+            stream = stream.Union(UncommittedEvents).ToList();
 
         var result = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
+        AvailableSteps = result.availableNodes;
         return Result.Success(result.availableNodes.Distinct().ToList());
     }
 
@@ -173,7 +192,7 @@ public class Process : IProcess, IProcessStore
     public async Task AppendUncommittedToDb(CancellationToken ct)
     {
         var headers = new Dictionary<string, object> { { "AggregateType", AggregateName } };
-        await _repository.AppendEvents(Id, _uncommittedEvents.ToArray(), _isNewProcess, headers, ct);
+        await _repository.AppendEvents(Id, UncommittedEvents.ToArray(), _isNewProcess, headers, ct);
         _isNewProcess = false;
     }
 

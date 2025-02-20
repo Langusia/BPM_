@@ -84,7 +84,6 @@ public class PasswordRecovery : Aggregate
     public void CheckCardInitiate(long userId, int paymentId, string hash)
     {
         var @event = new CheckCardInitiated(userId, paymentId, hash);
-        SetBpmProps(@event);
         Enqueue(@event);
         Apply(@event);
     }

@@ -2,8 +2,8 @@
 
 public interface IBpmStore
 {
-    IProcess StartProcess<T>(params object[] events) where T : Aggregate;
-    IProcess StartProcess(Type aggregateType, params object[] events);
+    IProcess? StartProcess<T>(object events) where T : Aggregate;
+    IProcess? StartProcess(Type aggregateType, object events);
     Task<IProcess> FetchProcessAsync(Guid aggregateId, CancellationToken ct);
 
     Task SaveChangesAsync(CancellationToken token);

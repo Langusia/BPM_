@@ -1,4 +1,5 @@
-﻿using Core.BPM.Persistence;
+﻿using Core.BPM.Configuration;
+using Core.BPM.Persistence;
 
 namespace Core.BPM.Application.Managers;
 
@@ -6,14 +7,19 @@ public class BpmStore(IBpmRepository repository) : IBpmStore
 {
     private readonly Queue<IProcess> _processes = [];
 
-    public IProcess StartProcess<T>(params object[] events) where T : Aggregate
+    public IProcess? StartProcess<T>(object @event) where T : Aggregate
     {
-        return StartProcess(typeof(T), events);
+        return StartProcess(typeof(T), @event);
     }
 
-    public IProcess StartProcess(Type aggregateType, params object[] events)
+    public IProcess? StartProcess(Type aggregateType, object @event)
     {
-        var process = new Process(Guid.NewGuid(), aggregateType.Name, true, null, events, null, repository);
+        var config = BProcessGraphConfiguration.GetConfig(aggregateType.Name)!;
+        if (!config.RootNode.ContainsEvent(@event))
+            return null;
+
+        var process = new Process(Guid.NewGuid(), aggregateType.Name, true, null, [@event], null,
+            config.RootNode.NextSteps, repository);
         _processes.Enqueue(process);
         return process;
     }
@@ -25,7 +31,7 @@ public class BpmStore(IBpmRepository repository) : IBpmStore
         if (string.IsNullOrEmpty(aggregateName))
             throw new Exception();
 
-        var process = new Process(aggregateId, aggregateName, false, stream.Select(x => x.Data).ToArray(), null, stream.FirstOrDefault().Timestamp, repository);
+        var process = new Process(aggregateId, aggregateName, false, stream.Select(x => x.Data).ToArray(), null, stream.FirstOrDefault().Timestamp, null, repository);
         _processes.Enqueue(process);
         return process;
     }

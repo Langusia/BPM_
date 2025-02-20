@@ -12,13 +12,11 @@ public class TwoFactor : Aggregate
     public void Apply(OtpSent @event)
     {
         Test = @event.OtpHash;
-        SetBpmProps(@event);
     }
 
     public void Apply(OtpValidated @event)
     {
         IsValid = @event.ValidOtp;
-        SetBpmProps(@event);
     }
 
     public void GenerateOtp(Guid aggregateId, string otpHash)

@@ -103,7 +103,6 @@ public class RequestDigitalLoan : Aggregate
         Period = @event.Period;
         Insurance = @event.Insurance;
         NotCheckInRs = @event.NotCheckInRs;
-        SetBpmProps(@event);
     }
 
     public void Apply(ConfirmedDigitalLoan @event)
@@ -111,14 +110,12 @@ public class RequestDigitalLoan : Aggregate
         Channel = @event.Channel;
         TraceId = @event.TraceId;
         UserId = @event.UserId;
-        SetBpmProps(@event);
     }
 
     public void Apply(FinishedRequestDigitalLoan @event)
     {
         Channel = @event.Channel;
         UserId = @event.UserId;
-        SetBpmProps(@event);
     }
 }
 

@@ -57,7 +57,6 @@ public class RequestCarPawnshop : Aggregate
         Amount = @event.Amount;
         EffectiveInterestRate = @event.EffectiveInterestRate;
         Period = @event.Period;
-        SetBpmProps(@event);
     }
 
     public void InitiateCarPawnshop(DigitalLoanProductTypeEnum productType, string promoCode, decimal percent, int tryCount, decimal amount, decimal effectiveInterestRate, int period)
@@ -92,7 +91,6 @@ public class RequestCarPawnshop : Aggregate
         TraceId = @event.TraceId;
         UserId = @event.UserId;
         Channel = @event.Channel;
-        SetBpmProps(@event);
     }
 }
 
