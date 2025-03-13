@@ -1,7 +1,5 @@
 using Core.BPM.Application;
-using Marten;
 using Marten.Events.Projections;
-using Marten.Schema.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MyCredo.Common;
@@ -9,7 +7,6 @@ using MyCredo.Features.Loan;
 using MyCredo.Features.Loan.ConfirmLoanRequest;
 using MyCredo.Features.Loan.Initiating;
 using MyCredo.Features.Loan.LoanV9;
-using MyCredo.Features.Loan.OtpSend;
 using MyCredo.Features.Loan.OtpValidate;
 using MyCredo.Features.Loan.UploadImage;
 using MyCredo.Features.Loann;
@@ -20,9 +17,11 @@ using MyCredo.Features.RecoveringPassword.Finishing;
 using MyCredo.Features.RecoveringPassword.GetUserData;
 using MyCredo.Features.RecoveringPassword.Initiating;
 using MyCredo.Features.TwoFactor;
-using Weasel.Core;
+using MyCredo.Retail.Loan.Application.Features.IssueLoanProcess.CreditCard.GetLimits;
+using MyCredo.Retail.Loan.Application.Features.IssueLoanProcess.CreditCard.Initiating;
 using OtpSent = MyCredo.Features.TwoFactor.OtpSent;
 using ValidateOtp = MyCredo.Features.TwoFactor.ValidateOtp;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,16 +29,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMediatR(c => { c.RegisterServicesFromAssembly(typeof(Program).Assembly); });
 
-builder.Services.AddBpm(options =>
+builder.Services.AddBpm("bpm", "Host = 10.195.105.11;Database = MyCredoRetailLoan;Username = MyCredoRetailLoanUser;Password = Fgr$fdsf#fSF",
+    x =>
     {
-        options.Connection("Host=10.195.105.11; Database=ExternalLoans; Username=ExternalLoansUser; Password=Vfh53F2@df4U");
-        options.AutoCreateSchemaObjects = AutoCreate.CreateOrUpdate;
-        options.DatabaseSchemaName = "bpm";
-        options.Events.MetadataConfig.HeadersEnabled = true;
-        options.Events.MetadataConfig.CausationIdEnabled = true;
-        options.Events.MetadataConfig.CorrelationIdEnabled = true;
+        x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
+        x.AddAggregate<TwoFactor>();
+        //x.AddAggregateDefinition<IssueCreditCard, IssueCreditCardDefinition>();
+    },
+    options =>
+    {
         options.Projections.Add<CheckCardFlatProjection>(ProjectionLifecycle.Inline);
-
+        options.Events.AddEventType(typeof(CreditCardInitiated));
+        options.Events.AddEventType(typeof(GetCreditCardLimits));
         options.Events.AddEventType(typeof(RequestLoanInitiated));
         options.Events.AddEventType(typeof(OtpSent));
         options.Events.AddEventType(typeof(OtpValidated));
@@ -61,15 +62,9 @@ builder.Services.AddBpm(options =>
         options.Events.AddEventType(typeof(IssueLoanInitiated));
         options.Events.AddEventType(typeof(GeneratedContract));
         options.Events.AddEventType(typeof(GeneratedSchedule));
-    }, x =>
-    {
-        x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
-        x.AddAggregate<TwoFactor>();
-        //x.AddAggregateDefinition<RequestCarPawnshop, RequestCarPawnshopDefinition>();
-        //x.AddAggregateDefinition<RequestDigitalLoan, RequestDigitalLoanDefinition>();
-        //x.AddAggregateDefinition<IssueLoan, LoanV9AggregateDefinition>();
     }
 );
+
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.

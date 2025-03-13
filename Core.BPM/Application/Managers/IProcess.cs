@@ -1,4 +1,6 @@
-﻿using MediatR;
+﻿using Core.BPM.Application.Events;
+using Core.BPM.Attributes;
+using MediatR;
 using Core.BPM.Interfaces;
 
 namespace Core.BPM.Application.Managers;
@@ -41,7 +43,7 @@ public interface IProcess
     /// </summary>
     /// <param name="events">Events to append.</param>
     /// <returns>True if the events were appended successfully, otherwise false.</returns>
-    BpmResult AppendEvents(params object[] events);
+    BpmResult AppendEvent(BpmEvent @event);
 
     BpmResult ForceAppendEvents(params object[] events);
     BpmResult AppendFail<T>(string description, object data);

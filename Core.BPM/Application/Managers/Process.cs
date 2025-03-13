@@ -1,4 +1,5 @@
 ﻿using Core.BPM.Application.Events;
+using Core.BPM.Attributes;
 using Core.BPM.Configuration;
 using Core.BPM.Interfaces;
 using Core.BPM.Persistence;
@@ -45,7 +46,7 @@ public class Process : IProcess, IProcessStore
     {
         var stream = StoredEvents;
         if (includeUncommitted)
-            stream = stream.Union(UncommittedEvents).ToList();
+            stream = MergedWithUncommitted();
 
         var aggregate = (T)_repository.AggregateStreamFromRegistry(typeof(T), stream);
         aggregate.Id = Id;
@@ -58,7 +59,7 @@ public class Process : IProcess, IProcessStore
         {
             var stream = StoredEvents;
             if (includeUncommitted)
-                stream = stream.Union(UncommittedEvents).ToList();
+                stream = MergedWithUncommitted();
 
             var aggregate = (T)_repository.AggregateStreamFromRegistry(typeof(T), stream);
             aggregate.Id = Id;
@@ -77,7 +78,8 @@ public class Process : IProcess, IProcessStore
         {
             var stream = StoredEvents;
             if (includeUncommitted)
-                stream = stream.Union(UncommittedEvents).ToList();
+                stream = MergedWithUncommitted();
+            ;
 
             aggregate = (T)_repository.AggregateStreamFromRegistry(typeof(T), stream);
             aggregate.Id = Id;
@@ -89,27 +91,31 @@ public class Process : IProcess, IProcessStore
         }
     }
 
+    private List<object> MergedWithUncommitted() =>
+        StoredEvents.Union(UncommittedEvents.ToList()).ToList();
 
-    public BpmResult AppendEvents(params object[] events)
+
+    public BpmResult AppendEvent(BpmEvent @event)
     {
         if (CheckExpiration(out var bpmResult))
             return bpmResult;
 
-        var stream = StoredEvents;
-        stream = stream.Union(UncommittedEvents).ToList();
+        var stream = MergedWithUncommitted();
         if (CheckFail(stream, out var failResult))
             return failResult;
-
-        var filteredResult = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
-        if (filteredResult.availableNodes.All(x => events.All(z => !x.ContainsEvent(z))))
+        var availableNodesResult = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
+        var eventNodes = availableNodesResult.availableNodes.Where(x => x.ContainsEvent(@event)).ToList();
+        if (eventNodes is null || eventNodes.Count == 0)
             return Result.Fail(Code.InvalidEvent);
 
-        foreach (var @event in events)
+        foreach (var eventNode in eventNodes)
         {
+            @event.NodeId = eventNode.NodeLevel;
             UncommittedEvents.Enqueue(@event);
         }
 
-        AvailableSteps = filteredResult.availableNodes;
+
+        AvailableSteps = availableNodesResult.availableNodes;
         return Result.Success();
     }
 
@@ -164,7 +170,7 @@ public class Process : IProcess, IProcessStore
 
         var stream = StoredEvents;
         if (includeUncommitted)
-            stream = stream.Union(UncommittedEvents).ToList();
+            stream = MergedWithUncommitted();
         if (CheckFail(stream, out var failResult))
             return failResult;
 
@@ -181,7 +187,7 @@ public class Process : IProcess, IProcessStore
     {
         var stream = StoredEvents;
         if (includeUnsavedEvents)
-            stream = stream.Union(UncommittedEvents).ToList();
+            stream = MergedWithUncommitted();
 
         var result = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
         AvailableSteps = result.availableNodes;

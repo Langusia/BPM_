@@ -18,6 +18,31 @@ using ValidateOtp = MyCredo.Features.TwoFactor;
 
 namespace MyCredo.Features.RecoveringPassword;
 
+public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
+{
+    public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
+        configure.StartWith<InitiatePasswordRecovery>()
+            .If(x => x.ChannelType == ChannelTypeEnum.Unclassified,
+                z =>
+                    z.Continue<A>()
+                        .Continue<B>())
+            .ContinueAnyTime<C>()
+            .If(x => x.ChannelType == ChannelTypeEnum.Unclassified, x =>
+                x.Continue<D>())
+            .Continue<F>()
+            .ContinueAnyTime<C>()
+            .Continue<Z>()
+            .End();
+
+
+    public override void ConfigureSteps(StepConfigurator<PasswordRecovery> stepConfigurator)
+    {
+        stepConfigurator.Configure<GenerateOtp>()
+            .SetProcessPreCondition(x => x.ChannelType == ChannelTypeEnum.Unclassified)
+            .SetMaxCount(3);
+    }
+}
+
 public class PasswordRecovery : Aggregate
 {
     public PasswordRecovery()
@@ -148,40 +173,4 @@ public class PasswordRecovery : Aggregate
     public ChannelTypeEnum ChannelType { get; set; }
     public bool IsOtpValid { get; set; }
     public int? KycParameters { get; set; }
-}
-
-public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
-{
-    //public override void DefineProcess(IProcessBuilder<IssueLoan> configureProcess)
-    //{
-    //    configureProcess
-    //        .StartWith<InitiateIssueLoanProcess>()
-    //        .ThenContinue<GenerateContract>(x =>
-    //            x.ThenContinue<GenerateSchedule>(y =>
-    //                y.ThenContinueOptional<GenerateInsuranceDocuments>()))
-    //        .Or<GenerateSchedule>(x =>
-    //            x.ThenContinue<GenerateContract>(y =>
-    //                y.ThenContinueOptional<GenerateInsuranceDocuments>()))
-    //        .ContinueAnyTime<ValidateOtp>()
-    //        .Continue<MarkDocumentsAsAssigned>()
-    //        .Continue<FinishIssueLoan>();
-    //}
-    public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
-                           configure.StartWith<InitiatePasswordRecovery>()
-                               .If(x => x.ChannelType == ChannelTypeEnum.MOBILE_CIB, z =>
-                                   z.Group(x =>
-                                   {
-                                       x.AddStep<A>();
-                                       x.AddStep<B>();
-                                   }))
-            .Continue<Z>()
-            .End();
-
-
-    public override void ConfigureSteps(StepConfigurator<PasswordRecovery> stepConfigurator)
-    {
-        stepConfigurator.Configure<GenerateOtp>()
-            .SetProcessPreCondition(x => x.ChannelType == ChannelTypeEnum.Unclassified)
-            .SetMaxCount(3);
-    }
 }

@@ -76,11 +76,7 @@ public class BpmRepository : IBpmRepository
         return aggregate;
     }
 
-//bpmStore should return process instance
-//process instance must be responsible for its modification
-//bpmStore must save every distinct fetched or started process
-//bpmStore SaveChanges must apply every process modifications
-//Aggregating is process prerogative
+
 
     public async Task AppendEvents(Guid aggregateId, object[] events, bool newStream = true, Dictionary<string, object>? headers = null, CancellationToken ct = default)
     {

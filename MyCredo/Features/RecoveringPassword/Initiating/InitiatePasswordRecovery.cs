@@ -3,6 +3,7 @@ using Core.BPM.Attributes;
 using Marten;
 using MediatR;
 using MyCredo.Common;
+using MyCredo.Features.Loan.OtpValidate;
 using MyCredo.Features.TwoFactor;
 
 namespace MyCredo.Features.RecoveringPassword.Initiating;
@@ -19,12 +20,35 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
 {
     public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
-        var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, request.ChannelType));
-        process.AppendEvents(new Ad(Guid.Empty));
-        process.AppendEvents(new Bd(Guid.Empty));
+        var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, ChannelTypeEnum.MOBILE_CIB));
+        process!.AppendEvent(new Cd(Guid.Empty));
+        process!.AppendEvent(new Fd(Guid.Empty));
+
+        var res = process.TryAggregateAs<PasswordRecovery>(out var agg);
+        var nexts = process.GetNextSteps();
+
+
+        await store.SaveChangesAsync(cancellationToken);
+
+
+        //List<object> strs =
+        //[
+        //    new OtpSent(Guid.Empty, ""),
+        //    new OtpSent(Guid.Empty, ""),
+        //    new OtpSent(Guid.Empty, ""),
+        //    new OtpSent(Guid.Empty, ""),
+        //    new OtpValidated(Guid.Empty, false),
+        //    new OtpValidated(Guid.Empty, false),
+        //    new OtpValidated(Guid.Empty, false)
+        //];
+        //Queue<object> strsQ = [];
+        //var s = strs.Union(strsQ);
+        //var pr = await store.FetchProcessAsync(Guid.Empty, cancellationToken);
+        //process.AppendEvents(new Ad(Guid.Empty));
+        //process.AppendEvents(new Bd(Guid.Empty));
         //process.AppendEvents(new Cd(Guid.Empty));
         //
-        var s = process.GetNextSteps();
+
 
         return Guid.Empty;
     }

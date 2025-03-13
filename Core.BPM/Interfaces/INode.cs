@@ -1,11 +1,14 @@
 ﻿using Core.BPM.Evaluators;
 using Core.BPM.AggregateConditions;
+using Core.BPM.Application.Events;
+using Core.BPM.Attributes;
 
 namespace Core.BPM.Interfaces;
 
 public interface INode
 {
     Type CommandType { get; }
+    int NodeLevel { get; set; }
     List<IAggregateCondition>? AggregateConditions { get; set; }
     public List<Type> ProducingEvents { get; }
     List<INode>? NextSteps { get; set; }
@@ -15,6 +18,7 @@ public interface INode
     INode? FindNextNode(string eventName);
     INodeStateEvaluator GetEvaluator();
     bool ContainsEvent(object @event);
+    bool ContainsNodeEvent(BpmEvent @event);
     List<INode> GetAllNodes();
     (bool isComplete, List<INode> availableNodes) CheckBranchCompletionAndGetAvailableNodes(INode start, List<object> storedEvents);
     (bool isComplete, List<INode> availableNodes) GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents);

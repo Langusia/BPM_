@@ -1,6 +1,5 @@
 ﻿using Core.BPM.Application.Managers;
 using Core.BPM.Attributes;
-using JasperFx.CodeGeneration.Model;
 using MediatR;
 using MyCredo.Features.Loan.LoanV9;
 using MyCredo.Features.RecoveringPassword;
@@ -28,7 +27,7 @@ public class GenerateOtpHandler : IRequestHandler<GenerateOtp, long>
         process.AppendFail<GenerateOtp>("asd", request);
         var agg3 = process.AggregateOrNullAs<TwoFactor>();
         var agg1 = process.AggregateAs<PasswordRecovery>();
-        var sss = process.AppendEvents(new OtpSent(Guid.NewGuid(), "test"));
+        //var sss = process.AppendEvents(new OtpSent(Guid.NewGuid(), "test"));
         var s = new PasswordRecovery();
         if (!process.TryAggregateAs<PasswordRecovery>(out var aggregate))
         {

@@ -2,7 +2,6 @@
 using Core.BPM.Attributes;
 using Core.BPM.Evaluators;
 using Core.BPM.Evaluators.Factory;
-using Core.BPM.Exceptions;
 using Core.BPM.Interfaces;
 
 namespace Core.BPM.Nodes;
@@ -30,6 +29,7 @@ public abstract class NodeBase : INode
     }
 
     public Type CommandType { get; }
+    public int NodeLevel { get; set; }
 
     public Type ProcessType { get; }
 
@@ -47,6 +47,15 @@ public abstract class NodeBase : INode
 
     public virtual INodeStateEvaluator GetEvaluator() => _nodeEvaluatorFactory.CreateEvaluator(this);
     public virtual bool ContainsEvent(object @event) => GetCommandProducer(CommandType).EventTypes.Select(x => x.Name).Contains(@event.GetType().Name);
+
+    public virtual bool ContainsNodeEvent(BpmEvent @event)
+    {
+        //var bpmEvents = storedEvents.OfType<BpmEvent>().ToList();
+        //return bpmEvents?.Any(node.ContainsNodeEvent) ?? storedEvents.Except(bpmEvents ?? Enumerable.Empty<object>()).Any(node.ContainsEvent);
+        return GetCommandProducer(CommandType).EventTypes.Select(x => x.Name).Contains(@event.GetType().Name) &&
+               NodeLevel == @event.NodeId;
+    }
+
 
     public List<INode> GetAllNodes()
     {
@@ -111,7 +120,7 @@ public abstract class NodeBase : INode
 
     public (bool isComplete, List<INode> availableNodes) CheckBranchCompletionAndGetAvailableNodes(INode start, List<object> storedEvents)
     {
-        List<INode> availableNodes = new();
+        List<INode> availableNodes = [];
         bool isAnyBranchComplete = false;
 
         void Traverse(INode node)

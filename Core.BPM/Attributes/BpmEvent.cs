@@ -1,6 +1,6 @@
 ﻿namespace Core.BPM.Attributes;
 
-public record BpmEvent
+public abstract record BpmEvent
 {
-    public int? TryCount { get; set; }
+    public int NodeId { get; internal set; }
 }

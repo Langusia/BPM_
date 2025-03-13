@@ -7,15 +7,29 @@ using Core.BPM.Trash;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Weasel.Core;
 using StepConfigurator = Core.BPM.Trash.StepConfigurator;
 
 namespace Core.BPM.Application;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddBpm(this IServiceCollection services, Action<StoreOptions> configureMartenStore, Action<IBpmConfiguration>? configure = null)
+    public static void AddBpm(this IServiceCollection services, string dbSchemeName, string connectionString, Action<IBpmConfiguration>? configure = null,
+        Action<StoreOptions>? configureMartenStore = null)
     {
-        services.AddMarten(configureMartenStore);
+        var storeOptions = new StoreOptions
+        {
+            AutoCreateSchemaObjects = AutoCreate.CreateOrUpdate
+        };
+        storeOptions.Connection(connectionString);
+        storeOptions.DatabaseSchemaName = dbSchemeName;
+        storeOptions.Events.MetadataConfig.HeadersEnabled = true;
+        storeOptions.Events.MetadataConfig.CausationIdEnabled = true;
+        storeOptions.Events.MetadataConfig.CorrelationIdEnabled = true;
+        configureMartenStore(storeOptions);
+
+        services.AddMarten(storeOptions)
+            .UseLightweightSessions();
         services.TryAddScoped(typeof(BpmRepository));
         services.TryAddScoped(typeof(BpmEventConfigurationBuilder<>));
         services.TryAddScoped<IBpmRepository, BpmRepository>();
@@ -43,7 +57,7 @@ public class BpmConfiguration(ProcessRegistry registry, IServiceProvider service
     {
         var definition = (TDefinition)Activator.CreateInstance(typeof(TDefinition))!;
 
-        var processDefinition = (ProcessBuilder<TAggregate>)ActivatorUtilities.CreateInstance(serviceProvider, typeof(ProcessBuilder<>).MakeGenericType(typeof(TAggregate)))!;
+        var processDefinition = (ProcessRootBuilder<TAggregate>)ActivatorUtilities.CreateInstance(serviceProvider, typeof(ProcessRootBuilder<>).MakeGenericType(typeof(TAggregate)))!;
         var stepConfigurator = (StepConfigurator<TAggregate>)Activator.CreateInstance(typeof(StepConfigurator<>).MakeGenericType(typeof(TAggregate)))!;
 
         registry.RegisterAggregate(typeof(TAggregate));

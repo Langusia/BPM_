@@ -1,4 +1,5 @@
-﻿using Core.BPM.Interfaces;
+﻿using Core.BPM.Attributes;
+using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 using Core.BPM.Persistence;
 
@@ -25,6 +26,8 @@ public class ConditionalNodeStateEvaluator(INode node, IBpmRepository repository
         return false;
     }
 
+    //checks if can execute and returns available nodes for exec
+    //returns CanExecute,AvailableNodes
     public (bool, List<INode>) CanExecute(List<object> storedEvents)
     {
         bool canExecute = Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;

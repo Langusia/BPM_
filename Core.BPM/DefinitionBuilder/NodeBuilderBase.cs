@@ -2,7 +2,7 @@
 
 namespace Core.BPM.DefinitionBuilder;
 
-public class BaseNodeDefinition(INode firstNode, BProcess process)
+public class NodeBuilderBase(INode firstNode, BProcess process)
 {
     protected readonly BProcess ProcessConfig = process;
     protected INode CurrentNode = firstNode;
@@ -12,22 +12,15 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
     public INode GetCurrent() => CurrentNode;
     public INode GetRoot() => firstNode;
 
-    protected List<List<INode>> GetAllPossibles(INode rootNode)
-    {
-        List<List<INode>> result = [[rootNode]];
-        IterateAllPossibles(rootNode, result);
-        return result;
-    }
 
-
-    protected Tuple<INode, List<INode>> GetConfiguredProcessRootReverse()
+    protected INode GetConfiguredProcessRootReverse()
     {
         var currentNodeSet = CurrentBranchInstances;
         List<INode> result = [];
-        List<INode> distresult = [];
-        List<INode> allNodes = [];
-        IterateConfiguredProcessRoot(currentNodeSet, result, distresult, allNodes);
-        return new Tuple<INode, List<INode>>(result.FirstOrDefault()!, distresult);
+        HashSet<INode> visited = [];
+        int levelCounter = 0;
+        IterateConfiguredProcessRoot(currentNodeSet, result, visited, 0);
+        return result.FirstOrDefault()!;
     }
 
     private void IterateAllPossibles(INode root, List<List<INode>> results)
@@ -49,19 +42,16 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
         }
     }
 
-    protected void IterateConfiguredProcessRoot(List<INode> currentNodeSet, List<INode> res, List<INode> distinctNodeSet, List<INode> allNodes)
+    protected void IterateConfiguredProcessRoot(List<INode> currentNodeSet, List<INode> res, HashSet<INode> visited, int levelCounter)
     {
         foreach (var currentBranchInstance in currentNodeSet)
         {
             if (currentBranchInstance is null)
                 continue;
+            currentBranchInstance.NodeLevel = levelCounter;
             if (currentBranchInstance.PrevSteps is null)
             {
-                allNodes.Add(currentBranchInstance);
-
                 res.Add(currentBranchInstance);
-                if (!distinctNodeSet.Exists(x => x.CommandType == currentBranchInstance.CommandType && x.GetType() == currentBranchInstance.GetType()))
-                    distinctNodeSet.Add(currentBranchInstance);
                 continue;
             }
 
@@ -73,14 +63,13 @@ public class BaseNodeDefinition(INode firstNode, BProcess process)
                     continue;
                 }
 
-                allNodes.Add(currentBranchInstance);
                 if (!currentBranchInstancePrevStep.NextSteps!.Contains(currentBranchInstance))
                 {
                     currentBranchInstancePrevStep.AddNextStep(currentBranchInstance);
                 }
             }
 
-            IterateConfiguredProcessRoot(currentBranchInstance.PrevSteps!, res, distinctNodeSet, allNodes);
+            IterateConfiguredProcessRoot(currentBranchInstance.PrevSteps!, res, visited, ++levelCounter);
         }
     }
 }

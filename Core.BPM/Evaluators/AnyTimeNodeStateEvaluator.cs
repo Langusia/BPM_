@@ -1,4 +1,5 @@
-﻿using Core.BPM.Interfaces;
+﻿using Core.BPM.Attributes;
+using Core.BPM.Interfaces;
 
 namespace Core.BPM.Evaluators;
 
@@ -6,7 +7,8 @@ public class AnyTimeNodeStateEvaluator(INode node) : INodeStateEvaluator
 {
     public bool IsCompleted(List<object> storedEvents)
     {
-        return storedEvents.Any(node.ContainsEvent);
+        var bpmEvents = storedEvents.OfType<BpmEvent>();
+        return bpmEvents.Any(node.ContainsNodeEvent);
     }
 
     public (bool, List<INode>) CanExecute(List<object> storedEvents)

@@ -1,4 +1,5 @@
-﻿using Core.BPM.Interfaces;
+﻿using Core.BPM.Attributes;
+using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 
 namespace Core.BPM.Evaluators;

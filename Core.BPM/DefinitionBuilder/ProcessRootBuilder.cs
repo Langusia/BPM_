@@ -6,7 +6,7 @@ using MediatR;
 
 namespace Core.BPM.DefinitionBuilder;
 
-public class ProcessBuilder<TProcess>(INodeEvaluatorFactory evaluatorFactory) : IProcessBuilder<TProcess>
+public class ProcessRootBuilder<TProcess>(INodeEvaluatorFactory evaluatorFactory) : IProcessBuilder<TProcess>
     where TProcess : Aggregate
 {
     public IProcessNodeInitialBuilder<TProcess> StartWith<TCommand>() where TCommand : IBaseRequest
@@ -14,9 +14,9 @@ public class ProcessBuilder<TProcess>(INodeEvaluatorFactory evaluatorFactory) : 
         var node = new Node(typeof(TCommand), typeof(TProcess), evaluatorFactory);
         var processInst = new BProcess(typeof(TProcess), node);
         BProcessGraphConfiguration.AddProcess(processInst);
-        var builder = new ProcessNodeBuilder<TProcess>(node, processInst, evaluatorFactory);
+        var builder = new ProcessBuilder<TProcess>(node, processInst, evaluatorFactory);
         return builder;
     }
 }
 
-public class ProcessConfig<T> where T : Aggregate;
+public class ProcessConfig<T>(BProcess process) where T : Aggregate;

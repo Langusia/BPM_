@@ -8,13 +8,11 @@ public class OtpValidation : Aggregate
 {
     public int ValidationCount { get; set; }
     public int SendCount { get; set; }
+    public bool IsValidOtp { get; set; }
 
-    public OtpSent SendOtp()
+    public override bool? IsCompleted()
     {
-        var @event = new OtpSent(Guid.NewGuid());
-        Apply(@event);
-        Enqueue(@event);
-        return @event;
+        return IsValidOtp;
     }
 
     public void Apply(OtpSent @event)
