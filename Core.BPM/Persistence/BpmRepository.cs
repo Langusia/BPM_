@@ -1,4 +1,5 @@
-﻿using Core.BPM.Registry;
+﻿using System.Linq.Expressions;
+using Core.BPM.Registry;
 using Marten;
 using Marten.Events;
 
@@ -77,7 +78,6 @@ public class BpmRepository : IBpmRepository
     }
 
 
-
     public async Task AppendEvents(Guid aggregateId, object[] events, bool newStream = true, Dictionary<string, object>? headers = null, CancellationToken ct = default)
     {
         if (events.Any())
@@ -119,13 +119,7 @@ public class BpmRepository : IBpmRepository
 
     private object CreateAggregate(Type aggregateType)
     {
-        if (aggregateType.GetConstructor(Type.EmptyTypes) == null)
-        {
-            throw new InvalidOperationException($"Aggregate type {aggregateType.Name} must have a parameterless constructor.");
-        }
-
-        return Activator.CreateInstance(aggregateType)
-               ?? throw new InvalidOperationException($"Failed to create instance of {aggregateType.Name}.");
+        return FastActivator.CreateAggregate(aggregateType);
     }
 }
 
