@@ -7,7 +7,7 @@
         <Authors>Guram Elkanishvili</Authors>
         <Company>Credo Bank</Company>
         <Description>Credo BPM management</Description>
-        <Version>2.6.0</Version>
+        <Version>2.6.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
