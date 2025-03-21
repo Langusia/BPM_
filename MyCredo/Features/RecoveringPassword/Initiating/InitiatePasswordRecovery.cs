@@ -21,14 +21,13 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
     public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
         var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, ChannelTypeEnum.MOBILE_CIB));
-        process!.AppendEvent(new Cd(Guid.Empty));
-        process!.AppendEvent(new Fd(Guid.Empty));
-
-        var res = process.TryAggregateAs<PasswordRecovery>(out var agg);
         var nexts = process.GetNextSteps();
 
-
         await store.SaveChangesAsync(cancellationToken);
+
+        //process!.AppendEvent(new Fd(Guid.Empty));
+
+        var res = process.TryAggregateAs<PasswordRecovery>(out var agg);
 
 
         //List<object> strs =
@@ -50,6 +49,6 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
         //
 
 
-        return Guid.Empty;
+        return process.Id;
     }
 }

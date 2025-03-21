@@ -55,7 +55,7 @@ public class BpmConfiguration(ProcessRegistry registry, IServiceProvider service
     public void AddAggregateDefinition<TAggregate, TDefinition>() where TAggregate : Aggregate
         where TDefinition : BpmDefinition<TAggregate>
     {
-        var definition = (TDefinition)Activator.CreateInstance(typeof(TDefinition))!;
+        var definition = (TDefinition)FastActivator.CreateAggregate(typeof(TDefinition))!;
 
         var processDefinition = (ProcessRootBuilder<TAggregate>)ActivatorUtilities.CreateInstance(serviceProvider, typeof(ProcessRootBuilder<>).MakeGenericType(typeof(TAggregate)))!;
         var stepConfigurator = (StepConfigurator<TAggregate>)Activator.CreateInstance(typeof(StepConfigurator<>).MakeGenericType(typeof(TAggregate)))!;

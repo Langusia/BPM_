@@ -3,23 +3,25 @@ using Core.BPM.Attributes;
 using Credo.Core.Shared.Library;
 using Marten;
 using MediatR;
+using MyCredo.Features.TwoFactor;
 
 namespace MyCredo.Features.RecoveringPassword.CheckingCard;
 
-[BpmProducer(typeof(CheckCardInitiated))]
+[BpmProducer(typeof(Cd))]
 public record CheckCardInitiate(Guid DocumentId) : IRequest<bool>;
 
-public record CheckCardInitiateHandler(IDocumentSession _session, IQuerySession _qSession) : IRequestHandler<CheckCardInitiate, bool>
+public record CheckCardInitiateHandler(IBpmStore store) : IRequestHandler<CheckCardInitiate, bool>
 {
-    private readonly IQuerySession _qSession = _qSession;
-    private readonly IDocumentSession _session = _session;
-
     public async Task<bool> Handle(CheckCardInitiate request, CancellationToken cancellationToken)
     {
-        //
-        //if (s.AppendEvent(x => x.Initiate(0, 0, "hash")) == false)
-        //    return false;
+        var process = await store.FetchProcessAsync(request.DocumentId, cancellationToken);
+        var res = process!.AppendEvent(new Cd(Guid.Empty));
 
+        var nexts = process.GetNextSteps();
+
+        await store.SaveChangesAsync(cancellationToken);
+
+        //process!.AppendEvent(new Fd(Guid.Empty));
         return true;
     }
 }

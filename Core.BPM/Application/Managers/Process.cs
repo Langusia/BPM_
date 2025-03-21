@@ -199,6 +199,8 @@ public class Process : IProcess, IProcessStore
     {
         var headers = new Dictionary<string, object> { { "AggregateType", AggregateName } };
         await _repository.AppendEvents(Id, UncommittedEvents.ToArray(), _isNewProcess, headers, ct);
+        StoredEvents.AddRange(UncommittedEvents.ToArray());
+        UncommittedEvents.Clear();
         _isNewProcess = false;
     }
 

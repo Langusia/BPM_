@@ -1,4 +1,5 @@
-﻿using Core.BPM.Attributes;
+﻿using Core.BPM.Application;
+using Core.BPM.Configuration;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 using Core.BPM.Persistence;
@@ -11,11 +12,15 @@ public class GuestProcessNodeStateEvaluator(INode node, IBpmRepository repositor
     {
         if (node is GuestProcessNode processNode)
         {
-            processNode.ProcessConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents);
-            ((IAggregate)Activator.CreateInstance(processNode.ProcessType)).IsCompleted();
+            var config = BProcessGraphConfiguration.GetConfig(processNode.AggregateType.Name);
+            if (config is null)
+                throw new Exception();
+
+            config.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents);
+            ((IAggregate)FastActivator.CreateAggregate(processNode.ProcessType)).IsCompleted();
         }
 
-        throw new NotImplementedException();
+        return false;
     }
 
     public (bool canExec, List<INode> availableNodes) CanExecute(List<object> storedEvents)
@@ -26,8 +31,12 @@ public class GuestProcessNodeStateEvaluator(INode node, IBpmRepository repositor
 
         if (node is GuestProcessNode processNode)
         {
+            var config = BProcessGraphConfiguration.GetConfig(processNode.AggregateType.Name);
+            if (config is null)
+                throw new Exception();
+
             List<INode> result = [];
-            result.AddRange(processNode.ProcessConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).availableNodes);
+            result.AddRange(config.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).availableNodes);
             return (canExecute, result);
         }
 

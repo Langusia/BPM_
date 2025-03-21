@@ -17,6 +17,15 @@ public class ProcessRootBuilder<TProcess>(INodeEvaluatorFactory evaluatorFactory
         var builder = new ProcessBuilder<TProcess>(node, processInst, evaluatorFactory);
         return builder;
     }
+
+    public IProcessNodeInitialBuilder<TProcess> StartWithAnyTime<TCommand>() where TCommand : IBaseRequest
+    {
+        var node = new AnyTimeNode(typeof(TCommand), typeof(TProcess), evaluatorFactory);
+        var processInst = new BProcess(typeof(TProcess), node);
+        BProcessGraphConfiguration.AddProcess(processInst);
+        var builder = new ProcessBuilder<TProcess>(node, processInst, evaluatorFactory);
+        return builder;
+    }
 }
 
 public class ProcessConfig<T>(BProcess process) where T : Aggregate;

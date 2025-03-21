@@ -14,7 +14,7 @@ public abstract class NodeBase : INode
     public NodeBase(Type commandType, Type processType, INodeEvaluatorFactory nodeEvaluatorFactory)
     {
         _nodeEvaluatorFactory = nodeEvaluatorFactory;
-        if (commandType != typeof(GroupNode) && commandType != typeof(ConditionalNode))
+        if (commandType != typeof(GroupNode) && commandType != typeof(ConditionalNode) && commandType != typeof(GuestProcessNode))
         {
             var producer = GetCommandProducer(commandType);
             if (producer is null)
@@ -107,7 +107,7 @@ public abstract class NodeBase : INode
     private INode _currNext;
     private bool _isComplete;
 
-    public (bool isComplete, List<INode> availableNodes) GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents)
+    public (bool isComplete, List<INode> availableNodes)  GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents)
     {
         int eventHash = storedEvents?.Count > 0 ? storedEvents.GetHashCode() : 0;
         var cacheKey = (this, eventHash);

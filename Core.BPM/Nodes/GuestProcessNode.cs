@@ -8,10 +8,4 @@ public class GuestProcessNode(Type aggregateType, Type processType, INodeEvaluat
     : NodeBase(typeof(GuestProcessNode), processType, nodeEvaluatorFactory), INode
 {
     public Type AggregateType { get; init; } = aggregateType;
-
-    public BProcess ProcessConfig
-    {
-        get => ProcessConfig;
-        init => ProcessConfig = BProcessGraphConfiguration.GetConfig(aggregateType.Name);
-    }
 }

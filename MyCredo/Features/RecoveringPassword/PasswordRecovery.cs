@@ -1,7 +1,5 @@
 ﻿using Core.BPM;
 using Core.BPM.Application;
-using Core.BPM.Application.Managers;
-using Core.BPM.Configuration;
 using Core.BPM.DefinitionBuilder;
 using Core.BPM.DefinitionBuilder.Interfaces;
 using Core.BPM.Trash;
@@ -22,10 +20,7 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            .If(x => x.ChannelType == ChannelTypeEnum.Unclassified,
-                z =>
-                    z.Continue<A>()
-                        .Continue<B>())
+            
             .ContinueAnyTime<C>()
             .If(x => x.ChannelType == ChannelTypeEnum.Unclassified, x =>
                 x.Continue<D>())

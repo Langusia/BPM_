@@ -33,36 +33,37 @@ builder.Services.AddBpm("bpm", "Host = 10.195.105.11;Database = MyCredoRetailLoa
     x =>
     {
         x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
+        x.AddAggregateDefinition<OtpValidation, OtpValidationDefinition>();
         x.AddAggregate<TwoFactor>();
         //x.AddAggregateDefinition<IssueCreditCard, IssueCreditCardDefinition>();
     },
-    options =>
-    {
-        options.Projections.Add<CheckCardFlatProjection>(ProjectionLifecycle.Inline);
-        options.Events.AddEventType(typeof(CreditCardInitiated));
-        options.Events.AddEventType(typeof(GetCreditCardLimits));
-        options.Events.AddEventType(typeof(RequestLoanInitiated));
-        options.Events.AddEventType(typeof(OtpSent));
-        options.Events.AddEventType(typeof(OtpValidated));
-        options.Events.AddEventType(typeof(PasswordRecoveryInitiated));
-        options.Events.AddEventType(typeof(SecurityQuestionValidated));
-        options.Events.AddEventType(typeof(CheckCardInitiated));
-        options.Events.AddEventType(typeof(FinishedPasswordRecovery));
-        options.Events.AddEventType(typeof(CheckCardCompleted));
-        options.Events.AddEventType(typeof(UserDataGet));
-        options.Events.AddEventType(typeof(UploadedImage));
-        options.Events.AddEventType(typeof(ConfirmedCarPawnshop));
-        options.Events.AddEventType(typeof(CarPawnshopInitiated));
-        //
-        options.Events.AddEventType(typeof(FinishedRequestDigitalLoan));
-        options.Events.AddEventType(typeof(ConfirmedDigitalLoan));
-        options.Events.AddEventType(typeof(DigitalLoanInitiated));
-        options.Events.MapEventType<IInterface>("asd");
-        //
-        options.Events.AddEventType(typeof(IssueLoanInitiated));
-        options.Events.AddEventType(typeof(GeneratedContract));
-        options.Events.AddEventType(typeof(GeneratedSchedule));
-    }
+         options =>
+         {
+             options.Projections.Add<CheckCardFlatProjection>(ProjectionLifecycle.Inline);
+             options.Events.AddEventType(typeof(CreditCardInitiated));
+             options.Events.AddEventType(typeof(GetCreditCardLimits));
+             options.Events.AddEventType(typeof(RequestLoanInitiated));
+             options.Events.AddEventType(typeof(OtpSent));
+             options.Events.AddEventType(typeof(OtpValidated));
+             options.Events.AddEventType(typeof(PasswordRecoveryInitiated));
+             options.Events.AddEventType(typeof(SecurityQuestionValidated));
+             options.Events.AddEventType(typeof(CheckCardInitiated));
+             options.Events.AddEventType(typeof(FinishedPasswordRecovery));
+             options.Events.AddEventType(typeof(CheckCardCompleted));
+             options.Events.AddEventType(typeof(UserDataGet));
+             options.Events.AddEventType(typeof(UploadedImage));
+             options.Events.AddEventType(typeof(ConfirmedCarPawnshop));
+             options.Events.AddEventType(typeof(CarPawnshopInitiated));
+             //
+             options.Events.AddEventType(typeof(FinishedRequestDigitalLoan));
+             options.Events.AddEventType(typeof(ConfirmedDigitalLoan));
+             options.Events.AddEventType(typeof(DigitalLoanInitiated));
+             options.Events.MapEventType<IInterface>("asd");
+             //
+             options.Events.AddEventType(typeof(IssueLoanInitiated));
+             options.Events.AddEventType(typeof(GeneratedContract));
+             options.Events.AddEventType(typeof(GeneratedSchedule));
+         }
 );
 
 

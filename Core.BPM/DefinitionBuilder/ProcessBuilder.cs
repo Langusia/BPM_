@@ -79,7 +79,7 @@ public class ProcessBuilder<TProcess>(INode rootNode, BProcess process, INodeEva
     public IConditionalModifiableBuilder<TProcess> If<T>(Predicate<T> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure) where T : Aggregate
     {
         var b = new ProcessBuilder<TProcess>(null, process, nodeEvaluatorFactory);
-        var configuredBranch = (configure.Invoke(b));
+        var configuredBranch = configure.Invoke(b);
         var ifNodes = ((NodeBuilderBase)configuredBranch).CurrentBranchInstances;
 
         var condition = new AggregateCondition<T>(predicate);
