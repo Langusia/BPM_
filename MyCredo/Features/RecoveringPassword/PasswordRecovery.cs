@@ -20,11 +20,14 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            .ContinueAnyTime<A>(x =>
-                x.ContinueAnyTime<B>())
-            .OrAnyTime<C>(x =>
-                x.ContinueAnyTime<D>())
-            .ContinueAnyTime<Z>()
+            .ContinueAnyTime<D>(x =>
+                x.ContinueAnyTime<A>(x =>
+                        x.ContinueAnyTime<B>())
+                    .OrAnyTime<C>(x =>
+                        x.ContinueAnyTime<D>()))
+            .OrAnyTime<F>()
+            .ContinueAnyTime<Z>(x =>
+                x.Continue<InitiatePasswordRecovery>())
             .End();
 
 

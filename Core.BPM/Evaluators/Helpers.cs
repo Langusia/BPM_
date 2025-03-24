@@ -1,5 +1,4 @@
-﻿using Core.BPM.Attributes;
-using Core.BPM.Interfaces;
+﻿using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 
 namespace Core.BPM.Evaluators;
@@ -9,18 +8,19 @@ public static class Helpers
     public static bool? FindFirstNonOptionalCompletion(List<INode>? prevSteps, List<object> storedEvents)
     {
         if (prevSteps == null || prevSteps.Count == 0 || prevSteps.All(x => x is null))
-            return null; // No predecessors to check
+            return false;
 
-        foreach (var prev in prevSteps)
+        if (prevSteps.Where(x => x is not OptionalNode).Any(x => x.GetEvaluator().IsCompleted(storedEvents)))
+            return true;
+
+        var optionalNodes = prevSteps.Where(x => x is OptionalNode);
+        foreach (var prev in optionalNodes)
         {
-            if (!(prev is OptionalNode))
-                return prev.GetEvaluator().IsCompleted(storedEvents);
-
             var result = FindFirstNonOptionalCompletion(prev.PrevSteps, storedEvents);
-            if (result.HasValue) // Stop at the first found result
+            if (result.HasValue)
                 return result;
         }
 
-        return null; // No non-optional node found
+        return false;
     }
 }
