@@ -20,17 +20,11 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            .Continue<A>()
-            .Continue<B>()
-            .UnlockOptional<C>()
-            .UnlockOptional<F>()
-            .If(x => x.ChannelType == ChannelTypeEnum.Unclassified, x =>
-                x.Continue<D>())
-            .JumpTo<OtpValidation>()
+            .ContinueAnyTime<A>(x =>
+                x.ContinueAnyTime<B>())
+            .OrAnyTime<C>(x =>
+                x.ContinueAnyTime<D>())
             .ContinueAnyTime<Z>()
-            .Continue<D>()
-            .ContinueAnyTime<B>()
-            .Continue<A>()
             .End();
 
 

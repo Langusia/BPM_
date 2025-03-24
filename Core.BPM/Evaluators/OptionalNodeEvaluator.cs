@@ -11,7 +11,7 @@ public class OptionalNodeEvaluator(INode node) : INodeStateEvaluator
         return true;
     }
 
-    public (bool canExec, List<INode> availableNodes) CanExecute(List<object> storedEvents)
+    public (bool canExec, List<INode> availableNodes) CanExecute(INode rootNode,List<object> storedEvents)
     {
         bool canExecute = Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
         if (!canExecute)

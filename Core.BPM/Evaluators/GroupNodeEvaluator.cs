@@ -24,24 +24,30 @@ public class GroupNodeStateEvaluator(INode node) : INodeStateEvaluator
         return false;
     }
 
-    public (bool, List<INode>) CanExecute(List<object> storedEvents)
+    public (bool, List<INode>) CanExecute(INode rootNode, List<object> storedEvents)
     {
-        bool canExecute = Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
-        if (!canExecute)
-            return (false, []);
-
-        if (node is GroupNode groupNode)
+        bool canExecute = !rootNode.NextSteps?.Where(z => z.CommandType != node.CommandType).Any(x => x.ContainsEvent(storedEvents)) ?? true;
+        if (canExecute)
         {
-            List<INode> result = [];
+            canExecute = Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
+            if (!canExecute)
+                return (false, []);
 
-            if (_subNodesCompletionStates is null)
+            if (node is GroupNode groupNode)
             {
-                _subNodesCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
-                groupNode.SubRootNodes.ForEach(x => { _subNodesCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
+                List<INode> result = [];
+
+                if (_subNodesCompletionStates is null)
+                {
+                    _subNodesCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
+                    groupNode.SubRootNodes.ForEach(x => { _subNodesCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
+                }
+
+                result.AddRange(_subNodesCompletionStates.SelectMany(x => x.availableNodes));
+                return (canExecute, result);
             }
 
-            result.AddRange(_subNodesCompletionStates.SelectMany(x => x.availableNodes));
-            return (canExecute, result);
+            return (false, []);
         }
 
         return (false, []);

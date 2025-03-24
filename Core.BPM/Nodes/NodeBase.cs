@@ -48,6 +48,12 @@ public abstract class NodeBase : INode
     public virtual INodeStateEvaluator GetEvaluator() => _nodeEvaluatorFactory.CreateEvaluator(this);
     public virtual bool ContainsEvent(object @event) => GetCommandProducer(CommandType).EventTypes.Select(x => x.Name).Contains(@event.GetType().Name);
 
+    public bool ContainsEvent(List<object> events)
+    {
+        var evts = GetCommandProducer(CommandType).EventTypes.Select(x => x.Name);
+        return events.Select(x => x.GetType().Name).Any(x => evts.Contains(x));
+    }
+
     public virtual bool ContainsNodeEvent(BpmEvent @event)
     {
         //var bpmEvents = storedEvents.OfType<BpmEvent>().ToList();
@@ -107,7 +113,7 @@ public abstract class NodeBase : INode
     private INode _currNext;
     private bool _isComplete;
 
-    public (bool isComplete, List<INode> availableNodes)  GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents)
+    public (bool isComplete, List<INode> availableNodes) GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents)
     {
         int eventHash = storedEvents?.Count > 0 ? storedEvents.GetHashCode() : 0;
         var cacheKey = (this, eventHash);
@@ -123,14 +129,14 @@ public abstract class NodeBase : INode
         List<INode> availableNodes = [];
         bool isAnyBranchComplete = false;
 
-        void Traverse(INode node)
+        void Traverse(INode rootNode, INode node)
         {
             var evaluator = node.GetEvaluator();
             bool nodeCompleted = evaluator.IsCompleted(storedEvents);
             if (node.NextSteps == null || node.NextSteps.Count == 0)
                 isAnyBranchComplete |= nodeCompleted;
 
-            var canExecute = evaluator.CanExecute(storedEvents);
+            var canExecute = evaluator.CanExecute(rootNode, storedEvents);
             if (canExecute.canExec)
             {
                 var availables = canExecute.availableNodes.ToList();
@@ -140,11 +146,11 @@ public abstract class NodeBase : INode
 
             foreach (var next in node.NextSteps ?? [])
             {
-                Traverse(next);
+                Traverse(node, next);
             }
         }
 
-        Traverse(start);
+        Traverse(start, start);
 
         return (isAnyBranchComplete, availableNodes);
     }

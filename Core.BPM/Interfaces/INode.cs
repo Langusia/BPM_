@@ -18,6 +18,7 @@ public interface INode
     INode? FindNextNode(string eventName);
     INodeStateEvaluator GetEvaluator();
     bool ContainsEvent(object @event);
+    bool ContainsEvent(List<object> @events);
     bool ContainsNodeEvent(BpmEvent @event);
     List<INode> GetAllNodes();
     (bool isComplete, List<INode> availableNodes) CheckBranchCompletionAndGetAvailableNodes(INode start, List<object> storedEvents);

@@ -24,13 +24,10 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
         var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, ChannelTypeEnum.MOBILE_CIB));
         process.AppendEvent(new Ad(Guid.Empty));
         process.AppendEvent(new Bd(Guid.Empty));
-        process.AppendEvent(new OtpSent(Guid.Empty));
-        process.AppendEvent(new OtpValidated(Guid.Empty, false));
 
         var nexts = process.GetNextSteps();
 
 
-        await store.SaveChangesAsync(cancellationToken);
 
         //process!.AppendEvent(new Fd(Guid.Empty));
 

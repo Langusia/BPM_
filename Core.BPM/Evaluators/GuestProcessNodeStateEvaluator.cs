@@ -32,27 +32,33 @@ public class GuestProcessNodeStateEvaluator(INode node, IBpmRepository repositor
         return false;
     }
 
-    public (bool canExec, List<INode> availableNodes) CanExecute(List<object> storedEvents)
+    public (bool canExec, List<INode> availableNodes) CanExecute(INode rootNode, List<object> storedEvents)
     {
-        bool canExecute = Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
-        if (!canExecute)
-            return (false, []);
-
-        if (node is GuestProcessNode processNode)
+        bool canExecute = !rootNode.NextSteps?.Where(z => z.CommandType != node.CommandType).Any(x => x.ContainsEvent(storedEvents)) ?? true;
+        if (canExecute)
         {
-            var config = BProcessGraphConfiguration.GetConfig(processNode.GuestProcessType.Name);
-            if (config is null)
-                throw new NoDefinitionFoundException(processNode.GuestProcessType.Name);
-            var explicitCompletion = _aggregate?.IsCompleted();
+            canExecute = Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
+            if (!canExecute)
+                return (false, []);
 
-            List<INode> result = [];
-            _completionState ??= config.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents);
-            result.AddRange(_completionState.Value.availableNodes);
+            if (node is GuestProcessNode processNode)
+            {
+                var config = BProcessGraphConfiguration.GetConfig(processNode.GuestProcessType.Name);
+                if (config is null)
+                    throw new NoDefinitionFoundException(processNode.GuestProcessType.Name);
+                var explicitCompletion = _aggregate?.IsCompleted();
 
-            if (explicitCompletion.HasValue)
-                return (canExecute, explicitCompletion.Value && processNode.SealedSteps ? [] : result);
+                List<INode> result = [];
+                _completionState ??= config.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents);
+                result.AddRange(_completionState.Value.availableNodes);
 
-            return (canExecute, _completionState.Value.isComplete && processNode.SealedSteps ? [] : result);
+                if (explicitCompletion.HasValue)
+                    return (canExecute, explicitCompletion.Value && processNode.SealedSteps ? [] : result);
+
+                return (canExecute, _completionState.Value.isComplete && processNode.SealedSteps ? [] : result);
+            }
+
+            return (false, []);
         }
 
         return (false, []);
