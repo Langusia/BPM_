@@ -10,6 +10,9 @@ public class NodeEvaluatorFactory(IBpmRepository repository) : INodeEvaluatorFac
     {
         return node switch
         {
+            GuestProcessNode conditionalNode =>
+                new GuestProcessNodeStateEvaluator(conditionalNode, repository),
+
             ConditionalNode conditionalNode =>
                 new ConditionalNodeStateEvaluator(conditionalNode, repository),
 

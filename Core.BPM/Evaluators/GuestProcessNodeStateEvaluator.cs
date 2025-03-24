@@ -1,5 +1,5 @@
-﻿using Core.BPM.Application;
-using Core.BPM.Configuration;
+﻿using Core.BPM.Configuration;
+using Core.BPM.Exceptions;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 using Core.BPM.Persistence;
@@ -8,16 +8,25 @@ namespace Core.BPM.Evaluators;
 
 public class GuestProcessNodeStateEvaluator(INode node, IBpmRepository repository) : INodeStateEvaluator
 {
+    private Aggregate? _aggregate;
+    private (bool isComplete, List<INode> availableNodes)? _completionState;
+
     public bool IsCompleted(List<object> storedEvents)
     {
         if (node is GuestProcessNode processNode)
         {
-            var config = BProcessGraphConfiguration.GetConfig(processNode.AggregateType.Name);
+            var config = BProcessGraphConfiguration.GetConfig(processNode.GuestProcessType.Name);
             if (config is null)
                 throw new Exception();
 
-            config.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents);
-            ((IAggregate)FastActivator.CreateAggregate(processNode.ProcessType)).IsCompleted();
+
+            if (repository.TryAggregateAs(processNode.GuestProcessType, storedEvents, out _aggregate))
+            {
+                _completionState ??= config.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents);
+                var explicitCompletion = _aggregate!.IsCompleted();
+
+                return explicitCompletion ?? _completionState.Value.isComplete;
+            }
         }
 
         return false;
@@ -31,13 +40,19 @@ public class GuestProcessNodeStateEvaluator(INode node, IBpmRepository repositor
 
         if (node is GuestProcessNode processNode)
         {
-            var config = BProcessGraphConfiguration.GetConfig(processNode.AggregateType.Name);
+            var config = BProcessGraphConfiguration.GetConfig(processNode.GuestProcessType.Name);
             if (config is null)
-                throw new Exception();
+                throw new NoDefinitionFoundException(processNode.GuestProcessType.Name);
+            var explicitCompletion = _aggregate?.IsCompleted();
 
             List<INode> result = [];
-            result.AddRange(config.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).availableNodes);
-            return (canExecute, result);
+            _completionState ??= config.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents);
+            result.AddRange(_completionState.Value.availableNodes);
+
+            if (explicitCompletion.HasValue)
+                return (canExecute, explicitCompletion.Value && processNode.SealedSteps ? [] : result);
+
+            return (canExecute, _completionState.Value.isComplete && processNode.SealedSteps ? [] : result);
         }
 
         return (false, []);

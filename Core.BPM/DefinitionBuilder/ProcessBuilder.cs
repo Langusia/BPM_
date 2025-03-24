@@ -64,11 +64,11 @@ public class ProcessBuilder<TProcess>(INode rootNode, BProcess process, INodeEva
         return configured;
     }
 
-    public IProcessNodeModifiableBuilder<TProcess> JumpTo<TGuestAggregate>() where TGuestAggregate : Aggregate
+    public IProcessNodeModifiableBuilder<TProcess> JumpTo<TGuestAggregate>(bool sealedSteps) where TGuestAggregate : Aggregate
     {
-        var processNode = new GuestProcessNode(typeof(TGuestAggregate), ProcessConfig.ProcessType, nodeEvaluatorFactory);
+        var processNode = new GuestProcessNode(typeof(TGuestAggregate), sealedSteps, ProcessConfig.ProcessType, nodeEvaluatorFactory);
 
-        return Continue(new ProcessBuilder<TProcess>(processNode, process, nodeEvaluatorFactory, ++depthCounter));
+        return Continue(new ProcessBuilder<TProcess>(processNode, ProcessConfig, nodeEvaluatorFactory, ++depthCounter));
     }
 
     public IConditionalModifiableBuilder<TProcess> If(Predicate<TProcess> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
@@ -78,13 +78,13 @@ public class ProcessBuilder<TProcess>(INode rootNode, BProcess process, INodeEva
 
     public IConditionalModifiableBuilder<TProcess> If<T>(Predicate<T> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure) where T : Aggregate
     {
-        var b = new ProcessBuilder<TProcess>(null, process, nodeEvaluatorFactory);
+        var b = new ProcessBuilder<TProcess>(null, ProcessConfig, nodeEvaluatorFactory);
         var configuredBranch = configure.Invoke(b);
         var ifNodes = ((NodeBuilderBase)configuredBranch).CurrentBranchInstances;
 
         var condition = new AggregateCondition<T>(predicate);
         var conditionalNode = new ConditionalNode(ProcessConfig.ProcessType, condition, nodeEvaluatorFactory);
-        var cBldr = new ConditionalBuilder<TProcess>(conditionalNode, process, conditionalNode, nodeEvaluatorFactory, ++depthCounter);
+        var cBldr = new ConditionalBuilder<TProcess>(conditionalNode, ProcessConfig, conditionalNode, nodeEvaluatorFactory, ++depthCounter);
         cBldr.SetIfNode(ifNodes);
         conditionalNode.SetPrevSteps(CurrentBranchInstances.ToList());
         return cBldr;
@@ -99,14 +99,14 @@ public class ProcessBuilder<TProcess>(INode rootNode, BProcess process, INodeEva
     public IProcessNodeModifiableBuilder<TProcess> Group(Action<IGroupBuilder<TProcess>> configure)
     {
         var groupNode = new GroupNode(ProcessConfig.ProcessType, nodeEvaluatorFactory);
-        var builder = new GroupNodeBuilder<TProcess>(process, CurrentNode, groupNode, nodeEvaluatorFactory, ++depthCounter);
+        var builder = new GroupNodeBuilder<TProcess>(ProcessConfig, CurrentNode, groupNode, nodeEvaluatorFactory, ++depthCounter);
 
         configure.Invoke(builder);
         builder.EndGroup();
 
         groupNode.SetPrevSteps(CurrentBranchInstances.ToList());
 
-        return Continue(new ProcessBuilder<TProcess>(groupNode, process, nodeEvaluatorFactory, ++depthCounter));
+        return Continue(new ProcessBuilder<TProcess>(groupNode, ProcessConfig, nodeEvaluatorFactory, ++depthCounter));
     }
 
     public IProcessNodeModifiableBuilder<TProcess> Case(Predicate<TProcess> predicate, Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
@@ -116,7 +116,7 @@ public class ProcessBuilder<TProcess>(INode rootNode, BProcess process, INodeEva
 
     public IProcessNodeModifiableBuilder<TProcess> Or(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
     {
-        var nextBuilder = new ProcessBuilder<TProcess>(rootNode, process, nodeEvaluatorFactory);
+        var nextBuilder = new ProcessBuilder<TProcess>(CurrentNode, ProcessConfig, nodeEvaluatorFactory);
         var configured = (ProcessBuilder<TProcess>)configure.Invoke(nextBuilder);
 
         return configured;
@@ -172,7 +172,7 @@ public class ProcessBuilder<TProcess>(INode rootNode, BProcess process, INodeEva
         var res = GetConfiguredProcessRootReverse();
         ProcessConfig.RootNode = res;
         if (configureProcess is not null)
-            configureProcess(process.Config);
+            configureProcess(ProcessConfig.Config);
 
         return new ProcessConfig<TProcess>(ProcessConfig);
     }

@@ -1,15 +1,8 @@
 ﻿namespace Core.BPM;
 
-public class BpmResult(bool isSuccess, Code code)
-{
-    public bool IsSuccess { get; set; } = isSuccess;
-    public Code Code { get; set; } = code;
-}
+public record BpmResult(bool IsSuccess, Code Code);
 
-public class BpmResult<T>(bool isSuccess, Code code, T? data) : BpmResult(isSuccess, code)
-{
-    public T? Data { get; } = data;
-}
+public record BpmResult<T>(bool IsSuccess, Code Code, T? Data) : BpmResult(IsSuccess, Code);
 
 public static class Result
 {

@@ -35,5 +35,6 @@ public class OtpValidation : Aggregate
     public void Apply(OtpValidated @event)
     {
         ValidationCount++;
+        IsValidOtp = @event.ValidOtp;
     }
 }

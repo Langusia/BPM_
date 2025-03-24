@@ -1,4 +1,5 @@
 ﻿using Core.BPM.AggregateConditions;
+using Core.BPM.Attributes;
 using Core.BPM.Evaluators.Factory;
 using Core.BPM.Interfaces;
 
@@ -14,4 +15,7 @@ public class ConditionalNode(Type processType, IAggregateCondition aggregateCond
 
     public override bool ContainsEvent(object @event) => IfNodeRoots.SelectMany(x => x.GetAllNodes())
         .Union(ElseNodeRoots?.SelectMany(x => x.GetAllNodes()) ?? Enumerable.Empty<INode>()).Any(x => x.ContainsEvent(@event));
+
+    public override bool ContainsNodeEvent(BpmEvent @event) => IfNodeRoots.SelectMany(x => x.GetAllNodes())
+        .Union(ElseNodeRoots?.SelectMany(x => x.GetAllNodes()) ?? Enumerable.Empty<INode>()).Any(x => x.ContainsNodeEvent(@event));
 }

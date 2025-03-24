@@ -7,6 +7,9 @@ namespace Core.BPM.Evaluators;
 
 public class ConditionalNodeStateEvaluator(INode node, IBpmRepository repository) : INodeStateEvaluator
 {
+    private List<(bool isComplete, List<INode> availableNodes)>? _ifNodeRootsCompletionStates;
+    private List<(bool isComplete, List<INode> availableNodes)>? _elseNodeRootsCompletionStates;
+
     public bool IsCompleted(List<object> storedEvents)
     {
         if (node is ConditionalNode conditionalNode)
@@ -14,11 +17,25 @@ public class ConditionalNodeStateEvaluator(INode node, IBpmRepository repository
             var aggregate = repository.AggregateOrDefaultStreamFromRegistry(conditionalNode.AggregateCondition.ConditionalAggregateType, storedEvents);
             if (conditionalNode.AggregateCondition.EvaluateAggregateCondition(aggregate))
             {
-                return conditionalNode.IfNodeRoots.Any(x => x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).isComplete);
+                if (_ifNodeRootsCompletionStates is null)
+                {
+                    _ifNodeRootsCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
+                    conditionalNode.IfNodeRoots.ForEach(x => { _ifNodeRootsCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
+                }
+
+                return _ifNodeRootsCompletionStates.Any(x => x.isComplete);
             }
 
             if (conditionalNode.ElseNodeRoots is not null)
-                return conditionalNode.ElseNodeRoots?.Any(x => x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).isComplete) ?? false;
+            {
+                if (_elseNodeRootsCompletionStates is null)
+                {
+                    _elseNodeRootsCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
+                    conditionalNode.IfNodeRoots.ForEach(x => { _elseNodeRootsCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
+                }
+
+                return _elseNodeRootsCompletionStates.Any(x => x.isComplete);
+            }
 
             return Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
         }
@@ -39,14 +56,24 @@ public class ConditionalNodeStateEvaluator(INode node, IBpmRepository repository
             var aggregate = repository.AggregateOrDefaultStreamFromRegistry(conditionalNode.AggregateCondition.ConditionalAggregateType, storedEvents);
             if (conditionalNode.AggregateCondition.EvaluateAggregateCondition(aggregate))
             {
-                var results = conditionalNode.IfNodeRoots.Select(x => x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)).ToList();
-                return (true, results.SelectMany(x => x.availableNodes).ToList());
+                if (_ifNodeRootsCompletionStates is null)
+                {
+                    _ifNodeRootsCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
+                    conditionalNode.IfNodeRoots.ForEach(x => { _ifNodeRootsCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
+                }
+
+                return (true, _ifNodeRootsCompletionStates.SelectMany(x => x.availableNodes).ToList());
             }
 
             if (conditionalNode.ElseNodeRoots is not null)
             {
-                var elseResults = conditionalNode.ElseNodeRoots?.Select(x => x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)).ToList();
-                return (true, elseResults.SelectMany(x => x.availableNodes).ToList());
+                if (_elseNodeRootsCompletionStates is null)
+                {
+                    _elseNodeRootsCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
+                    conditionalNode.IfNodeRoots.ForEach(x => { _elseNodeRootsCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
+                }
+
+                return (true, _elseNodeRootsCompletionStates.SelectMany(x => x.availableNodes).ToList());
             }
         }
 

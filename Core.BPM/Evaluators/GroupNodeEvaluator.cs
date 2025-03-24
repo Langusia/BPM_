@@ -6,11 +6,19 @@ namespace Core.BPM.Evaluators;
 
 public class GroupNodeStateEvaluator(INode node) : INodeStateEvaluator
 {
+    private List<(bool isComplete, List<INode> availableNodes)>? _subNodesCompletionStates;
+
     public bool IsCompleted(List<object> storedEvents)
     {
         if (node is GroupNode groupNode)
         {
-            return groupNode.SubRootNodes.All(x => x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).isComplete);
+            if (_subNodesCompletionStates is null)
+            {
+                _subNodesCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
+                groupNode.SubRootNodes.ForEach(x => { _subNodesCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
+            }
+
+            return _subNodesCompletionStates.All(x => x.isComplete);
         }
 
         return false;
@@ -25,7 +33,14 @@ public class GroupNodeStateEvaluator(INode node) : INodeStateEvaluator
         if (node is GroupNode groupNode)
         {
             List<INode> result = [];
-            groupNode.SubRootNodes.ForEach(x => result.AddRange(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents).availableNodes));
+
+            if (_subNodesCompletionStates is null)
+            {
+                _subNodesCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
+                groupNode.SubRootNodes.ForEach(x => { _subNodesCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
+            }
+
+            result.AddRange(_subNodesCompletionStates.SelectMany(x => x.availableNodes));
             return (canExecute, result);
         }
 

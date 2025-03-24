@@ -20,13 +20,17 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            
-            .ContinueAnyTime<C>()
+            .Continue<A>()
+            .Continue<B>()
+            .UnlockOptional<C>()
+            .UnlockOptional<F>()
             .If(x => x.ChannelType == ChannelTypeEnum.Unclassified, x =>
                 x.Continue<D>())
-            .Continue<F>()
-            .ContinueAnyTime<C>()
-            .Continue<Z>()
+            .JumpTo<OtpValidation>()
+            .ContinueAnyTime<Z>()
+            .Continue<D>()
+            .ContinueAnyTime<B>()
+            .Continue<A>()
             .End();
 
 
@@ -51,14 +55,6 @@ public class PasswordRecovery : Aggregate
         Enqueue(@event);
         Apply(@event);
     }
-
-    //public void Initiate(string personalNumber, DateTime birthDate, ChannelTypeEnum channelType)
-    //{
-    //    Id = Guid.NewGuid();
-    //    var @event = new PasswordRecoveryInitiated(personalNumber, birthDate, channelType);
-    //    Enqueue(@event);
-    //    Apply(@event);
-    //}
 
     public void Apply(PasswordRecoveryInitiated @event)
     {

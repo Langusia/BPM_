@@ -61,7 +61,7 @@ public class BpmRepository : IBpmRepository
         return aggregate;
     }
 
-    public object? AggregateOrDefaultStreamFromRegistry(Type aggregateType, IEnumerable<object> events)
+    public object AggregateOrDefaultStreamFromRegistry(Type aggregateType, IEnumerable<object> events)
     {
         var eventList = events.ToList();
         var aggregate = CreateAggregate(aggregateType);
@@ -75,6 +75,34 @@ public class BpmRepository : IBpmRepository
         }
 
         return aggregate;
+    }
+
+    public bool TryAggregateAs<T>(out T? aggregate, IEnumerable<object> stream) where T : Aggregate
+    {
+        aggregate = null;
+        try
+        {
+            aggregate = (T)AggregateStreamFromRegistry(typeof(T), stream);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public bool TryAggregateAs(Type aggType, IEnumerable<object> stream, out Aggregate? aggregate)
+    {
+        aggregate = null;
+        try
+        {
+            aggregate = (Aggregate)AggregateStreamFromRegistry(aggType, stream);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
 
