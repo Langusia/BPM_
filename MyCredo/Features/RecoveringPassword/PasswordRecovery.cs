@@ -20,6 +20,7 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
+            .JumpTo<OtpValidation>()
             .ContinueAnyTime<D>(x =>
                 x.ContinueAnyTime<A>(x =>
                         x.ContinueAnyTime<B>())

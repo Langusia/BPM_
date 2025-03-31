@@ -16,7 +16,6 @@ public class NodeStateEvaluator(INode node) : INodeStateEvaluator
 
     public (bool, List<INode>) CanExecute(INode rootNode, List<object> storedEvents)
     {
-        var bpmEvents = storedEvents.OfType<BpmEvent>();
         if (node.PrevSteps is null || node.PrevSteps.All(x => x == null))
             return (!_containsNode, [node]);
 

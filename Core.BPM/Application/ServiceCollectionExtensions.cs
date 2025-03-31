@@ -26,7 +26,8 @@ public static class ServiceCollectionExtensions
         storeOptions.Events.MetadataConfig.HeadersEnabled = true;
         storeOptions.Events.MetadataConfig.CausationIdEnabled = true;
         storeOptions.Events.MetadataConfig.CorrelationIdEnabled = true;
-        configureMartenStore(storeOptions);
+        if (configureMartenStore is not null)
+            configureMartenStore(storeOptions);
 
         services.AddMarten(storeOptions)
             .UseLightweightSessions();
