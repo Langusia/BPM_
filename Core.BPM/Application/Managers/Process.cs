@@ -163,6 +163,11 @@ public class Process : IProcess, IProcessStore
         return Result.Success();
     }
 
+    public void ClearUncommittedEvents()
+    {
+        UncommittedEvents.Clear();
+    }
+
     public BpmResult Validate<T>(bool includeUncommitted) where T : IBaseRequest
     {
         if (CheckExpiration(out var bpmResult))

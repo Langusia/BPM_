@@ -8,10 +8,10 @@ public class BpmStore(IBpmRepository repository) : IBpmStore
 {
     private readonly Queue<IProcess> _processes = [];
 
-    public IProcess? StartProcess<T>(BpmEvent @event) where T : Aggregate
-    {
-        return StartProcess(typeof(T), @event);
-    }
+    public IProcess? StartProcess<T>() where T : Aggregate =>
+        new Process(Guid.NewGuid(), typeof(T).Name, true, null, null, null, null, repository);
+
+    public IProcess? StartProcess<T>(BpmEvent @event) where T : Aggregate => StartProcess(typeof(T), @event);
 
     public IProcess? StartProcess(Type aggregateType, BpmEvent @event)
     {

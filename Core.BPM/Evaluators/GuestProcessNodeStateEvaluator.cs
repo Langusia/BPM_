@@ -9,7 +9,7 @@ namespace Core.BPM.Evaluators;
 public class GuestProcessNodeStateEvaluator(INode node, IBpmRepository repository) : INodeStateEvaluator
 {
     private Aggregate? _aggregate;
-    private (bool isComplete, List<INode> availableNodes)? _completionState;
+    private (bool isComplete, List<INode> availableNodes) ? _completionState;
 
     public bool IsCompleted(List<object> storedEvents)
     {

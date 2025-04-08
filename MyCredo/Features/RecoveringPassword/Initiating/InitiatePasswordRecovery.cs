@@ -23,7 +23,6 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
     {
         var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, ChannelTypeEnum.MOBILE_CIB));
         process.AppendEvent(new TwoFactor.OtpSent(Guid.Empty, ""));
-
         var nexts = process.GetNextSteps();
 
 

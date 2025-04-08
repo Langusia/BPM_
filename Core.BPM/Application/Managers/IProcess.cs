@@ -47,6 +47,7 @@ public interface IProcess
 
     BpmResult ForceAppendEvents(params object[] events);
     BpmResult AppendFail<T>(string description, object data);
+    void ClearUncommittedEvents();
 
     /// <summary>
     /// Validates if the given command type can be executed within the process.
