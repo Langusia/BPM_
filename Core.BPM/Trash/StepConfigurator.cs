@@ -1,4 +1,6 @@
-﻿using MediatR;
+﻿using System;
+using System.Collections.Generic;
+using MediatR;
 
 namespace Core.BPM.Trash;
 

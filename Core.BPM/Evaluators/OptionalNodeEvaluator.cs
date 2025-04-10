@@ -1,4 +1,5 @@
-﻿using Core.BPM.Attributes;
+﻿using System.Collections.Generic;
+using Core.BPM.Attributes;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 

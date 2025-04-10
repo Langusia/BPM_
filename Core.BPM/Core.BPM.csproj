@@ -2,12 +2,12 @@
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
+        <ImplicitUsinMDgs>enable</ImplicitUsinMDgs>
         <Nullable>enable</Nullable>
         <Authors>Guram Elkanishvili</Authors>
         <Company>Credo Bank</Company>
         <Description>Credo BPM management</Description>
-        <Version>2.6.4</Version>
+        <Version>2.6.5</Version>
     </PropertyGroup>
 
     <ItemGroup>

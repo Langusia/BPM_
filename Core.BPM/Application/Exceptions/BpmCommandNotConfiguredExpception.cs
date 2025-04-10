@@ -1,4 +1,6 @@
-﻿namespace Core.BPM.Application.Exceptions;
+﻿using System;
+
+namespace Core.BPM.Application.Exceptions;
 
 public class CommandNotConfiguredException : Exception
 {

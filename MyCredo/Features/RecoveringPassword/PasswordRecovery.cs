@@ -5,6 +5,7 @@ using Core.BPM.DefinitionBuilder.Interfaces;
 using Core.BPM.Trash;
 using MyCredo.Common;
 using MyCredo.Features.Loan;
+using MyCredo.Features.Loan.OtpValidate;
 using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
 using MyCredo.Features.RecoveringPassword.Finishing;
@@ -21,6 +22,14 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
             .JumpTo<OtpValidation>()
+            .If(x => x.IsOtpValid, x =>
+                x.Group(g =>
+                    {
+                        g.AddStep<A>();
+                        g.AddStep<B>();
+                        g.AddStep<C>();
+                    }
+                ))
             .ContinueAnyTime<D>(x =>
                 x.ContinueAnyTime<A>(x =>
                         x.ContinueAnyTime<B>())
@@ -82,6 +91,11 @@ public class PasswordRecovery : Aggregate
 
     public void Apply(SecurityQuestionValidated @event)
     {
+    }
+
+    public void Apply(OtpValidated @event)
+    {
+        IsOtpValid = @event.ValidOtp;
     }
 
     public void CheckCardComplete()

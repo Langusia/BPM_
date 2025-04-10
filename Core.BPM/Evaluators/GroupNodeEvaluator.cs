@@ -1,4 +1,6 @@
-﻿using Core.BPM.Attributes;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Core.BPM.Attributes;
 using Core.BPM.Interfaces;
 using Core.BPM.Nodes;
 
@@ -29,9 +31,12 @@ public class GroupNodeStateEvaluator(INode node) : INodeStateEvaluator
         bool canExecute = !rootNode.NextSteps?.Where(z => z.CommandType != node.CommandType).Any(x => x.ContainsEvent(storedEvents)) ?? true;
         if (canExecute)
         {
-            canExecute = Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
-            if (!canExecute)
-                return (false, []);
+            if (node.PrevSteps?.All(x => x is not null) ?? false)
+            {
+                canExecute = Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
+                if (!canExecute)
+                    return (false, []);
+            }
 
             if (node is GroupNode groupNode)
             {

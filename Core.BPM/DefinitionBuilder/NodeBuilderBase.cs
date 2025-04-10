@@ -1,4 +1,6 @@
-﻿using Core.BPM.Interfaces;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Core.BPM.Interfaces;
 
 namespace Core.BPM.DefinitionBuilder;
 

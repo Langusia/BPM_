@@ -1,4 +1,6 @@
-﻿using Core.BPM.AggregateConditions;
+﻿using System;
+using System.Linq;
+using Core.BPM.AggregateConditions;
 using Core.BPM.DefinitionBuilder.Interfaces;
 using Core.BPM.Evaluators.Factory;
 using Core.BPM.Interfaces;

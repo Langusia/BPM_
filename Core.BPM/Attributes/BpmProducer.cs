@@ -1,4 +1,6 @@
-﻿namespace Core.BPM.Attributes;
+﻿using System;
+
+namespace Core.BPM.Attributes;
 
 public class BpmProducer : Attribute
 {

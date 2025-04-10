@@ -1,4 +1,6 @@
-﻿using Core.BPM.Interfaces;
+﻿using System;
+using System.Collections.Generic;
+using Core.BPM.Interfaces;
 
 namespace Core.BPM;
 

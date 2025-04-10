@@ -1,4 +1,6 @@
-﻿namespace Core.BPM.AggregateConditions;
+﻿using System;
+
+namespace Core.BPM.AggregateConditions;
 
 public interface IAggregateCondition
 {

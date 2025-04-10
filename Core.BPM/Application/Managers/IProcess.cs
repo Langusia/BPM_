@@ -1,4 +1,6 @@
-﻿using Core.BPM.Application.Events;
+﻿using System;
+using System.Collections.Generic;
+using Core.BPM.Application.Events;
 using Core.BPM.Attributes;
 using MediatR;
 using Core.BPM.Interfaces;

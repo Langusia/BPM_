@@ -1,4 +1,6 @@
-﻿namespace Core.BPM.Interfaces;
+﻿using System;
+
+namespace Core.BPM.Interfaces;
 
 public interface IAggregate
 {

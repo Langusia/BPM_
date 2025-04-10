@@ -23,14 +23,14 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
     {
         var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, ChannelTypeEnum.MOBILE_CIB));
         process.AppendEvent(new TwoFactor.OtpSent(Guid.Empty, ""));
+        process.AppendEvent(new OtpValidated(Guid.Empty, true));
         var nexts = process.GetNextSteps();
-
 
         //process!.AppendEvent(new Fd(Guid.Empty));
 
         var res = process.TryAggregateAs<PasswordRecovery>(out var agg);
 
-
+        var a = 5;
         //List<object> strs =
         //[
         //    new OtpSent(Guid.Empty, ""),

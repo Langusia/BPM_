@@ -1,4 +1,7 @@
-﻿namespace Core.BPM.Application.Managers;
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace Core.BPM.Application.Managers;
 
 public interface IProcessStore
 {

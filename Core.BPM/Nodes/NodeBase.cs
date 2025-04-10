@@ -1,4 +1,7 @@
-﻿using Core.BPM.AggregateConditions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Core.BPM.AggregateConditions;
 using Core.BPM.Attributes;
 using Core.BPM.Evaluators;
 using Core.BPM.Evaluators.Factory;

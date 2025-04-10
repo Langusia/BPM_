@@ -1,4 +1,6 @@
-﻿using Core.BPM.Evaluators;
+﻿using System;
+using System.Collections.Generic;
+using Core.BPM.Evaluators;
 using Core.BPM.AggregateConditions;
 using Core.BPM.Application.Events;
 using Core.BPM.Attributes;

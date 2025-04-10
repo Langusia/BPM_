@@ -1,4 +1,7 @@
-﻿namespace Core.BPM.Persistence;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Core.BPM.Persistence;
 
 public interface IProcessRegistryRepository
 {
