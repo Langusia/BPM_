@@ -14,12 +14,12 @@ public record InitiatePasswordRecovery(
     string PersonalNumber,
     DateTime BirthDate,
     ChannelTypeEnum ChannelType)
-    : IRequest<Guid>;
+    : IRequest<List<string>>;
 
 public class InitiatePasswordRecoveryHandler(IBpmStore store)
-    : IRequestHandler<InitiatePasswordRecovery, Guid>
+    : IRequestHandler<InitiatePasswordRecovery, List<string>>
 {
-    public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
+    public async Task<List<string>> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
         var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, ChannelTypeEnum.MOBILE_CIB));
         process.AppendEvent(new TwoFactor.OtpSent(Guid.Empty, ""));
@@ -50,6 +50,6 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
         //
 
 
-        return process.Id;
+        return nexts.Data.Select(x => x.CommandType.Name).ToList();
     }
 }

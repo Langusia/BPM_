@@ -23,21 +23,22 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
         configure.StartWith<InitiatePasswordRecovery>()
             .JumpTo<OtpValidation>()
             .If(x => x.IsOtpValid, x =>
-                x.Group(g =>
-                    {
-                        g.AddStep<A>();
-                        g.AddStep<B>();
-                        g.AddStep<C>();
-                    }
-                ))
-            .ContinueAnyTime<D>(x =>
-                x.ContinueAnyTime<A>(x =>
-                        x.ContinueAnyTime<B>())
-                    .OrAnyTime<C>(x =>
-                        x.ContinueAnyTime<D>()))
-            .OrAnyTime<F>()
-            .ContinueAnyTime<Z>(x =>
-                x.Continue<InitiatePasswordRecovery>())
+                x.If(z => !z.IsOtpValid, z =>
+                        z.Group(g =>
+                            {
+                                g.AddStep<A>();
+                                g.AddStep<B>();
+                                g.AddStep<C>();
+                            }
+                        ))
+                    .Else(e =>
+                        e.Group(z =>
+                        {
+                            z.AddStep<F>();
+                            z.AddStep<D>();
+                        })))
+            .Else(x =>
+                x.ContinueAnyTime<Z>())
             .End();
 
 

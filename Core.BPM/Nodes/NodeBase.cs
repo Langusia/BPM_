@@ -116,7 +116,8 @@ public abstract class NodeBase : INode
     private INode _currNext;
     private bool _isComplete;
 
-    public (bool isComplete, List<INode> availableNodes) GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents)
+    public (bool isComplete, List<INode> availableNodes) GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents,
+        List<(string, INode, bool isCompleted, bool canExec, List<INode> availableNodes)>? res = null)
     {
         int eventHash = storedEvents?.Count > 0 ? storedEvents.GetHashCode() : 0;
         var cacheKey = (this, eventHash);
@@ -124,10 +125,11 @@ public abstract class NodeBase : INode
         if (_cache.TryGetValue(cacheKey, out var cachedResult))
             return cachedResult;
 
-        return this.CheckBranchCompletionAndGetAvailableNodes(this, storedEvents);
+        return this.CheckBranchCompletionAndGetAvailableNodes(this, storedEvents, res);
     }
 
-    public (bool isComplete, List<INode> availableNodes) CheckBranchCompletionAndGetAvailableNodes(INode start, List<object> storedEvents)
+    public (bool isComplete, List<INode> availableNodes) CheckBranchCompletionAndGetAvailableNodes(INode start, List<object> storedEvents,
+        List<(string, INode, bool isCompleted, bool canExec, List<INode> availableNodes)>? res = null)
     {
         List<INode> availableNodes = [];
         bool isAnyBranchComplete = false;
@@ -147,6 +149,7 @@ public abstract class NodeBase : INode
                 availableNodes.AddRange(nodesToAdd);
             }
 
+            res?.Add(new ValueTuple<string, INode, bool, bool, List<INode>>(node.CommandType.Name, node, nodeCompleted, canExecute.canExec, canExecute.availableNodes));
             foreach (var next in node.NextSteps ?? [])
             {
                 Traverse(node, next);

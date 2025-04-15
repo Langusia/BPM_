@@ -15,7 +15,7 @@ public interface INode
     public List<Type> ProducingEvents { get; }
     List<INode>? NextSteps { get; set; }
     void AddNextStep(INode node);
-    List<INode>? PrevSteps { get; set; }
+    List<INode?>? PrevSteps { get; set; }
     void SetPrevSteps(List<INode>? nodes);
     INode? FindNextNode(string eventName);
     INodeStateEvaluator GetEvaluator();
@@ -23,6 +23,10 @@ public interface INode
     bool ContainsEvent(List<object> @events);
     bool ContainsNodeEvent(BpmEvent @event);
     List<INode> GetAllNodes();
-    (bool isComplete, List<INode> availableNodes) CheckBranchCompletionAndGetAvailableNodes(INode start, List<object> storedEvents);
-    (bool isComplete, List<INode> availableNodes) GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents);
+
+    (bool isComplete, List<INode> availableNodes) CheckBranchCompletionAndGetAvailableNodes(INode start, List<object> storedEvents,
+        List<(string, INode, bool isCompleted, bool canExec, List<INode> availableNodes)>? res = null);
+
+    (bool isComplete, List<INode> availableNodes) GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents,
+        List<(string, INode, bool isCompleted, bool canExec, List<INode> availableNodes)>? res = null);
 }

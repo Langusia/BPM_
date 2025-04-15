@@ -12,7 +12,7 @@ namespace Core.BPM.Evaluators;
 public class GuestProcessNodeStateEvaluator(INode node, IBpmRepository repository) : INodeStateEvaluator
 {
     private Aggregate? _aggregate;
-    private (bool isComplete, List<INode> availableNodes) ? _completionState;
+    private (bool isComplete, List<INode> availableNodes)? _completionState;
 
     public bool IsCompleted(List<object> storedEvents)
     {
@@ -56,7 +56,7 @@ public class GuestProcessNodeStateEvaluator(INode node, IBpmRepository repositor
                 result.AddRange(_completionState.Value.availableNodes);
 
                 if (explicitCompletion.HasValue)
-                    return (canExecute, explicitCompletion.Value && processNode.SealedSteps ? [] : result);
+                    return (canExecute && !explicitCompletion.Value, explicitCompletion.Value && processNode.SealedSteps ? [] : result);
 
                 return (canExecute, _completionState.Value.isComplete && processNode.SealedSteps ? [] : result);
             }

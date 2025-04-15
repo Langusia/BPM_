@@ -199,7 +199,8 @@ public class Process : IProcess, IProcessStore
         if (includeUnsavedEvents)
             stream = MergedWithUncommitted();
 
-        var result = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
+        var res = new List<(string, INode, bool isCompleted, bool canExec, List<INode> availableNodes)>();
+        var result = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream, res);
         AvailableSteps = result.availableNodes;
         return Result.Success(result.availableNodes.Distinct().ToList());
     }
