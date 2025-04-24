@@ -5,6 +5,7 @@ using Core.BPM.DefinitionBuilder.Interfaces;
 using Core.BPM.Trash;
 using MyCredo.Common;
 using MyCredo.Features.Loan;
+using MyCredo.Features.Loan.OtpSend;
 using MyCredo.Features.Loan.OtpValidate;
 using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
@@ -21,24 +22,14 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            .JumpTo<OtpValidation>()
-            .If(x => x.IsOtpValid, x =>
-                x.If(z => !z.IsOtpValid, z =>
-                        z.Group(g =>
-                            {
-                                g.AddStep<A>();
-                                g.AddStep<B>();
-                                g.AddStep<C>();
-                            }
-                        ))
-                    .Else(e =>
-                        e.Group(z =>
-                        {
-                            z.AddStep<F>();
-                            z.AddStep<D>();
-                        })))
-            .Else(x =>
-                x.ContinueAnyTime<Z>())
+            .Continue<SendOtp>()
+            .Continue<Loan.OtpValidate.ValidateOtp>()
+            .If(x => !x.IsOtpValid, x =>
+                x.If(x => !x.IsOtpValid, z =>
+                        z.Continue<A>())
+                    .If(x => x.IsOtpValid, z =>
+                        z.Continue<B>()))
+            .Else(z => z.Continue<Z>())
             .End();
 
 
