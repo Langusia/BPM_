@@ -169,6 +169,13 @@ public class ProcessBuilder<TProcess>(INode rootNode, BProcess process, INodeEva
         return Or(node, configure);
     }
 
+    public IProcessNodeModifiableBuilder<TProcess> OrJumpTo<TAggregate>(bool sealedSteps = true) where TAggregate : Aggregate
+    {
+        var processNode = new GuestProcessNode(typeof(TAggregate), sealedSteps, ProcessConfig.ProcessType, nodeEvaluatorFactory);
+
+        return Or(processNode);
+    }
+
     public ProcessConfig<TProcess> End(Action<BProcessConfig>? configureProcess)
     {
         var res = GetConfiguredProcessRootReverse();

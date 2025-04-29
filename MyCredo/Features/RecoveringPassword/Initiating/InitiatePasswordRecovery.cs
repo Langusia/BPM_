@@ -22,8 +22,7 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
     public async Task<List<string>> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
         var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, ChannelTypeEnum.MOBILE_CIB));
-        process.AppendEvent(new TwoFactor.OtpSent(Guid.Empty, ""));
-        process.AppendEvent(new OtpValidated(Guid.Empty, true));
+        var ress = process.AppendEvent(new Zd(process.Id));
         var nexts = process.GetNextSteps();
 
         //process!.AppendEvent(new Fd(Guid.Empty));
@@ -31,25 +30,6 @@ public class InitiatePasswordRecoveryHandler(IBpmStore store)
         var res = process.TryAggregateAs<PasswordRecovery>(out var agg);
 
         var a = 5;
-        //List<object> strs =
-        //[
-        //    new OtpSent(Guid.Empty, ""),
-        //    new OtpSent(Guid.Empty, ""),
-        //    new OtpSent(Guid.Empty, ""),
-        //    new OtpSent(Guid.Empty, ""),
-        //    new OtpValidated(Guid.Empty, false),
-        //    new OtpValidated(Guid.Empty, false),
-        //    new OtpValidated(Guid.Empty, false)
-        //];
-        //Queue<object> strsQ = [];
-        //var s = strs.Union(strsQ);
-        //var pr = await store.FetchProcessAsync(Guid.Empty, cancellationToken);
-        //process.AppendEvents(new Ad(Guid.Empty));
-        //process.AppendEvents(new Bd(Guid.Empty));
-        //process.AppendEvents(new Cd(Guid.Empty));
-        //
-
-
         return nexts.Data.Select(x => x.CommandType.Name).ToList();
     }
 }

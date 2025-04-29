@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Core.BPM.Attributes;
 using Core.BPM.Configuration;
@@ -22,6 +23,23 @@ public class GuestProcessNode(Type guestProcessType, bool sealedSteps, Type proc
 
         // Check if the event belongs to any node in this aggregate's process
         return config.RootNode.GetAllNodes().Any(node => node.ContainsEvent(@event));
+    }
+
+    public virtual bool ContainsEvent(List<object> events)
+    {
+        var config = BProcessGraphConfiguration.GetConfig(GuestProcessType.Name);
+        if (config is null)
+            throw new NoDefinitionFoundException(GuestProcessType.Name);
+
+        // Check if the event belongs to any node in this aggregate's process
+        var roots = config.RootNode.GetAllNodes();
+        foreach (object @event in events)
+        {
+            if (roots.Any(node => node.ContainsEvent(@event)))
+                return true;
+        }
+
+        return false;
     }
 
     public override bool ContainsNodeEvent(BpmEvent @event)

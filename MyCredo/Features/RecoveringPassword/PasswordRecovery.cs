@@ -22,14 +22,10 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            .Continue<SendOtp>()
-            .Continue<Loan.OtpValidate.ValidateOtp>()
-            .If(x => !x.IsOtpValid, x =>
-                x.If(x => !x.IsOtpValid, z =>
-                        z.Continue<A>())
-                    .If(x => x.IsOtpValid, z =>
-                        z.Continue<B>()))
-            .Else(z => z.Continue<Z>())
+            .Continue<Z>()
+            
+            .Continue<A>()
+            .OrJumpTo<OtpValidation>()
             .End();
 
 

@@ -51,7 +51,7 @@ public abstract class NodeBase : INode
     public virtual INodeStateEvaluator GetEvaluator() => _nodeEvaluatorFactory.CreateEvaluator(this);
     public virtual bool ContainsEvent(object @event) => GetCommandProducer(CommandType).EventTypes.Select(x => x.Name).Contains(@event.GetType().Name);
 
-    public bool ContainsEvent(List<object> events)
+    public virtual bool ContainsEvent(List<object> events)
     {
         var evts = GetCommandProducer(CommandType).EventTypes.Select(x => x.Name);
         return events.Select(x => x.GetType().Name).Any(x => evts.Contains(x));
