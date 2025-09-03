@@ -1,25 +1,16 @@
 using Core.BPM.Application;
-using Marten.Events.Projections;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MyCredo.Common;
 using MyCredo.Features.Loan;
 using MyCredo.Features.Loan.ConfirmLoanRequest;
-using MyCredo.Features.Loan.Initiating;
 using MyCredo.Features.Loan.LoanV9;
-using MyCredo.Features.Loan.OtpValidate;
 using MyCredo.Features.Loan.UploadImage;
 using MyCredo.Features.Loann;
 using MyCredo.Features.RecoveringPassword;
-using MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
 using MyCredo.Features.RecoveringPassword.CheckingCard;
-using MyCredo.Features.RecoveringPassword.Finishing;
-using MyCredo.Features.RecoveringPassword.GetUserData;
 using MyCredo.Features.RecoveringPassword.Initiating;
 using MyCredo.Features.TwoFactor;
-using MyCredo.Retail.Loan.Application.Features.IssueLoanProcess.CreditCard.GetLimits;
-using MyCredo.Retail.Loan.Application.Features.IssueLoanProcess.CreditCard.Initiating;
-using OtpSent = MyCredo.Features.TwoFactor.OtpSent;
 using ValidateOtp = MyCredo.Features.TwoFactor.ValidateOtp;
 
 
@@ -35,6 +26,7 @@ builder.Services.AddBpm("bpm", "Host = 10.195.105.11;Database = MyCredoRetailLoa
         x.AddAggregateDefinition<PasswordRecovery, PasswordRecoveryDefinition>();
         x.AddAggregateDefinition<OtpValidation, OtpValidationDefinition>();
         x.AddAggregate<TwoFactor>();
+        x.AddAggregateDefinition<RequestDigitalLoan, RequestDigitalLoanDefinition>();
         //x.AddAggregateDefinition<IssueCreditCard, IssueCreditCardDefinition>();
     }
 );
@@ -51,9 +43,24 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
+app.MapPost("playground/query",
+        async ([FromBody] Q requestLoan, IMediator mediator) => await mediator.Send(requestLoan))
+    .WithName("aaa")
+    .WithOpenApi();
+
+app.MapPost("playground/query2",
+        async ([FromBody] Q2 requestLoan, IMediator mediator) => await mediator.Send(requestLoan))
+    .WithName("aaa2")
+    .WithOpenApi();
+
+app.MapPost("playground/do/init-dl",
+        async ([FromBody] B requestLoan, IMediator mediator) => await mediator.Send(requestLoan))
+    .WithName("confirmLbbbboanRequest")
+    .WithOpenApi();
+
 app.MapPost("car/loan/confirm",
         async ([FromBody] ConfirmLoanRequest requestLoan, IMediator mediator) => await mediator.Send(requestLoan))
-    .WithName("confirmLoanRequest")
+    .WithName("confirmcccLoanRequest")
     .WithOpenApi();
 
 

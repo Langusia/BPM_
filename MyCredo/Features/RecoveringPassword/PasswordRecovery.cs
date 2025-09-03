@@ -22,10 +22,12 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 {
     public override ProcessConfig<PasswordRecovery> DefineProcess(IProcessBuilder<PasswordRecovery> configure) =>
         configure.StartWith<InitiatePasswordRecovery>()
-            .Continue<Z>()
-            
-            .Continue<A>()
-            .OrJumpTo<OtpValidation>()
+            .If(x => !x.Initiated, y =>
+                y.Continue<A>()
+                    .Continue<B>())
+            .ContinueAnyTime<C>()
+            .If(x => x.IsCd, y =>
+                y.ContinueAnyTime<Z>())
             .End();
 
 
@@ -39,39 +41,16 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
 
 public class PasswordRecovery : Aggregate
 {
-    public PasswordRecovery()
-    {
-    }
-
-    public PasswordRecovery(string personalNumber, DateTime birthDate, ChannelTypeEnum channelType)
-    {
-        Id = Guid.NewGuid();
-        var @event = new PasswordRecoveryInitiated(personalNumber, birthDate, channelType);
-        Enqueue(@event);
-        Apply(@event);
-    }
+    public bool Initiated { get; set; }
 
     public void Apply(PasswordRecoveryInitiated @event)
     {
         PersonalNumber = @event.PersonalNumber;
         BirthDate = @event.BirthDate;
         ChannelType = @event.ChannelType;
+        Initiated = @event.Initiated;
     }
 
-    public PasswordRecovery Initiate(string personalNumber, DateTime birthDate, ChannelTypeEnum channelType)
-    {
-        var @event = new PasswordRecoveryInitiated(personalNumber, birthDate, channelType);
-        Enqueue(@event);
-        Apply(@event);
-        return new(personalNumber, birthDate, channelType);
-    }
-
-    public void ValidateSecurityQuestion()
-    {
-        var @event = new SecurityQuestionValidated();
-        Enqueue(@event);
-        Apply(@event);
-    }
 
     public void Apply(ValidateOtp.OtpSent @event)
     {
@@ -158,7 +137,12 @@ public class PasswordRecovery : Aggregate
         IsOtpValid = @event.IsValid;
     }
 
+    public void Apply(Cd @event)
+    {
+        IsCd = @event.IsCd;
+    }
 
+    public bool IsCd { get; set; }
     public string PersonalNumber { get; set; }
     public DateTime BirthDate { get; set; }
     public ChannelTypeEnum ChannelType { get; set; }

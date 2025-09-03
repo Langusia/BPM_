@@ -15,7 +15,7 @@ public record CheckCardInitiateHandler(IBpmStore store) : IRequestHandler<CheckC
     public async Task<bool> Handle(CheckCardInitiate request, CancellationToken cancellationToken)
     {
         var process = await store.FetchProcessAsync(request.DocumentId, cancellationToken);
-        var res = process!.AppendEvent(new Cd(Guid.Empty));
+        var res = process!.AppendEvent(new Cd(Guid.Empty, true));
 
         var nexts = process.GetNextSteps();
 

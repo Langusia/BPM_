@@ -1,11 +1,8 @@
 ﻿using Core.BPM.Application.Managers;
 using Core.BPM.Attributes;
-using Marten;
 using MediatR;
 using MyCredo.Common;
-using MyCredo.Features.Loan.OtpValidate;
 using MyCredo.Features.TwoFactor;
-using OtpSent = MyCredo.Features.Loan.OtpSend.OtpSent;
 
 namespace MyCredo.Features.RecoveringPassword.Initiating;
 
@@ -14,22 +11,32 @@ public record InitiatePasswordRecovery(
     string PersonalNumber,
     DateTime BirthDate,
     ChannelTypeEnum ChannelType)
-    : IRequest<List<string>>;
+    : IRequest<Guid>;
 
 public class InitiatePasswordRecoveryHandler(IBpmStore store)
-    : IRequestHandler<InitiatePasswordRecovery, List<string>>
+    : IRequestHandler<InitiatePasswordRecovery, Guid>
 {
-    public async Task<List<string>> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
+    public async Task<Guid> Handle(InitiatePasswordRecovery request, CancellationToken cancellationToken)
     {
-        var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, ChannelTypeEnum.MOBILE_CIB));
-        var ress = process.AppendEvent(new Zd(process.Id));
-        var nexts = process.GetNextSteps();
+        var process = store.StartProcess<PasswordRecovery>(new PasswordRecoveryInitiated(request.PersonalNumber, request.BirthDate, ChannelTypeEnum.MOBILE_CIB, false));
+        var s = process!.GetNextSteps();
+        process.AppendEvent(new Ad(process.Id));
+        s = process!.GetNextSteps();
+        process.AppendEvent(new Bd(process.Id));
+        s = process!.GetNextSteps();
+        process.AppendEvent(new Cd(process.Id, true));
+        s = process!.GetNextSteps();
+        if (!process.TryAggregateAs<PasswordRecovery>(out var a))
+        {
+            var ss = 1;
+        }
 
-        //process!.AppendEvent(new Fd(Guid.Empty));
+        var r = process.AppendEvent(new Zd(process.Id));
+        s = process!.GetNextSteps();
 
-        var res = process.TryAggregateAs<PasswordRecovery>(out var agg);
+        await store.SaveChangesAsync(cancellationToken);
 
-        var a = 5;
-        return nexts.Data.Select(x => x.CommandType.Name).ToList();
+
+        return process.Id;
     }
 }

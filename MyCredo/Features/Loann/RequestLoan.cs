@@ -4,6 +4,7 @@ using Core.BPM.DefinitionBuilder;
 using Core.BPM.DefinitionBuilder.Interfaces;
 using MyCredo.Common;
 using MyCredo.Features.Loan;
+using MyCredo.Features.TwoFactor;
 
 namespace MyCredo.Features.Loann;
 
@@ -22,7 +23,7 @@ public class RequestDigitalLoan : Aggregate
     public int UserId { get; set; }
     public bool HasGracePeriod { get; set; }
     public int? GracePeriod { get; set; }
-
+    public Guid SomeId { get; set; }
 
     public RequestDigitalLoan()
     {
@@ -105,6 +106,12 @@ public class RequestDigitalLoan : Aggregate
         NotCheckInRs = @event.NotCheckInRs;
     }
 
+    public void Apply(Bd @event)
+    {
+        SomeId = @event.DocumentId;
+    }
+
+
     public void Apply(ConfirmedDigitalLoan @event)
     {
         Channel = @event.Channel;
@@ -124,9 +131,7 @@ public class RequestDigitalLoanDefinition : BpmDefinition<RequestDigitalLoan>
     public override ProcessConfig<RequestDigitalLoan> DefineProcess(IProcessBuilder<RequestDigitalLoan> configureProcess)
     {
         return configureProcess
-            .StartWith<DigitalLoanInitiate>()
-            .Continue<ConfirmDigitalLoan>()
-            .Continue<FinishDigitalLoan>()
+            .StartWith<B>()
             .End();
     }
 }

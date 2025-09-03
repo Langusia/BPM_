@@ -75,7 +75,7 @@ public class BpmRepository : IBpmRepository
         {
             var applyMethod = _registry.GetApplyMethodOrNull(aggregateType, @event.GetType());
             if (applyMethod is null)
-                return aggregate;
+                continue;
             applyMethod(aggregate, @event);
         }
 
