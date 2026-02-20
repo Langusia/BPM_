@@ -1,10 +1,12 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.BPM", "Core.BPM\Core.BPM.csproj", "{14701BEF-21E0-4C78-8989-F893D9DD95F3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BPM.Core", "BPM.Core\BPM.Core.csproj", "{14701BEF-21E0-4C78-8989-F893D9DD95F3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{25B58FB8-9134-4FAE-A3EF-CE26792800FE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BPM.Client", "BPM.Client\BPM.Client.csproj", "{A1C2D3E4-F5A6-47B8-9C0D-1E2F3A4B5C6D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BPM.Tests", "BPM.Tests\BPM.Tests.csproj", "{B2C3D4E5-F6A7-48B9-AC0D-2E3F4A5B6C7D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +22,10 @@ Global
 		{A1C2D3E4-F5A6-47B8-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1C2D3E4-F5A6-47B8-9C0D-1E2F3A4B5C6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1C2D3E4-F5A6-47B8-9C0D-1E2F3A4B5C6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2C3D4E5-F6A7-48B9-AC0D-2E3F4A5B6C7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2C3D4E5-F6A7-48B9-AC0D-2E3F4A5B6C7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2C3D4E5-F6A7-48B9-AC0D-2E3F4A5B6C7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2C3D4E5-F6A7-48B9-AC0D-2E3F4A5B6C7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A1C2D3E4-F5A6-47B8-9C0D-1E2F3A4B5C6D} = {25B58FB8-9134-4FAE-A3EF-CE26792800FE}

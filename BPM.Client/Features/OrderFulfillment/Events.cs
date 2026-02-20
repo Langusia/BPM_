@@ -1,4 +1,4 @@
-using Core.BPM.Events;
+using BPM.Core.Events;
 
 namespace BPM.Client.Features.OrderFulfillment;
 
