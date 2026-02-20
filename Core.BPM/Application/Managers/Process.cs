@@ -84,7 +84,6 @@ public class Process : IProcess, IProcessStore
             var stream = StoredEvents;
             if (includeUncommitted)
                 stream = MergedWithUncommitted();
-            ;
 
             aggregate = (T)_repository.AggregateStreamFromRegistry(typeof(T), stream);
             aggregate.Id = Id;
