@@ -26,12 +26,24 @@ public class ConditionalBuilder<TProcess>(
 
     public IProcessNodeModifiableBuilder<TProcess> Else(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure)
     {
+        var elseBuilder = new ProcessBuilder<TProcess>(null, process, nodeEvaluatorFactory);
+        var configuredBranch = configure.Invoke(elseBuilder);
+        return ElseCore((NodeBuilderBase)configuredBranch);
+    }
+
+    public IProcessNodeModifiableBuilder<TProcess> Else(Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeNonModifiableBuilder<TProcess>> configure)
+    {
+        var elseBuilder = new ProcessBuilder<TProcess>(null, process, nodeEvaluatorFactory);
+        var configuredBranch = configure.Invoke(elseBuilder);
+        return ElseCore((NodeBuilderBase)configuredBranch);
+    }
+
+    private IProcessNodeModifiableBuilder<TProcess> ElseCore(NodeBuilderBase configuredBranch)
+    {
         HashSet<INode> visited = [];
         var r = new List<INode>();
 
-        var elseBuilder = new ProcessBuilder<TProcess>(null, process, nodeEvaluatorFactory);
-        var configuredBranch = configure.Invoke(elseBuilder);
-        var elseNodes = ((NodeBuilderBase)configuredBranch).CurrentBranchInstances;
+        var elseNodes = configuredBranch.CurrentBranchInstances;
         IterateConfiguredProcessRoot(elseNodes, r, visited, -depthCounter * 1000);
 
         nodeToConfigure.ElseNodeRoots = r;

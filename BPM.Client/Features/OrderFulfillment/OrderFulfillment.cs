@@ -110,7 +110,7 @@ public class OrderFulfillmentDefinition : BpmDefinition<OrderFulfillment>
             .Continue<VerifyOrder>()
             .Continue<ProcessPayment>()
             .If(x => x.IsPaid, branch =>
-                branch.Continue<ShipOrder>())
+                branch.UnlockOptional<ShipOrder>())
             .Continue<CompleteOrder>()
             .End();
     }

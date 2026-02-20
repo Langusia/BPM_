@@ -55,6 +55,18 @@ public interface IProcessNodeInitialBuilder<TProcess> : IProcessNodeBuilder<TPro
         Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeModifiableBuilder<TProcess>> configure) where T : Aggregate;
 
     /// <summary>
+    /// Creates a conditional branch based on the current process state, allowing non-modifiable builders (e.g. UnlockOptional) as the branch result.
+    /// </summary>
+    IConditionalModifiableBuilder<TProcess> If(Predicate<TProcess> predicate,
+        Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeNonModifiableBuilder<TProcess>> configure);
+
+    /// <summary>
+    /// Creates a conditional branch based on a different process's state, allowing non-modifiable builders (e.g. UnlockOptional) as the branch result.
+    /// </summary>
+    IConditionalModifiableBuilder<TProcess> If<T>(Predicate<T> predicate,
+        Func<IProcessNodeInitialBuilder<TProcess>, IProcessNodeNonModifiableBuilder<TProcess>> configure) where T : Aggregate;
+
+    /// <summary>
     /// Adds a command node that must be executed in sequence within the process.
     /// </summary>
     /// <typeparam name="TCommand">The type of command to execute.</typeparam>
