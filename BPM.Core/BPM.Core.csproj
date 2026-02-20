@@ -6,15 +6,27 @@
         <Nullable>enable</Nullable>
         <Authors>Guram Elkanishvili</Authors>
         <Company></Company>
-        <Description>Business Process Management engine</Description>
+        <Description>A lightweight, code-first Business Process Management engine for .NET. Define stateful workflows as directed graphs using a fluent builder API, execute them step-by-step with event sourcing, and let the engine enforce ordering, branching, and validation at runtime.</Description>
         <Version>2.6.9</Version>
+        <PackageId>BPM.Core</PackageId>
+        <PackageTags>bpm;workflow;process;event-sourcing;state-machine;orchestration;marten;mediatr</PackageTags>
+        <PackageProjectUrl>https://github.com/Langusia/BPM_</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Langusia/BPM_</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>logo.png</PackageIcon>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Marten" Version="7.7.0"/>                                
-        <PackageReference Include="MediatR" Version="14.0.0" />                                
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-preview.1.26104.118" />                                
+        <PackageReference Include="Marten" Version="7.7.0"/>
+        <PackageReference Include="MediatR" Version="14.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-preview.1.26104.118" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="..\assets\logo.png" Pack="true" PackagePath="" />
+        <None Include="..\README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
 
 </Project>
