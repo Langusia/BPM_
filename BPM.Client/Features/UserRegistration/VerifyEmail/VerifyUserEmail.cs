@@ -1,4 +1,4 @@
-using Core.BPM.Application.Managers;
+using Core.BPM.Process;
 using Core.BPM.Attributes;
 using MediatR;
 
@@ -7,7 +7,7 @@ namespace BPM.Client.Features.UserRegistration.VerifyEmail;
 [BpmProducer(typeof(EmailVerified))]
 public record VerifyUserEmail(Guid ProcessId) : IRequest;
 
-public class VerifyUserEmailHandler(IBpmStore store) : IRequestHandler<VerifyUserEmail>
+public class VerifyUserEmailHandler(IProcessStore store) : IRequestHandler<VerifyUserEmail>
 {
     public async Task Handle(VerifyUserEmail request, CancellationToken cancellationToken)
     {

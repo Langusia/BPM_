@@ -1,4 +1,4 @@
-using Core.BPM.Application.Managers;
+using Core.BPM.Process;
 using Core.BPM.Attributes;
 using MediatR;
 
@@ -7,7 +7,7 @@ namespace BPM.Client.Features.OrderFulfillment.Verification;
 [BpmProducer(typeof(OrderVerified))]
 public record VerifyOrder(Guid ProcessId) : IRequest;
 
-public class VerifyOrderHandler(IBpmStore store) : IRequestHandler<VerifyOrder>
+public class VerifyOrderHandler(IProcessStore store) : IRequestHandler<VerifyOrder>
 {
     public async Task Handle(VerifyOrder request, CancellationToken cancellationToken)
     {

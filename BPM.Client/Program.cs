@@ -1,4 +1,4 @@
-using Core.BPM.Application;
+using Core.BPM;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using BPM.Client.Features.OrderFulfillment;

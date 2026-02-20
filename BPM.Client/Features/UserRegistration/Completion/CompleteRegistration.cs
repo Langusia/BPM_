@@ -1,4 +1,4 @@
-using Core.BPM.Application.Managers;
+using Core.BPM.Process;
 using Core.BPM.Attributes;
 using MediatR;
 
@@ -7,7 +7,7 @@ namespace BPM.Client.Features.UserRegistration.Completion;
 [BpmProducer(typeof(RegistrationCompleted))]
 public record CompleteRegistration(Guid ProcessId) : IRequest;
 
-public class CompleteRegistrationHandler(IBpmStore store) : IRequestHandler<CompleteRegistration>
+public class CompleteRegistrationHandler(IProcessStore store) : IRequestHandler<CompleteRegistration>
 {
     public async Task Handle(CompleteRegistration request, CancellationToken cancellationToken)
     {

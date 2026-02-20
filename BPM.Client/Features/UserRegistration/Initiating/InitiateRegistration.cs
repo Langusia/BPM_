@@ -1,5 +1,6 @@
-using Core.BPM.Application.Managers;
+using Core.BPM.Process;
 using Core.BPM.Attributes;
+using Core.BPM.Events;
 using MediatR;
 
 namespace BPM.Client.Features.UserRegistration.Initiating;
@@ -7,7 +8,7 @@ namespace BPM.Client.Features.UserRegistration.Initiating;
 [BpmProducer(typeof(RegistrationInitiated))]
 public record InitiateRegistration(string Email, string FullName) : IRequest<Guid>;
 
-public class InitiateRegistrationHandler(IBpmStore store) : IRequestHandler<InitiateRegistration, Guid>
+public class InitiateRegistrationHandler(IProcessStore store) : IRequestHandler<InitiateRegistration, Guid>
 {
     public async Task<Guid> Handle(InitiateRegistration request, CancellationToken cancellationToken)
     {

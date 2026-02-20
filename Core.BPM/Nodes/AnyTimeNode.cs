@@ -1,8 +1,5 @@
-﻿using System;
-using Core.BPM.Application.Managers;
-using Core.BPM.Evaluators;
-using Core.BPM.Evaluators.Factory;
-using Core.BPM.Interfaces;
+using System;
+using Core.BPM.Nodes.Evaluation;
 
 namespace Core.BPM.Nodes;
 

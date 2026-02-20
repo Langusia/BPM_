@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Core.BPM.Registry;
+using Core.BPM.Process;
 using Marten;
 using Marten.Events;
 
@@ -110,7 +109,6 @@ public class BpmRepository : IBpmRepository
         }
     }
 
-
     public async Task AppendEvents(Guid aggregateId, object[] events, bool newStream = true, Dictionary<string, object>? headers = null, CancellationToken ct = default)
     {
         if (events.Any())
@@ -155,5 +153,3 @@ public class BpmRepository : IBpmRepository
         return FastActivator.CreateAggregate(aggregateType);
     }
 }
-
-public interface IBpmRepository : IEventStoreRepository, IProcessRegistryRepository;

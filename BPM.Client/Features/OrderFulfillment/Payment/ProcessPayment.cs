@@ -1,4 +1,4 @@
-using Core.BPM.Application.Managers;
+using Core.BPM.Process;
 using Core.BPM.Attributes;
 using MediatR;
 
@@ -7,7 +7,7 @@ namespace BPM.Client.Features.OrderFulfillment.Payment;
 [BpmProducer(typeof(PaymentProcessed))]
 public record ProcessPayment(Guid ProcessId, decimal Amount) : IRequest<bool>;
 
-public class ProcessPaymentHandler(IBpmStore store) : IRequestHandler<ProcessPayment, bool>
+public class ProcessPaymentHandler(IProcessStore store) : IRequestHandler<ProcessPayment, bool>
 {
     public async Task<bool> Handle(ProcessPayment request, CancellationToken cancellationToken)
     {
