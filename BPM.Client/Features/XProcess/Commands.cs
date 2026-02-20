@@ -1,4 +1,4 @@
-using Core.BPM.Attributes;
+using BPM.Core.Attributes;
 using MediatR;
 
 namespace BPM.Client.Features.XProcess;

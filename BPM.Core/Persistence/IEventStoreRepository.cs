@@ -1,0 +1,16 @@
+using BPM.Core.Process;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Marten.Events;
+
+namespace BPM.Core.Persistence;
+
+public interface IEventStoreRepository
+{
+    Task<IReadOnlyList<IEvent>> FetchStreamAsync(Guid id, CancellationToken ct);
+    Task<T?> AggregateStreamAsync<T>(Guid id, CancellationToken ct) where T : Aggregate;
+    Task AppendEvents(Guid aggregateId, object[] events, bool newStream = true, Dictionary<string, object>? headers = null, CancellationToken ct = default);
+    Task SaveChangesAsync(CancellationToken ct = default);
+}

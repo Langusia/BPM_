@@ -1,9 +1,0 @@
-using System;
-using Core.BPM.Nodes.Evaluation;
-
-namespace Core.BPM.Nodes;
-
-public class Node(Type commandType, Type processType, INodeEvaluatorFactory nodeEvaluatorFactory) : NodeBase(commandType, processType, nodeEvaluatorFactory)
-{
-    public override INodeStateEvaluator GetEvaluator() => new NodeStateEvaluator(this);
-}

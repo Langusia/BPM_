@@ -1,6 +1,6 @@
-using Core.BPM.Process;
-using Core.BPM.Attributes;
-using Core.BPM.Events;
+using BPM.Core.Process;
+using BPM.Core.Attributes;
+using BPM.Core.Events;
 using MediatR;
 
 namespace BPM.Client.Features.UserRegistration.Initiating;
