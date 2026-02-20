@@ -2,7 +2,6 @@
 using Core.BPM.Application;
 using Core.BPM.DefinitionBuilder;
 using Core.BPM.DefinitionBuilder.Interfaces;
-using Core.BPM.Trash;
 using MyCredo.Common;
 using MyCredo.Features.Loan;
 using MyCredo.Features.Loan.OtpSend;
@@ -30,13 +29,6 @@ public class PasswordRecoveryDefinition : BpmDefinition<PasswordRecovery>
                 y.ContinueAnyTime<Z>())
             .End();
 
-
-    public override void ConfigureSteps(StepConfigurator<PasswordRecovery> stepConfigurator)
-    {
-        stepConfigurator.Configure<GenerateOtp>()
-            .SetProcessPreCondition(x => x.ChannelType == ChannelTypeEnum.Unclassified)
-            .SetMaxCount(3);
-    }
 }
 
 public class PasswordRecovery : Aggregate
