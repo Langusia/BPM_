@@ -90,4 +90,3 @@ app.MapPost("/x/run",
     .WithOpenApi();
 
 app.Run();
-app.Run();
