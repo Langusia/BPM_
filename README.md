@@ -1,6 +1,19 @@
-# BPM.Core
+<p align="center">
+  <img src="assets/logo.png" alt="BPM.Core Logo" width="200" />
+</p>
 
-A lightweight, code-first Business Process Management engine for .NET. Define stateful workflows as directed graphs using a fluent builder API, execute them step-by-step with event sourcing, and let the engine enforce ordering, branching, and validation at runtime.
+<h1 align="center">BPM.Core</h1>
+
+<p align="center">
+  A lightweight, code-first Business Process Management engine for .NET.<br/>
+  Define stateful workflows as directed graphs using a fluent builder API, execute them step-by-step with event sourcing, and let the engine enforce ordering, branching, and validation at runtime.
+</p>
+
+<p align="center">
+  <a href="https://www.nuget.org/packages/BPM.Core"><img src="https://img.shields.io/nuget/v/BPM.Core.svg" alt="NuGet" /></a>
+  <a href="https://www.nuget.org/packages/BPM.Core"><img src="https://img.shields.io/nuget/dt/BPM.Core.svg" alt="NuGet Downloads" /></a>
+  <a href="https://github.com/Langusia/BPM_/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" /></a>
+</p>
 
 Built on [Marten](https://martendb.io/) (PostgreSQL event store) and [MediatR](https://github.com/jbogard/MediatR).
 
