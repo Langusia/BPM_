@@ -12,6 +12,7 @@ using BPM.Client.Features.UserRegistration.Initiating;
 using BPM.Client.Features.UserRegistration.VerifyEmail;
 using BPM.Client.Features.UserRegistration.SetupProfile;
 using BPM.Client.Features.UserRegistration.Completion;
+using BPM.Client.Features.XProcess;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,7 @@ builder.Services.AddBpm("bpm", builder.Configuration.GetConnectionString("Bpm")!
     {
         x.AddAggregateDefinition<OrderFulfillment, OrderFulfillmentDefinition>();
         x.AddAggregateDefinition<UserRegistration, UserRegistrationDefinition>();
+        x.AddAggregateDefinition<XAggregate, XAggregateDefinition>();
     }
 );
 
@@ -81,4 +83,11 @@ app.MapPost("/registration/complete",
     .WithName("CompleteRegistration")
     .WithOpenApi();
 
+// XProcess endpoint
+app.MapPost("/x/run",
+        async ([FromBody] S1 request, IMediator mediator) => await mediator.Send(request))
+    .WithName("RunXProcess")
+    .WithOpenApi();
+
+app.Run();
 app.Run();
