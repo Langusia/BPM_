@@ -1,4 +1,4 @@
-using Core.BPM.Application.Managers;
+using Core.BPM.Process;
 using Core.BPM.Attributes;
 using MediatR;
 
@@ -7,7 +7,7 @@ namespace BPM.Client.Features.OrderFulfillment.Shipping;
 [BpmProducer(typeof(OrderShipped))]
 public record ShipOrder(Guid ProcessId) : IRequest;
 
-public class ShipOrderHandler(IBpmStore store) : IRequestHandler<ShipOrder>
+public class ShipOrderHandler(IProcessStore store) : IRequestHandler<ShipOrder>
 {
     public async Task Handle(ShipOrder request, CancellationToken cancellationToken)
     {

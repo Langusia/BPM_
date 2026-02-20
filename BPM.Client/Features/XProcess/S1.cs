@@ -1,5 +1,6 @@
-using Core.BPM.Application.Managers;
+using Core.BPM.Process;
 using Core.BPM.Attributes;
+using Core.BPM.Events;
 using MediatR;
 
 namespace BPM.Client.Features.XProcess;
@@ -7,7 +8,7 @@ namespace BPM.Client.Features.XProcess;
 [BpmProducer(typeof(S1Completed))]
 public record S1(string Name) : IRequest<Guid>;
 
-public class S1Handler(IBpmStore store) : IRequestHandler<S1, Guid>
+public class S1Handler(IProcessStore store) : IRequestHandler<S1, Guid>
 {
     public async Task<Guid> Handle(S1 request, CancellationToken cancellationToken)
     {

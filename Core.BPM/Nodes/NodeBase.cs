@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Core.BPM.AggregateConditions;
+using Core.BPM.Definition.Conditions;
+using Core.BPM.Events;
+using Core.BPM.Nodes.Evaluation;
 using Core.BPM.Attributes;
-using Core.BPM.Evaluators;
-using Core.BPM.Evaluators.Factory;
-using Core.BPM.Interfaces;
 
 namespace Core.BPM.Nodes;
 

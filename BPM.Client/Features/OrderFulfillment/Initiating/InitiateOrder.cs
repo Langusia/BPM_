@@ -1,5 +1,6 @@
-using Core.BPM.Application.Managers;
+using Core.BPM.Process;
 using Core.BPM.Attributes;
+using Core.BPM.Events;
 using MediatR;
 
 namespace BPM.Client.Features.OrderFulfillment.Initiating;
@@ -7,7 +8,7 @@ namespace BPM.Client.Features.OrderFulfillment.Initiating;
 [BpmProducer(typeof(OrderInitiated))]
 public record InitiateOrder(string CustomerName, string ProductSku, int Quantity, decimal TotalAmount) : IRequest<Guid>;
 
-public class InitiateOrderHandler(IBpmStore store) : IRequestHandler<InitiateOrder, Guid>
+public class InitiateOrderHandler(IProcessStore store) : IRequestHandler<InitiateOrder, Guid>
 {
     public async Task<Guid> Handle(InitiateOrder request, CancellationToken cancellationToken)
     {

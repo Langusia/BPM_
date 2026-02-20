@@ -1,7 +1,6 @@
-using Core.BPM;
-using Core.BPM.Application;
-using Core.BPM.DefinitionBuilder;
-using Core.BPM.DefinitionBuilder.Interfaces;
+using Core.BPM.Process;
+using Core.BPM.Definition;
+using Core.BPM.Definition.Interfaces;
 using BPM.Client.Features.UserRegistration.Initiating;
 using BPM.Client.Features.UserRegistration.VerifyEmail;
 using BPM.Client.Features.UserRegistration.SetupProfile;

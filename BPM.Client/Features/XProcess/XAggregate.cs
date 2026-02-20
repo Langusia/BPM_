@@ -1,7 +1,6 @@
-using Core.BPM;
-using Core.BPM.Application;
-using Core.BPM.DefinitionBuilder;
-using Core.BPM.DefinitionBuilder.Interfaces;
+using Core.BPM.Process;
+using Core.BPM.Definition;
+using Core.BPM.Definition.Interfaces;
 
 namespace BPM.Client.Features.XProcess;
 
