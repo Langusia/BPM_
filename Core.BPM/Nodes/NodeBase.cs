@@ -119,7 +119,9 @@ public abstract class NodeBase : INode
     public (bool isComplete, List<INode> availableNodes) GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents,
         List<(string, INode, bool isCompleted, bool canExec, List<INode> availableNodes)>? res = null)
     {
-        int eventHash = storedEvents?.Count > 0 ? storedEvents.GetHashCode() : 0;
+        int eventHash = 0;
+        foreach (var e in storedEvents)
+            eventHash = HashCode.Combine(eventHash, e.GetType().GetHashCode(), (e as BpmEvent)?.NodeId ?? 0);
         var cacheKey = (this, eventHash);
 
         if (_cache.TryGetValue(cacheKey, out var cachedResult))

@@ -5,8 +5,8 @@
         <ImplicitUsinMDgs>enable</ImplicitUsinMDgs>
         <Nullable>enable</Nullable>
         <Authors>Guram Elkanishvili</Authors>
-        <Company>Credo Bank</Company>
-        <Description>Credo BPM management</Description>
+        <Company></Company>
+        <Description>Business Process Management engine</Description>
         <Version>2.6.9</Version>
     </PropertyGroup>
 
@@ -15,17 +15,5 @@
         <PackageReference Include="Marten" Version="7.7.0"/>                                
     </ItemGroup>
 
-    <ItemGroup>
-        <Compile Remove="Nodes\Evaluators\**"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <EmbeddedResource Remove="Nodes\Evaluators\**"/>
-
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Remove="Nodes\Evaluators\**"/>
-    </ItemGroup>
 
 </Project>
