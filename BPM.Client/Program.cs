@@ -29,12 +29,9 @@ builder.Services.AddBpm("bpm", builder.Configuration.GetConnectionString("Bpm")!
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseHttpsRedirection();
 
 // Order Fulfillment endpoints
