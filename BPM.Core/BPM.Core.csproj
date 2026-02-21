@@ -5,7 +5,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Authors>Guram Elkanishvili</Authors>
-        <Company></Company>
         <Description>A lightweight, code-first Business Process Management engine for .NET. Define stateful workflows as directed graphs using a fluent builder API, execute them step-by-step with event sourcing, and let the engine enforce ordering, branching, and validation at runtime.</Description>
         <Version>2.6.9</Version>
         <PackageId>BPM.Core</PackageId>
