@@ -2,7 +2,6 @@ using Core.BPM;
 using Core.BPM.Application;
 using Core.BPM.DefinitionBuilder;
 using Core.BPM.DefinitionBuilder.Interfaces;
-using Core.BPM.Trash;
 using BPM.Client.Features.OrderFulfillment.Initiating;
 using BPM.Client.Features.OrderFulfillment.Verification;
 using BPM.Client.Features.OrderFulfillment.Payment;
@@ -115,9 +114,4 @@ public class OrderFulfillmentDefinition : BpmDefinition<OrderFulfillment>
             .End();
     }
 
-    public override void ConfigureSteps(StepConfigurator<OrderFulfillment> stepConfigurator)
-    {
-        stepConfigurator.Configure<ProcessPayment>()
-            .SetMaxCount(3);
-    }
 }
