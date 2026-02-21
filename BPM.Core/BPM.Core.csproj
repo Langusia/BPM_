@@ -7,7 +7,7 @@
         <Authors>Guram Elkanishvili</Authors>
         <Description>A lightweight, code-first Business Process Management engine for .NET. Define stateful workflows as directed graphs using a fluent builder API, execute them step-by-step with event sourcing, and let the engine enforce ordering, branching, and validation at runtime.</Description>
         <Version>2.6.9</Version>
-        <PackageId>BPM.Core</PackageId>
+        <PackageId>BPM_.Core</PackageId>
         <PackageTags>bpm;workflow;process;event-sourcing;state-machine;orchestration;marten;mediatr</PackageTags>
         <PackageProjectUrl>https://github.com/Langusia/BPM_</PackageProjectUrl>
         <RepositoryUrl>https://github.com/Langusia/BPM_</RepositoryUrl>
