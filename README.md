@@ -56,7 +56,7 @@ Install-Package BPM_.Core
 Dependencies (included automatically):
 
 - [Marten](https://www.nuget.org/packages/Marten) >= 7.7.0
-- [MediatR](https://www.nuget.org/packages/MediatR) >= 14.0.0
+- [MediatR](https://www.nuget.org/packages/MediatR) >= 12.5.0
 - [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection) >= 8.0.0
 - [Microsoft.Extensions.Logging](https://www.nuget.org/packages/Microsoft.Extensions.Logging) >= 8.0.0
 
@@ -617,8 +617,8 @@ This project depends on the following open-source packages:
 | Package | License | Link |
 |---------|---------|------|
 | [Marten](https://martendb.io/) | MIT | [License](https://github.com/JasperFx/marten/blob/master/LICENSE) |
-| [MediatR](https://github.com/jbogard/MediatR) | RPL-1.5 / Commercial | [License](https://github.com/jbogard/MediatR/blob/master/LICENSE) |
+| [MediatR](https://github.com/jbogard/MediatR) | MIT | [License](https://github.com/jbogard/MediatR/blob/master/LICENSE) |
 | [Microsoft.Extensions.DependencyInjection](https://dot.net) | MIT | [License](https://licenses.nuget.org/MIT) |
 | [Microsoft.Extensions.Logging](https://dot.net) | MIT | [License](https://licenses.nuget.org/MIT) |
 
-> **Note:** MediatR v13+ is licensed under the [Reciprocal Public License 1.5 (RPL-1.5)](https://opensource.org/licenses/RPL-1.5) with a commercial license option available from [Jimmy Bogard / Lucky Penny Software](https://www.jimmybogard.com/automapper-and-mediatr-commercial-editions-launch-today/). A free Community edition is available for smaller companies, non-profits, and educational use. See the MediatR repository for details.
+> **Note:** This project pins MediatR to v12.x, which is MIT-licensed. MediatR v13+ changed to [RPL-1.5](https://opensource.org/licenses/RPL-1.5) with a commercial option. We stay on 12.x to keep the entire dependency tree MIT-compatible.
