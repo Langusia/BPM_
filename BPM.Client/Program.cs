@@ -13,11 +13,11 @@ using BPM.Client.Features.UserRegistration.VerifyEmail;
 using BPM.Client.Features.UserRegistration.SetupProfile;
 using BPM.Client.Features.UserRegistration.Completion;
 using BPM.Client.Features.XProcess;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi();
 builder.Services.AddMediatR(c => { c.RegisterServicesFromAssembly(typeof(Program).Assembly); });
 
 builder.Services.AddBpm("bpm", builder.Configuration.GetConnectionString("Bpm")!,
@@ -32,8 +32,8 @@ builder.Services.AddBpm("bpm", builder.Configuration.GetConnectionString("Bpm")!
 var app = builder.Build();
 
 
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapOpenApi();
+app.MapScalarApiReference();
 app.UseHttpsRedirection();
 
 // Order Fulfillment endpoints
