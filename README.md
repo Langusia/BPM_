@@ -10,9 +10,10 @@
 </p>
 
 <p align="center">
-  <a href="https://www.nuget.org/packages/BPM.Core"><img src="https://img.shields.io/nuget/v/BPM.Core.svg" alt="NuGet" /></a>
-  <a href="https://www.nuget.org/packages/BPM.Core"><img src="https://img.shields.io/nuget/dt/BPM.Core.svg" alt="NuGet Downloads" /></a>
+  <a href="https://www.nuget.org/packages/BPM_.Core"><img src="https://img.shields.io/nuget/v/BPM_.Core.svg" alt="NuGet" /></a>
+  <a href="https://www.nuget.org/packages/BPM_.Core"><img src="https://img.shields.io/nuget/dt/BPM_.Core.svg" alt="NuGet Downloads" /></a>
   <a href="https://github.com/Langusia/BPM_/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" /></a>
+  <img src="https://img.shields.io/badge/.NET-8.0%20%7C%209.0%20%7C%2010.0-512BD4" alt=".NET 8 | 9 | 10" />
 </p>
 
 Built on [Marten](https://martendb.io/) (PostgreSQL event store) and [MediatR](https://github.com/jbogard/MediatR).
@@ -34,20 +35,30 @@ Built on [Marten](https://martendb.io/) (PostgreSQL event store) and [MediatR](h
 - [Running a Process](#running-a-process)
 - [Complex Branching Example](#complex-branching-example)
 - [API Reference](#api-reference)
+- [License](#license)
 
 ## Installation
 
-Add a project reference to `BPM.Core`:
+Install from NuGet:
 
-```xml
-<ProjectReference Include="..\BPM.Core\BPM.Core.csproj" />
+```bash
+dotnet add package BPM_.Core
 ```
 
-Required packages (already included in BPM.Core):
+Or via the Package Manager Console:
 
-- `Marten` 7.7.0
-- `MediatR` 14.0.0
-- `Microsoft.Extensions.DependencyInjection`
+```powershell
+Install-Package BPM_.Core
+```
+
+**Supported frameworks:** .NET 8.0 | .NET 9.0 | .NET 10.0
+
+Dependencies (included automatically):
+
+- [Marten](https://www.nuget.org/packages/Marten) >= 7.7.0
+- [MediatR](https://www.nuget.org/packages/MediatR) >= 14.0.0
+- [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection) >= 8.0.0
+- [Microsoft.Extensions.Logging](https://www.nuget.org/packages/Microsoft.Extensions.Logging) >= 8.0.0
 
 ## Quick Start
 
@@ -597,4 +608,17 @@ Host=localhost;Port=5432;Database=bpm_db;Username=bpm_user;Password=bpm_password
 
 ## License
 
-See LICENSE file for details.
+BPM.Core is licensed under the [MIT License](https://github.com/Langusia/BPM_/blob/main/LICENSE).
+
+### Third-Party Licenses
+
+This project depends on the following open-source packages:
+
+| Package | License | Link |
+|---------|---------|------|
+| [Marten](https://martendb.io/) | MIT | [License](https://github.com/JasperFx/marten/blob/master/LICENSE) |
+| [MediatR](https://github.com/jbogard/MediatR) | RPL-1.5 / Commercial | [License](https://github.com/jbogard/MediatR/blob/master/LICENSE) |
+| [Microsoft.Extensions.DependencyInjection](https://dot.net) | MIT | [License](https://licenses.nuget.org/MIT) |
+| [Microsoft.Extensions.Logging](https://dot.net) | MIT | [License](https://licenses.nuget.org/MIT) |
+
+> **Note:** MediatR v13+ is licensed under the [Reciprocal Public License 1.5 (RPL-1.5)](https://opensource.org/licenses/RPL-1.5) with a commercial license option available from [Jimmy Bogard / Lucky Penny Software](https://www.jimmybogard.com/automapper-and-mediatr-commercial-editions-launch-today/). A free Community edition is available for smaller companies, non-profits, and educational use. See the MediatR repository for details.
