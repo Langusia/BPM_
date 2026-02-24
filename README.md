@@ -56,7 +56,7 @@ Install-Package BPM_.Core
 Dependencies (included automatically):
 
 - [Marten](https://www.nuget.org/packages/Marten) >= 7.7.0
-- [MediatR](https://www.nuget.org/packages/MediatR) >= 12.5.0
+- [MediatR.Contracts](https://www.nuget.org/packages/MediatR.Contracts) >= 2.0.1
 - [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection) >= 8.0.0
 - [Microsoft.Extensions.Logging](https://www.nuget.org/packages/Microsoft.Extensions.Logging) >= 8.0.0
 
@@ -617,8 +617,8 @@ This project depends on the following open-source packages:
 | Package | License | Link |
 |---------|---------|------|
 | [Marten](https://martendb.io/) | MIT | [License](https://github.com/JasperFx/marten/blob/master/LICENSE) |
-| [MediatR](https://github.com/jbogard/MediatR) | MIT | [License](https://github.com/jbogard/MediatR/blob/master/LICENSE) |
+| [MediatR.Contracts](https://github.com/jbogard/MediatR) | MIT | [License](https://github.com/jbogard/MediatR/blob/master/LICENSE) |
 | [Microsoft.Extensions.DependencyInjection](https://dot.net) | MIT | [License](https://licenses.nuget.org/MIT) |
 | [Microsoft.Extensions.Logging](https://dot.net) | MIT | [License](https://licenses.nuget.org/MIT) |
 
-> **Note:** This project pins MediatR to v12.x, which is MIT-licensed. MediatR v13+ changed to [RPL-1.5](https://opensource.org/licenses/RPL-1.5) with a commercial option. We stay on 12.x to keep the entire dependency tree MIT-compatible.
+> **Note:** BPM.Core depends only on `MediatR.Contracts` (interfaces-only, MIT-licensed) — not the full MediatR package. Your application brings in whichever MediatR version it prefers.
