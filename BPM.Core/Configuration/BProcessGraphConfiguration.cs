@@ -34,6 +34,8 @@ public static class BProcessGraphConfiguration
         return bpmProcess;
     }
 
+    public static List<BProcess>? GetAllProcesses() => _processes;
+
     public static void AddProcess(BProcess processToAdd)
     {
         _processes ??= [];

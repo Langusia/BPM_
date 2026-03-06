@@ -64,4 +64,11 @@ public interface IProcess
     /// <param name="includeUncommittedEvents">Whether to consider unsaved events in the computation.</param>
     /// <returns>A list of next possible steps, or null if no steps are available.</returns>
     BpmResult<List<INode>?> GetNextSteps(bool includeUncommittedEvents = true);
+
+    /// <summary>
+    /// Returns node IDs in format {CommandName}_{NodeLevel} for UI rendering.
+    /// </summary>
+    /// <param name="includeUncommittedEvents">Whether to include uncommitted events in the computation.</param>
+    /// <returns>A list of available step IDs.</returns>
+    BpmResult<List<string>> GetAvailableStepIds(bool includeUncommittedEvents = true);
 }

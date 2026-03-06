@@ -12,7 +12,7 @@ namespace BPM.Core;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddBpm(this IServiceCollection services, string dbSchemeName, string connectionString, Action<IBpmConfiguration>? configure = null,
+    public static IServiceCollection AddBpm(this IServiceCollection services, string dbSchemeName, string connectionString, Action<IBpmConfiguration>? configure = null,
         Action<StoreOptions>? configureMartenStore = null)
     {
         var storeOptions = new StoreOptions
@@ -35,6 +35,7 @@ public static class ServiceCollectionExtensions
         var registry = new ProcessRegistry();
         services.TryAddSingleton(registry);
         configure?.Invoke(new BpmConfiguration(registry, services.BuildServiceProvider()));
+        return services;
     }
 }
 

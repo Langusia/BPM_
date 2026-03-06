@@ -16,6 +16,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\BPM.Core\BPM.Core.csproj" />
+        <ProjectReference Include="..\BPM.UI\BPM.UI.csproj" />
     </ItemGroup>
 
 </Project>
