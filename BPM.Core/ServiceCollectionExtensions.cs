@@ -3,6 +3,7 @@ using BPM.Core.Process;
 using BPM.Core.Definition;
 using BPM.Core.Nodes.Evaluation;
 using BPM.Core.Persistence;
+using JasperFx;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;

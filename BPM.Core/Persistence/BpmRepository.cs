@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BPM.Core.Process;
+using JasperFx.Events;
 using Marten;
 using Marten.Events;
 

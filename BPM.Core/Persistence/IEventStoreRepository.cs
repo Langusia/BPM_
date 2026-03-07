@@ -3,6 +3,7 @@ using BPM.Core.Process;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using JasperFx.Events;
 using Marten.Events;
 
 namespace BPM.Core.Persistence;
