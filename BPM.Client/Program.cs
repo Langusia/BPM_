@@ -1,4 +1,7 @@
 using BPM.Core;
+using BPM.UI;
+using BPM.UI.Endpoints;
+using BPM.UI.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using BPM.Client.Features.OrderFulfillment;
@@ -27,7 +30,21 @@ builder.Services.AddBpm("bpm", builder.Configuration.GetConnectionString("Bpm")!
         x.AddAggregateDefinition<UserRegistration, UserRegistrationDefinition>();
         x.AddAggregateDefinition<XAggregate, XAggregateDefinition>();
     }
-);
+).UseUi(ui =>
+{
+    ui.UseConvention(cmd => cmd
+        .RemoveCommandSuffix()
+        .ToKebabCase()
+        .WithPrefix("/api")
+    );
+
+    ui.MapAggregate<OrderFulfillment>(commands =>
+    {
+        commands.Map<ProcessPayment>("/orders/pay");
+    });
+
+    ui.MapCommand<ShipOrder>("/orders/ship");
+});
 
 var app = builder.Build();
 
@@ -35,6 +52,13 @@ var app = builder.Build();
 app.MapOpenApi();
 app.MapScalarApiReference();
 app.UseHttpsRedirection();
+
+app.MapBpmUi();
+
+if (app.Environment.IsDevelopment())
+{
+    app.StartFrontendDevServer("BPM.UI/frontend");
+}
 
 // Order Fulfillment endpoints
 app.MapPost("/orders/initiate",

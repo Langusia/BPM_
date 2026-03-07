@@ -203,6 +203,21 @@ public class Process : IProcess
         return Result.Success(result.availableNodes.Distinct().ToList());
     }
 
+    public BpmResult<List<string>> GetAvailableStepIds(bool includeUncommittedEvents = true)
+    {
+        var stream = StoredEvents;
+        if (includeUncommittedEvents)
+            stream = MergedWithUncommitted();
+
+        var result = _processConfig.RootNode.GetCheckBranchCompletionAndGetAvailableNodesFromCache(stream);
+        AvailableSteps = result.availableNodes;
+        var stepIds = result.availableNodes
+            .Distinct()
+            .Select(n => $"{n.CommandType.Name}_{n.NodeLevel}")
+            .ToList();
+        return Result.Success(stepIds);
+    }
+
 
     public async Task AppendUncommittedToDb(CancellationToken ct)
     {

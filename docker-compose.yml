@@ -1,3 +1,5 @@
+name: bpm
+
 services:
   postgres:
     image: postgres:17-alpine
