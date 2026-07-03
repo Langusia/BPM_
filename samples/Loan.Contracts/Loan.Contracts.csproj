@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <!--
+      Deliberately references BPM.Contracts and MediatR.Contracts ONLY.
+      This assembly proves that annotated command records compile without the engine.
+    -->
+    <ItemGroup>
+        <ProjectReference Include="..\..\BPM.Contracts\BPM.Contracts.csproj" />
+        <PackageReference Include="MediatR.Contracts" Version="2.0.1" />
+    </ItemGroup>
+
+</Project>
