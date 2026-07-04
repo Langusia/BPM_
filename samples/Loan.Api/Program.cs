@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using BPM.Core;
 using BPM.Mcp;
@@ -39,8 +40,10 @@ builder.Services.AddMediatR(c =>
 
 // Host-level auth: the MCP endpoint sits behind the app's normal JWT auth.
 // BPM.Mcp only reads HttpContext.User; it never validates tokens itself.
+// The configured secret is hashed so any non-empty string yields a valid
+// 256-bit HS256 key (the raw value may be too short for the algorithm).
 var signingKey = new SymmetricSecurityKey(
-    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"]!));
+    SHA256.HashData(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"]!)));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
