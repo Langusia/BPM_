@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 using BPM.Core;
 using BPM.Mcp;
 using Loan.Api;
@@ -10,8 +11,13 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Same enum-as-string convention as the MCP channel.
+builder.Services.ConfigureHttpJsonOptions(o =>
+    o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
 {
@@ -64,6 +70,15 @@ builder.Services.AddBpm("bpm", builder.Configuration.GetConnectionString("Bpm")!
 
 var app = builder.Build();
 
+// Dev convenience: Marten creates schemas and tables, but never the database
+// itself. Provision it so a plain `docker compose up postgres` is enough.
+if (app.Environment.IsDevelopment() && app.Configuration.GetValue("Bpm:EnsureDatabase", true))
+{
+    await EnsureDatabaseExistsAsync(
+        app.Configuration.GetConnectionString("Bpm")!,
+        app.Logger);
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -98,5 +113,31 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+
+static async Task EnsureDatabaseExistsAsync(string connectionString, ILogger logger)
+{
+    var database = new NpgsqlConnectionStringBuilder(connectionString).Database!;
+    var admin = new NpgsqlConnectionStringBuilder(connectionString) { Database = "postgres" };
+    try
+    {
+        await using var connection = new NpgsqlConnection(admin.ConnectionString);
+        await connection.OpenAsync();
+        await using var exists = new NpgsqlCommand(
+            "SELECT 1 FROM pg_database WHERE datname = @name", connection);
+        exists.Parameters.AddWithValue("name", database);
+        if (await exists.ExecuteScalarAsync() is null)
+        {
+            await using var create = new NpgsqlCommand($"CREATE DATABASE \"{database}\"", connection);
+            await create.ExecuteNonQueryAsync();
+            logger.LogInformation("Created database {Database}.", database);
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex,
+            "Could not verify that database {Database} exists. " +
+            "If Postgres is not running, start it with `docker compose up -d postgres`.", database);
+    }
+}
 
 public partial class Program;

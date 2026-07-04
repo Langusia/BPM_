@@ -22,6 +22,7 @@ public sealed class LoanApiFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseSetting("Bpm:EnsureDatabase", "false"); // in-memory tests never touch Postgres
         builder.ConfigureServices(services =>
         {
             services.AddSingleton(EventStore);
