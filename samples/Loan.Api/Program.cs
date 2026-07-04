@@ -8,8 +8,28 @@ using Loan.Contracts;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
+{
+    document.Components ??= new OpenApiComponents();
+    document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+    document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "Paste the output of GET /dev-token"
+    };
+    document.Security ??= [];
+    document.Security.Add(new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+    });
+    return Task.CompletedTask;
+}));
 
 builder.Services.AddMediatR(c =>
 {
@@ -36,10 +56,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddBpm("bpm", builder.Configuration.GetConnectionString("Bpm")!,
         x => x.AddAggregateDefinition<LoanApplication, LoanApplicationDefinition>())
     .UseMcp(mcp => mcp
-        .WithIdentity<UserContext>(user => new UserContext(
-            user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub") ?? "unknown",
-            user.FindFirstValue(ClaimTypes.Name) ?? user.FindFirstValue("name") ?? "Unknown User",
-            user.FindFirstValue(ClaimTypes.Email) ?? user.FindFirstValue("email")))
+        .WithIdentity<UserContext>(LoanEndpoints.MapUser)
         .WithAgentSpecsFromAssembly(typeof(UserContext).Assembly));
 
 var app = builder.Build();
@@ -48,6 +65,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapMcp("/mcp").RequireAuthorization();
+
+app.MapOpenApi();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/openapi/v1.json", "Loan.Api");
+});
+
+app.MapLoanEndpoints();
 
 if (app.Environment.IsDevelopment())
 {
