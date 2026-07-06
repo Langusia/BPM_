@@ -95,7 +95,8 @@ app.MapLoanEndpoints();
 if (app.Environment.IsDevelopment())
 {
     // Dev-token endpoint for MCP Inspector / Claude Desktop testing only.
-    app.MapGet("/dev-token", (string? name) =>
+    // Long-lived (7 days) so a demo setup survives the week; pass ?hours= to shorten.
+    app.MapGet("/dev-token", (string? name, int? hours) =>
     {
         var token = new JwtSecurityToken(
             issuer: "loan-api-dev",
@@ -106,7 +107,7 @@ if (app.Environment.IsDevelopment())
                 new Claim(ClaimTypes.Name, name ?? "Nino Beridze"),
                 new Claim(ClaimTypes.Email, "nino.beridze@example.com")
             ],
-            expires: DateTime.UtcNow.AddHours(8),
+            expires: DateTime.UtcNow.AddHours(hours is > 0 ? hours.Value : 24 * 7),
             signingCredentials: new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256));
         return new JwtSecurityTokenHandler().WriteToken(token);
     });
