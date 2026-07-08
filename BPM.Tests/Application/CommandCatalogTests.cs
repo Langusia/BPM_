@@ -13,7 +13,7 @@ public class CommandCatalogTests : GraphTestBase
     }
 
     [Fact]
-    public void ProcessTypes_ListsRegisteredAggregatesWithCommands()
+    public void ProcessTypes_ListsRegisteredAggregatesWithEntryCommandsOnly()
     {
         var service = CreateService(out var catalog);
 
@@ -21,9 +21,12 @@ public class CommandCatalogTests : GraphTestBase
 
         Assert.Equal(2, types.Count);
         var ticket = types.Single(t => t.Name == nameof(Ticket));
+        // Only the initial (entry) command is listed; continuation commands
+        // (AddNote, EscalateTicket, CloseTicket) are discovered via next-steps.
         Assert.Equal(
-            [nameof(OpenTicket), nameof(AddNote), nameof(EscalateTicket), nameof(CloseTicket)],
-            ticket.Commands.Select(c => c.Name).ToArray());
+            [nameof(OpenTicket)],
+            ticket.EntryCommands.Select(c => c.Name).ToArray());
+        Assert.All(ticket.EntryCommands, c => Assert.True(c.IsInitial));
         Assert.Equal(2, catalog.ProcessTypes.Count);
     }
 

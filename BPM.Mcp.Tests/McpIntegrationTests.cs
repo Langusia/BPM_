@@ -219,7 +219,7 @@ public class McpIntegrationTests : IClassFixture<LoanApiFactory>
     }
 
     [Fact]
-    public async Task ListProcessTypes_DescribesTheLoanProcess()
+    public async Task ListProcessTypes_DescribesTheLoanProcessAndItsEntryCommand()
     {
         await using var client = await CreateMcpClientAsync();
 
@@ -231,10 +231,12 @@ public class McpIntegrationTests : IClassFixture<LoanApiFactory>
         Assert.Contains("loan", loan.GetProperty("description").GetString()!,
             StringComparison.OrdinalIgnoreCase);
 
-        var commands = loan.GetProperty("commands").EnumerateArray().ToList();
-        var disburse = commands.Single(c => c.GetProperty("name").GetString() == "DisburseLoan");
-        Assert.Equal("humanOnly", disburse.GetProperty("policy").GetString());
-        Assert.False(disburse.GetProperty("executableByAgent").GetBoolean());
+        // Only entry commands are listed: the initial command is present ...
+        var commands = loan.GetProperty("entryCommands").EnumerateArray().ToList();
+        var initiate = commands.Single(c => c.GetProperty("name").GetString() == "InitiateLoanApplication");
+        Assert.True(initiate.GetProperty("isInitial").GetBoolean());
+        // ... and non-initial commands (e.g. DisburseLoan) are not surfaced here.
+        Assert.DoesNotContain(commands, c => c.GetProperty("name").GetString() == "DisburseLoan");
     }
 
     [Fact]

@@ -41,7 +41,7 @@ public static class AgentErrorCodes
 public sealed record ProcessTypeSummary(
     string Name,
     string? Description,
-    IReadOnlyList<CommandSummary> Commands);
+    IReadOnlyList<CommandSummary> EntryCommands);
 
 /// <summary>
 /// A command as presented to agents in listings and next-step results.

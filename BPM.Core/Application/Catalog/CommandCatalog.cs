@@ -82,13 +82,12 @@ public sealed class CommandCatalog : ICommandCatalog
             .Cast<BpmDescriptionAttribute>()
             .FirstOrDefault()?.Description;
 
-        // Commands available on an empty stream are exactly the ones that can
-        // start a new instance.
-        var initialCommandTypes = process.RootNode
-            .CheckBranchCompletionAndGetAvailableNodes(process.RootNode, [])
-            .availableNodes
-            .Select(n => n.CommandType)
-            .ToHashSet();
+        // The command that starts an instance is the graph's single structural entry
+        // point: the StartWith / StartWithAnyTime root. The builder guarantees every
+        // process begins with exactly one StartWith and unlocks the rest only after it,
+        // so this is read straight from the definition — no aggregate, and no empty-stream
+        // traversal (which would evaluate conditional predicates against unpopulated state).
+        var initialCommandTypes = new HashSet<Type> { process.RootNode.CommandType };
 
         var commands = process.RootNode.GetAllNodes()
             .Where(n => n.CommandType is not null && HasProducer(n.CommandType))

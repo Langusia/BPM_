@@ -80,7 +80,10 @@ public sealed class CommandMetadataResolver(AgentSpecRegistry specs, BpmIdentity
     }
 
     // A single-language attribute value becomes the default variant of a LocalizedText.
-    private static LocalizedText? Loc(string? text) => text is null ? null : text;
+    // Build it explicitly: `text is null ? null : text` would collapse to string and run the
+    // implicit operator on null, yielding a non-null LocalizedText with a null Default.
+    private static LocalizedText? Loc(string? text) =>
+        text is null ? null : new LocalizedText().Set(LocalizedText.DefaultLanguage, text);
 
     private static TAttribute? Attr<TAttribute>(MemberInfo member) where TAttribute : Attribute =>
         member.GetCustomAttributes(typeof(TAttribute), false).Cast<TAttribute>().FirstOrDefault();

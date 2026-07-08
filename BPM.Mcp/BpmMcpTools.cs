@@ -34,8 +34,10 @@ public sealed class BpmMcpTools(IAgentProcessService service, IHttpContextAccess
         "execution, only the descriptive text returned. Defaults to English.";
 
     [McpServerTool(Name = "bpm_list_process_types", ReadOnly = true, Idempotent = true)]
-    [Description("Lists every business process type this service hosts, with each process's commands, " +
-                 "their execution policy, and which commands can start a new instance.")]
+    [Description("Lists every business process type this service hosts, each with only its initial " +
+                 "(entry) commands — the ones that can start a new instance — and their execution policy. " +
+                 "This is the process catalog and entry-point locator; to discover the commands available " +
+                 "after a process has started, call bpm_get_next_steps on the instance.")]
     public string ListProcessTypes(
         [Description(LanguageParam)] string language = "en") =>
         Ok(service.ListProcessTypes(language));

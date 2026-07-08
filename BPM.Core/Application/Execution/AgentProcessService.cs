@@ -30,12 +30,16 @@ public sealed class AgentProcessService(
 {
     private readonly CommandArgumentBinder _binder = new();
 
+    // Process list = catalog + entry locator: only the entry command is listed — the
+    // StartWith root, which is always the first command in the graph's node order.
+    // Purely structural: no aggregate, no traversal. Subsequent commands are discovered
+    // contextually via GetNextSteps, so branchy processes don't bloat this listing.
     public IReadOnlyList<ProcessTypeSummary> ListProcessTypes(string? language = null) =>
         catalog.ProcessTypes
             .Select(p => new ProcessTypeSummary(
                 p.Name,
                 p.Description,
-                p.Commands.Select(c => Summarize(c, language)).ToList()))
+                p.Commands.Where(x=>x.IsInitial).Select(c => Summarize(c, language)).ToList()))
             .ToList();
 
     public async Task<AgentResult<ProcessStateResult>> GetProcessAsync(Guid processId, CancellationToken ct, string? language = null)
