@@ -13,9 +13,9 @@ namespace BPM.Core.Application.Metadata;
 public sealed record CommandMetadata(
     string Name,
     Type CommandType,
-    string? Description,
+    LocalizedText? Description,
     ExecutionPolicy Policy,
-    string? SuccessCriteria,
+    LocalizedText? SuccessCriteria,
     IReadOnlyList<FieldMetadata> Fields);
 
 /// <summary>Merged metadata for a single command property.</summary>
@@ -23,8 +23,8 @@ public sealed record FieldMetadata(
     string Name,
     PropertyInfo Property,
     FieldRole Role,
-    string? Description,
-    string? SourceHint,
+    LocalizedText? Description,
+    LocalizedText? SourceHint,
     bool Required,
     string? Pattern,
     double? Minimum,

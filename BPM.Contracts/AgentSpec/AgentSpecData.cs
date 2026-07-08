@@ -7,9 +7,9 @@ namespace BPM.Contracts;
 /// </summary>
 public sealed class AgentSpecData
 {
-    public string? Description { get; set; }
+    public LocalizedText? Description { get; set; }
     public ExecutionPolicy? Policy { get; set; }
-    public string? SuccessCriteria { get; set; }
+    public LocalizedText? SuccessCriteria { get; set; }
     public Dictionary<string, AgentFieldData> Fields { get; } = new(StringComparer.Ordinal);
 
     public AgentFieldData GetOrAddField(string propertyName)
@@ -23,8 +23,8 @@ public sealed class AgentSpecData
 /// <summary>Per-field metadata collected from a fluent agent spec.</summary>
 public sealed class AgentFieldData
 {
-    public string? Description { get; set; }
-    public string? SourceHint { get; set; }
+    public LocalizedText? Description { get; set; }
+    public LocalizedText? SourceHint { get; set; }
     public FieldRole? Role { get; set; }
     public bool? Required { get; set; }
     public string? Pattern { get; set; }

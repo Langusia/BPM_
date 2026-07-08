@@ -21,7 +21,7 @@ public sealed class CommandMetadataResolver(AgentSpecRegistry specs, BpmIdentity
         var spec = specs.Find(commandType);
 
         var description = spec?.Description
-                          ?? Attr<BpmDescriptionAttribute>(commandType)?.Description;
+                          ?? Loc(Attr<BpmDescriptionAttribute>(commandType)?.Description);
         var policy = spec?.Policy
                      ?? Attr<BpmPolicyAttribute>(commandType)?.Policy
                      ?? defaultPolicy;
@@ -40,8 +40,8 @@ public sealed class CommandMetadataResolver(AgentSpecRegistry specs, BpmIdentity
     {
         var role = ClassifyRole(property, spec);
 
-        var description = spec?.Description ?? Attr<BpmDescriptionAttribute>(property)?.Description;
-        var sourceHint = spec?.SourceHint ?? Attr<BpmSourceAttribute>(property)?.SourceHint;
+        var description = spec?.Description ?? Loc(Attr<BpmDescriptionAttribute>(property)?.Description);
+        var sourceHint = spec?.SourceHint ?? Loc(Attr<BpmSourceAttribute>(property)?.SourceHint);
         var pattern = spec?.Pattern ?? Attr<BpmPatternAttribute>(property)?.Pattern;
 
         var rangeAttr = Attr<BpmRangeAttribute>(property);
@@ -78,6 +78,9 @@ public sealed class CommandMetadataResolver(AgentSpecRegistry specs, BpmIdentity
 
         return FieldRole.Input;
     }
+
+    // A single-language attribute value becomes the default variant of a LocalizedText.
+    private static LocalizedText? Loc(string? text) => text is null ? null : text;
 
     private static TAttribute? Attr<TAttribute>(MemberInfo member) where TAttribute : Attribute =>
         member.GetCustomAttributes(typeof(TAttribute), false).Cast<TAttribute>().FirstOrDefault();

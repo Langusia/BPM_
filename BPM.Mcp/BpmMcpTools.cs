@@ -27,27 +27,36 @@ public sealed class BpmMcpTools(IAgentProcessService service, IHttpContextAccess
 
     private ClaimsPrincipal? Caller => httpContextAccessor.HttpContext?.User;
 
+    private const string LanguageParam =
+        "ISO 639-1 code of the language the user is currently writing in (e.g. \"en\" English, " +
+        "\"ka\" Georgian). Set it to match the user's language so command and field descriptions " +
+        "come back localized; switch it whenever the user switches language. It does not affect " +
+        "execution, only the descriptive text returned. Defaults to English.";
+
     [McpServerTool(Name = "bpm_list_process_types", ReadOnly = true, Idempotent = true)]
     [Description("Lists every business process type this service hosts, with each process's commands, " +
                  "their execution policy, and which commands can start a new instance.")]
-    public string ListProcessTypes() =>
-        Ok(service.ListProcessTypes());
+    public string ListProcessTypes(
+        [Description(LanguageParam)] string language = "en") =>
+        Ok(service.ListProcessTypes(language));
 
     [McpServerTool(Name = "bpm_get_process", ReadOnly = true, Idempotent = true)]
     [Description("Gets the current state of a process instance: its aggregate state, completion status, " +
                  "and the commands currently available as next steps.")]
     public async Task<string> GetProcess(
         [Description("The process instance id (GUID) returned by bpm_start_process.")] Guid processId,
+        [Description(LanguageParam)] string language = "en",
         CancellationToken cancellationToken = default) =>
-        Render(await service.GetProcessAsync(processId, cancellationToken));
+        Render(await service.GetProcessAsync(processId, cancellationToken, language));
 
     [McpServerTool(Name = "bpm_get_next_steps", ReadOnly = true, Idempotent = true)]
     [Description("Lists the commands that can be executed next on a process instance, including each " +
                  "command's execution policy (autonomous / requires approval / human-only).")]
     public async Task<string> GetNextSteps(
         [Description("The process instance id (GUID).")] Guid processId,
+        [Description(LanguageParam)] string language = "en",
         CancellationToken cancellationToken = default) =>
-        Render(await service.GetNextStepsAsync(processId, Caller, cancellationToken));
+        Render(await service.GetNextStepsAsync(processId, Caller, cancellationToken, language));
 
     [McpServerTool(Name = "bpm_get_history", ReadOnly = true, Idempotent = true)]
     [Description("Returns the event timeline of a process instance: every recorded event with its " +
@@ -65,9 +74,10 @@ public sealed class BpmMcpTools(IAgentProcessService service, IHttpContextAccess
     public string GetCommandSchema(
         [Description("The command name, e.g. \"InitiateLoanApplication\".")] string commandName,
         [Description("Optional process type name to disambiguate commands that exist in several processes.")]
-        string? processType = null)
+        string? processType = null,
+        [Description(LanguageParam)] string language = "en")
     {
-        var result = service.GetCommandSchema(commandName, processType);
+        var result = service.GetCommandSchema(commandName, processType, language);
         if (!result.Ok)
             return Error(result.Error!);
 
@@ -93,8 +103,9 @@ public sealed class BpmMcpTools(IAgentProcessService service, IHttpContextAccess
         [Description("The initial command name, e.g. \"InitiateLoanApplication\".")] string commandName,
         [Description("The command arguments as a JSON object string matching the command schema.")]
         string? argsJson = null,
+        [Description(LanguageParam)] string language = "en",
         CancellationToken cancellationToken = default) =>
-        Render(await service.StartProcessAsync(processType, commandName, argsJson, Caller, cancellationToken));
+        Render(await service.StartProcessAsync(processType, commandName, argsJson, Caller, cancellationToken, language));
 
     [McpServerTool(Name = "bpm_execute_command")]
     [Description("Executes a command on an existing process instance. Returns the resulting process state " +
@@ -107,8 +118,9 @@ public sealed class BpmMcpTools(IAgentProcessService service, IHttpContextAccess
         [Description("The command arguments as a JSON object string matching the command schema. " +
                      "Do not include the process id or any identity fields; those come from the transport.")]
         string? argsJson = null,
+        [Description(LanguageParam)] string language = "en",
         CancellationToken cancellationToken = default) =>
-        Render(await service.ExecuteCommandAsync(processId, commandName, argsJson, Caller, cancellationToken));
+        Render(await service.ExecuteCommandAsync(processId, commandName, argsJson, Caller, cancellationToken, language));
 
     // ---- rendering ----
 

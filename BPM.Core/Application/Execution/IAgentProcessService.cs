@@ -14,22 +14,24 @@ namespace BPM.Core.Application.Execution;
 /// </summary>
 public interface IAgentProcessService
 {
-    IReadOnlyList<ProcessTypeSummary> ListProcessTypes();
+    // language: ISO 639-1 code of the language the user is writing in, chosen by the
+    // agent per call. Localized descriptions resolve to it, falling back to English.
+    IReadOnlyList<ProcessTypeSummary> ListProcessTypes(string? language = null);
 
-    Task<AgentResult<ProcessStateResult>> GetProcessAsync(Guid processId, CancellationToken ct);
+    Task<AgentResult<ProcessStateResult>> GetProcessAsync(Guid processId, CancellationToken ct, string? language = null);
 
     Task<AgentResult<IReadOnlyList<CommandSummary>>> GetNextStepsAsync(
-        Guid processId, ClaimsPrincipal? caller, CancellationToken ct);
+        Guid processId, ClaimsPrincipal? caller, CancellationToken ct, string? language = null);
 
     Task<AgentResult<IReadOnlyList<HistoryEntry>>> GetHistoryAsync(Guid processId, CancellationToken ct);
 
-    AgentResult<CommandSchemaModel> GetCommandSchema(string commandName, string? processType = null);
+    AgentResult<CommandSchemaModel> GetCommandSchema(string commandName, string? processType = null, string? language = null);
 
     /// <summary>Starts a new process instance by dispatching an initial command.</summary>
     Task<AgentResult<ExecutionResult>> StartProcessAsync(
-        string processType, string commandName, string? argsJson, ClaimsPrincipal? caller, CancellationToken ct);
+        string processType, string commandName, string? argsJson, ClaimsPrincipal? caller, CancellationToken ct, string? language = null);
 
     /// <summary>Executes a command against an existing process instance.</summary>
     Task<AgentResult<ExecutionResult>> ExecuteCommandAsync(
-        Guid processId, string commandName, string? argsJson, ClaimsPrincipal? caller, CancellationToken ct);
+        Guid processId, string commandName, string? argsJson, ClaimsPrincipal? caller, CancellationToken ct, string? language = null);
 }

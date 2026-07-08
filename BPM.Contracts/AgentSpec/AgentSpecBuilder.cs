@@ -12,7 +12,14 @@ public sealed class AgentSpecBuilder<TCommand>
 
     public AgentSpecBuilder<TCommand> Describe(string description)
     {
-        Data.Description = description;
+        (Data.Description ??= new LocalizedText()).Set(LocalizedText.DefaultLanguage, description);
+        return this;
+    }
+
+    /// <summary>Adds a language-specific description (ISO 639-1 code, e.g. "ka"). Chain calls to add variants.</summary>
+    public AgentSpecBuilder<TCommand> Describe(string language, string description)
+    {
+        (Data.Description ??= new LocalizedText()).Set(language, description);
         return this;
     }
 
@@ -25,7 +32,14 @@ public sealed class AgentSpecBuilder<TCommand>
     /// <summary>What a successful execution looks like, phrased for the agent.</summary>
     public AgentSpecBuilder<TCommand> SuccessCriteria(string criteria)
     {
-        Data.SuccessCriteria = criteria;
+        (Data.SuccessCriteria ??= new LocalizedText()).Set(LocalizedText.DefaultLanguage, criteria);
+        return this;
+    }
+
+    /// <summary>Adds language-specific success criteria (ISO 639-1 code, e.g. "ka").</summary>
+    public AgentSpecBuilder<TCommand> SuccessCriteria(string language, string criteria)
+    {
+        (Data.SuccessCriteria ??= new LocalizedText()).Set(language, criteria);
         return this;
     }
 
@@ -57,14 +71,28 @@ public sealed class AgentFieldBuilder
 
     public AgentFieldBuilder Describe(string description)
     {
-        _data.Description = description;
+        (_data.Description ??= new LocalizedText()).Set(LocalizedText.DefaultLanguage, description);
+        return this;
+    }
+
+    /// <summary>Adds a language-specific field description (ISO 639-1 code, e.g. "ka").</summary>
+    public AgentFieldBuilder Describe(string language, string description)
+    {
+        (_data.Description ??= new LocalizedText()).Set(language, description);
         return this;
     }
 
     /// <summary>Where the value should come from (e.g. "Customer's stated request; confirm before executing").</summary>
     public AgentFieldBuilder Source(string sourceHint)
     {
-        _data.SourceHint = sourceHint;
+        (_data.SourceHint ??= new LocalizedText()).Set(LocalizedText.DefaultLanguage, sourceHint);
+        return this;
+    }
+
+    /// <summary>Adds a language-specific source hint (ISO 639-1 code, e.g. "ka").</summary>
+    public AgentFieldBuilder Source(string language, string sourceHint)
+    {
+        (_data.SourceHint ??= new LocalizedText()).Set(language, sourceHint);
         return this;
     }
 

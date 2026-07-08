@@ -30,31 +30,31 @@ public sealed class AgentProcessService(
 {
     private readonly CommandArgumentBinder _binder = new();
 
-    public IReadOnlyList<ProcessTypeSummary> ListProcessTypes() =>
+    public IReadOnlyList<ProcessTypeSummary> ListProcessTypes(string? language = null) =>
         catalog.ProcessTypes
             .Select(p => new ProcessTypeSummary(
                 p.Name,
                 p.Description,
-                p.Commands.Select(Summarize).ToList()))
+                p.Commands.Select(c => Summarize(c, language)).ToList()))
             .ToList();
 
-    public async Task<AgentResult<ProcessStateResult>> GetProcessAsync(Guid processId, CancellationToken ct)
+    public async Task<AgentResult<ProcessStateResult>> GetProcessAsync(Guid processId, CancellationToken ct, string? language = null)
     {
         var snapshot = await store.LoadAsync(processId, ct);
         if (snapshot is null)
             return AgentResult<ProcessStateResult>.Fail(ProcessNotFound(processId));
 
-        return AgentResult<ProcessStateResult>.Success(BuildProcessState(snapshot));
+        return AgentResult<ProcessStateResult>.Success(BuildProcessState(snapshot, language));
     }
 
     public async Task<AgentResult<IReadOnlyList<CommandSummary>>> GetNextStepsAsync(
-        Guid processId, ClaimsPrincipal? caller, CancellationToken ct)
+        Guid processId, ClaimsPrincipal? caller, CancellationToken ct, string? language = null)
     {
         var snapshot = await store.LoadAsync(processId, ct);
         if (snapshot is null)
             return AgentResult<IReadOnlyList<CommandSummary>>.Fail(ProcessNotFound(processId));
 
-        return AgentResult<IReadOnlyList<CommandSummary>>.Success(NextSteps(snapshot));
+        return AgentResult<IReadOnlyList<CommandSummary>>.Success(NextSteps(snapshot, language));
     }
 
     public async Task<AgentResult<IReadOnlyList<HistoryEntry>>> GetHistoryAsync(Guid processId, CancellationToken ct)
@@ -69,7 +69,7 @@ public sealed class AgentProcessService(
         return AgentResult<IReadOnlyList<HistoryEntry>>.Success(history);
     }
 
-    public AgentResult<CommandSchemaModel> GetCommandSchema(string commandName, string? processType = null)
+    public AgentResult<CommandSchemaModel> GetCommandSchema(string commandName, string? processType = null, string? language = null)
     {
         var matches = catalog.ResolveCommand(commandName, processType);
         if (matches.Count == 0)
@@ -83,11 +83,11 @@ public sealed class AgentProcessService(
                 $"{string.Join(", ", matches.Select(m => m.AggregateTypeName).Distinct())}.",
                 "Pass the processType argument to disambiguate."));
 
-        return AgentResult<CommandSchemaModel>.Success(projector.Project(matches[0]));
+        return AgentResult<CommandSchemaModel>.Success(projector.Project(matches[0], language));
     }
 
     public async Task<AgentResult<ExecutionResult>> StartProcessAsync(
-        string processType, string commandName, string? argsJson, ClaimsPrincipal? caller, CancellationToken ct)
+        string processType, string commandName, string? argsJson, ClaimsPrincipal? caller, CancellationToken ct, string? language = null)
     {
         var descriptor = catalog.FindProcessType(processType);
         if (descriptor is null)
@@ -133,11 +133,11 @@ public sealed class AgentProcessService(
                 "Initial command handlers must return the Guid of the started process."));
 
         var snapshot = await store.LoadAsync(newProcessId, ct);
-        return AgentResult<ExecutionResult>.Success(BuildExecutionResult(newProcessId, descriptor.Name, response, snapshot));
+        return AgentResult<ExecutionResult>.Success(BuildExecutionResult(newProcessId, descriptor.Name, response, snapshot, language));
     }
 
     public async Task<AgentResult<ExecutionResult>> ExecuteCommandAsync(
-        Guid processId, string commandName, string? argsJson, ClaimsPrincipal? caller, CancellationToken ct)
+        Guid processId, string commandName, string? argsJson, ClaimsPrincipal? caller, CancellationToken ct, string? language = null)
     {
         var snapshot = await store.LoadAsync(processId, ct);
         if (snapshot is null)
@@ -153,7 +153,7 @@ public sealed class AgentProcessService(
         var availableTypes = AvailableNodeCommandTypes(snapshot);
         if (!availableTypes.Contains(command.CommandType))
         {
-            var available = NextSteps(snapshot);
+            var available = NextSteps(snapshot, language);
             return AgentResult<ExecutionResult>.Fail(new AgentError(
                 AgentErrorCodes.CommandNotAvailable,
                 $"'{command.Name}' is not an available step for process {processId} right now.",
@@ -177,7 +177,7 @@ public sealed class AgentProcessService(
 
         var updated = await store.LoadAsync(processId, ct);
         return AgentResult<ExecutionResult>.Success(
-            BuildExecutionResult(processId, snapshot.AggregateTypeName, response, updated));
+            BuildExecutionResult(processId, snapshot.AggregateTypeName, response, updated, language));
     }
 
     // ---- dispatch preparation: policy gate → binding → identity population ----
@@ -274,7 +274,7 @@ public sealed class AgentProcessService(
 
     // ---- projections over the event stream ----
 
-    private ProcessStateResult BuildProcessState(ProcessInstanceSnapshot snapshot)
+    private ProcessStateResult BuildProcessState(ProcessInstanceSnapshot snapshot, string? language = null)
     {
         var (state, isCompleted) = ProjectAggregateState(snapshot);
         return new ProcessStateResult(
@@ -283,17 +283,17 @@ public sealed class AgentProcessService(
             state,
             isCompleted,
             snapshot.StartedAt,
-            NextSteps(snapshot));
+            NextSteps(snapshot, language));
     }
 
     private ExecutionResult BuildExecutionResult(
-        Guid processId, string processType, object? handlerResponse, ProcessInstanceSnapshot? snapshot)
+        Guid processId, string processType, object? handlerResponse, ProcessInstanceSnapshot? snapshot, string? language = null)
     {
         if (snapshot is null)
             return new ExecutionResult(processId, processType, handlerResponse, null, null, []);
 
         var (state, isCompleted) = ProjectAggregateState(snapshot);
-        return new ExecutionResult(processId, processType, handlerResponse, state, isCompleted, NextSteps(snapshot));
+        return new ExecutionResult(processId, processType, handlerResponse, state, isCompleted, NextSteps(snapshot, language));
     }
 
     private (object? State, bool? IsCompleted) ProjectAggregateState(ProcessInstanceSnapshot snapshot)
@@ -313,12 +313,12 @@ public sealed class AgentProcessService(
         return (aggregate, aggregate.IsCompleted());
     }
 
-    private IReadOnlyList<CommandSummary> NextSteps(ProcessInstanceSnapshot snapshot) =>
+    private IReadOnlyList<CommandSummary> NextSteps(ProcessInstanceSnapshot snapshot, string? language = null) =>
         AvailableNodeCommandTypes(snapshot)
             .Select(t =>
             {
                 var descriptor = catalog.ResolveCommand(t.Name, snapshot.AggregateTypeName).FirstOrDefault();
-                return descriptor is null ? null : Summarize(descriptor);
+                return descriptor is null ? null : Summarize(descriptor, language);
             })
             .Where(s => s is not null)
             .Select(s => s!)
@@ -337,12 +337,12 @@ public sealed class AgentProcessService(
         return availableNodes.Select(n => n.CommandType).Distinct().ToList();
     }
 
-    private CommandSummary Summarize(CatalogCommandDescriptor command)
+    private CommandSummary Summarize(CatalogCommandDescriptor command, string? language = null)
     {
         var metadata = metadataResolver.Resolve(command.CommandType);
         return new CommandSummary(
             command.Name,
-            metadata.Description,
+            metadata.Description?.Resolve(language),
             metadata.Policy,
             command.IsInitial,
             metadata.Policy == ExecutionPolicy.Autonomous);

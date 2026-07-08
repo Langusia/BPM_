@@ -19,21 +19,21 @@ public sealed class CommandSchemaProjector(CommandMetadataResolver metadataResol
 {
     private const int MaxDepth = 8;
 
-    public CommandSchemaModel Project(CatalogCommandDescriptor command)
+    public CommandSchemaModel Project(CatalogCommandDescriptor command, string? language = null)
     {
         var metadata = metadataResolver.Resolve(command.CommandType);
 
         var fields = metadata.Fields
             .Where(f => f.Role == FieldRole.Input)
-            .Select(f => ProjectField(f, depth: 0))
+            .Select(f => ProjectField(f, depth: 0, language))
             .ToList();
 
         return new CommandSchemaModel(
             command.Name,
             command.AggregateTypeName,
-            metadata.Description,
+            metadata.Description?.Resolve(language),
             metadata.Policy,
-            metadata.SuccessCriteria,
+            metadata.SuccessCriteria?.Resolve(language),
             command.IsInitial,
             fields);
     }
@@ -41,19 +41,20 @@ public sealed class CommandSchemaProjector(CommandMetadataResolver metadataResol
     /// <summary>Merged metadata for a command, including non-input buckets (for logging/diagnostics).</summary>
     public CommandMetadata ResolveMetadata(Type commandType) => metadataResolver.Resolve(commandType);
 
-    private SchemaFieldModel ProjectField(FieldMetadata field, int depth)
+    private SchemaFieldModel ProjectField(FieldMetadata field, int depth, string? language)
     {
         var (kind, format, enumValues, items, properties) =
             MapType(field.Property.PropertyType, depth);
 
-        var description = Combine(field.Description, field.SourceHint);
+        var sourceHint = field.SourceHint?.Resolve(language);
+        var description = Combine(field.Description?.Resolve(language), sourceHint);
 
         return new SchemaFieldModel(
             field.Name,
             kind,
             field.Required,
             description,
-            field.SourceHint,
+            sourceHint,
             enumValues,
             field.Pattern,
             field.Minimum,
