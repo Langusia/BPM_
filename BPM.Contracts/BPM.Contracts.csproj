@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Authors>Guram Elkanishvili</Authors>
+        <Description>Annotation surface for BPM_ command assemblies: agent-grade metadata attributes, execution policy, agent spec builder, and marker interfaces. Zero heavy dependencies — reference this alone from your shared contracts assembly.</Description>
+        <Version>1.0.0</Version>
+        <PackageId>BPM_.Contracts</PackageId>
+        <PackageTags>bpm;workflow;process;contracts;annotations;agent;mcp</PackageTags>
+        <PackageProjectUrl>https://github.com/Langusia/BPM_</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Langusia/BPM_</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    </PropertyGroup>
+
+</Project>

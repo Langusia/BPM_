@@ -1,4 +1,10 @@
 using System;
+using BPM.Core.Application;
+using BPM.Core.Application.Catalog;
+using BPM.Core.Application.Execution;
+using BPM.Core.Application.Metadata;
+using BPM.Core.Application.Persistence;
+using BPM.Core.Application.Projection;
 using BPM.Core.Process;
 using BPM.Core.Definition;
 using BPM.Core.Nodes.Evaluation;
@@ -7,6 +13,7 @@ using JasperFx;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Weasel.Core;
 
 namespace BPM.Core;
@@ -32,10 +39,45 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped(typeof(BpmRepository));
         services.TryAddScoped<IBpmRepository, BpmRepository>();
         services.TryAddScoped<IProcessStore, ProcessStore>();
-        services.AddScoped<INodeEvaluatorFactory, NodeEvaluatorFactory>();
+        // Phase 1.2: per-request replay context — shared aggregate rehydration +
+        // branch-traversal memo consumed by conditional/guest evaluators.
+        services.TryAddScoped<IReplayMetrics, ReplayMetrics>();
+        services.TryAddScoped<IReplayContext>(sp =>
+            new ReplayContext(sp.GetRequiredService<ProcessRegistry>(), sp.GetRequiredService<IReplayMetrics>()));
+        services.AddScoped<INodeEvaluatorFactory>(sp =>
+            new NodeEvaluatorFactory(sp.GetRequiredService<IBpmRepository>(), sp.GetRequiredService<IReplayContext>()));
         var registry = new ProcessRegistry();
         services.TryAddSingleton(registry);
+        services.AddBpmApplicationLayer();
         configure?.Invoke(new BpmConfiguration(registry, services.BuildServiceProvider()));
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the transport-agnostic application layer (command catalog,
+    /// metadata resolution, schema projection, execute + next-steps flow) that
+    /// agent adapters such as BPM.Mcp build on. Called by AddBpm; safe to call again.
+    /// </summary>
+    public static IServiceCollection AddBpmApplicationLayer(this IServiceCollection services)
+    {
+        services.AddOptions();
+        services.TryAddSingleton(sp => sp.GetRequiredService<IOptions<BpmAgentOptions>>().Value);
+        services.TryAddSingleton<ICommandCatalog>(_ => CommandCatalog.FromRegisteredProcesses());
+        services.TryAddSingleton(sp =>
+        {
+            var options = sp.GetRequiredService<BpmAgentOptions>();
+            return new CommandMetadataResolver(options.Specs, options.Identity, options.DefaultPolicy);
+        });
+        services.TryAddSingleton<CommandSchemaProjector>();
+        services.TryAddScoped<IProcessInstanceStore, MartenProcessInstanceStore>();
+        // Phase 1.1: per-request capture of dispatched events. Scoped so the
+        // write seam (ProcessStore) and the reader (AgentProcessService) share
+        // one instance per request — see IExecutionEventCapture docs.
+        services.TryAddScoped<IExecutionEventCapture, ExecutionEventCapture>();
+        services.TryAddScoped<ICommandDispatcher, MediatRCommandDispatcher>();
+        // Phase 1.3: cross-request version-keyed traversal cache (singleton by design).
+        services.TryAddSingleton<ITraversalResultCache>(new TraversalResultCache());
+        services.TryAddScoped<IAgentProcessService, AgentProcessService>();
         return services;
     }
 }

@@ -11,7 +11,6 @@ namespace BPM.Core.Nodes;
 public abstract class NodeBase : INode
 {
     private readonly INodeEvaluatorFactory _nodeEvaluatorFactory;
-    private readonly Dictionary<(INode, int), (bool, List<INode>)> _cache = new();
 
     public NodeBase(Type commandType, Type processType, INodeEvaluatorFactory nodeEvaluatorFactory)
     {
@@ -118,14 +117,12 @@ public abstract class NodeBase : INode
     public (bool isComplete, List<INode> availableNodes) GetCheckBranchCompletionAndGetAvailableNodesFromCache(List<object> storedEvents,
         List<(string, INode, bool isCompleted, bool canExec, List<INode> availableNodes)>? res = null)
     {
-        int eventHash = 0;
-        foreach (var e in storedEvents)
-            eventHash = HashCode.Combine(eventHash, e.GetType().GetHashCode(), (e as BpmEvent)?.NodeId ?? 0);
-        var cacheKey = (this, eventHash);
-
-        if (_cache.TryGetValue(cacheKey, out var cachedResult))
-            return cachedResult;
-
+        // Phase 1.3 note: the old per-node cache that lived here was dead (read,
+        // never written) and mis-designed (hashed event TYPES — blind to event
+        // data that conditionals depend on; unsynchronized dictionary on singleton
+        // nodes). Caching now happens at the right layers: per-request in
+        // ReplayContext (Phase 1.2), cross-request version-keyed in
+        // TraversalResultCache (Phase 1.3).
         return this.CheckBranchCompletionAndGetAvailableNodes(this, storedEvents, res);
     }
 

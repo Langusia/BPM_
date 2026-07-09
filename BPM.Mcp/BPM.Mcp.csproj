@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Authors>Guram Elkanishvili</Authors>
+        <Description>MCP adapter for BPM_.Core: exposes any service hosting the BPM engine as its own Model Context Protocol server over streamable HTTP. Generic dispatch tools, agent-facing schema projection, transport-derived identity, and server-enforced execution policy.</Description>
+        <Version>1.0.0</Version>
+        <PackageId>BPM_.Mcp</PackageId>
+        <PackageTags>bpm;workflow;mcp;model-context-protocol;agent;ai;event-sourcing</PackageTags>
+        <PackageProjectUrl>https://github.com/Langusia/BPM_</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Langusia/BPM_</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Pinned exactly: the MCP server SDK surface is still moving fast. -->
+        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="[1.4.0]" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\BPM.Core\BPM.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+</Project>
