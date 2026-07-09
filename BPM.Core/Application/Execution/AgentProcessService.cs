@@ -148,20 +148,23 @@ public sealed class AgentProcessService(
         if (snapshot is null)
             return AgentResult<ExecutionResult>.Fail(ProcessNotFound(processId));
 
-        var matches = catalog.ResolveCommand(commandName, snapshot.AggregateTypeName);
+        // Resolve by name across all process graphs (not qualified by this instance's type),
+        // so guest sub-process commands (JumpTo) resolve too, then pick the match that is an
+        // available next step for the current stream.
+        var matches = catalog.ResolveCommand(commandName);
         if (matches.Count == 0)
             return AgentResult<ExecutionResult>.Fail(UnknownCommand(commandName, snapshot.AggregateTypeName));
-        var command = matches[0];
 
         // Engine-level availability: the command must be an available next step
         // for the instance's current event stream.
         var availableTypes = AvailableNodeCommandTypes(snapshot);
-        if (!availableTypes.Contains(command.CommandType))
+        var command = matches.FirstOrDefault(c => availableTypes.Contains(c.CommandType));
+        if (command is null)
         {
             var available = NextSteps(snapshot, language);
             return AgentResult<ExecutionResult>.Fail(new AgentError(
                 AgentErrorCodes.CommandNotAvailable,
-                $"'{command.Name}' is not an available step for process {processId} right now.",
+                $"'{commandName}' is not an available step for process {processId} right now.",
                 "Execute one of the currently available commands instead.",
                 new { availableCommands = available.Select(s => s.Name).ToList() }));
         }
@@ -322,7 +325,10 @@ public sealed class AgentProcessService(
         AvailableNodeCommandTypes(snapshot)
             .Select(t =>
             {
-                var descriptor = catalog.ResolveCommand(t.Name, snapshot.AggregateTypeName).FirstOrDefault();
+                // Resolve by the exact CommandType we already have — a guest sub-process
+                // (JumpTo) command belongs to the guest's process type, not this instance's,
+                // so it must not be qualified by snapshot.AggregateTypeName or it drops out.
+                var descriptor = catalog.ResolveCommand(t.Name).FirstOrDefault(c => c.CommandType == t);
                 return descriptor is null ? null : Summarize(descriptor, language);
             })
             .Where(s => s is not null)
@@ -382,8 +388,23 @@ public sealed class AgentProcessService(
 
     private static bool TryExtractProcessId(object? handlerResponse, out Guid processId)
     {
-        switch (handlerResponse)
+        processId = Guid.Empty;
+        if (handlerResponse is null)
+            return false;
+
+        // Unwrap a result-style wrapper (a Value property, e.g. Result<T>) so hosts can
+        // return their own result type; the payload just has to expose the process id via
+        // IProcessStartResult (or be a bare Guid/guid-string).
+        var payload = handlerResponse;
+        var valueProperty = payload.GetType().GetProperty("Value");
+        if (valueProperty is not null && valueProperty.GetIndexParameters().Length == 0)
+            payload = valueProperty.GetValue(payload) ?? payload;
+
+        switch (payload)
         {
+            case IProcessStartResult result when result.ProcessId != Guid.Empty:
+                processId = result.ProcessId;
+                return true;
             case Guid guid when guid != Guid.Empty:
                 processId = guid;
                 return true;
@@ -391,7 +412,6 @@ public sealed class AgentProcessService(
                 processId = parsed;
                 return true;
             default:
-                processId = Guid.Empty;
                 return false;
         }
     }
