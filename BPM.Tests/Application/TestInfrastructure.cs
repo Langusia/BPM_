@@ -90,7 +90,7 @@ public abstract class GraphTestBase : IDisposable
     protected GraphTestBase()
     {
         ClearProcesses();
-        EvaluatorFactory = new NodeEvaluatorFactory(Substitute.For<IBpmRepository>());
+        EvaluatorFactory = new NodeEvaluatorFactory(Substitute.For<IBpmRepository>(), new ReplayContext(Registry));
     }
 
     public void Dispose() => ClearProcesses();

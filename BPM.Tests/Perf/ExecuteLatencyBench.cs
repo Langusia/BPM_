@@ -40,6 +40,7 @@ public class ExecuteLatencyBench : PerfGraphBase
         }
 
         Counters.Reset();
+        Metrics.Reset();
         var timings = new double[Iterations];
         var sw = new Stopwatch();
         for (var i = 0; i < Iterations; i++)
@@ -57,18 +58,20 @@ public class ExecuteLatencyBench : PerfGraphBase
         var max = timings[^1];
         var loadsPerCall = Counters.StreamLoads / (double)Iterations;
         var replaysPerCall = Counters.EvaluatorReplays / (double)Iterations;
+        var rehydrationsPerCall = Metrics.AggregateRehydrations / (double)Iterations;
 
         // xunit.v3 surfaces TestContext output; also write to console for CI logs.
         var report =
             $"[KitchenSink execute | {streamLength} events] " +
             $"p50={p50:F3}ms p95={p95:F3}ms max={max:F3}ms | " +
-            $"loads/call={loadsPerCall:F1} evaluatorReplays/call={replaysPerCall:F1}";
+            $"loads/call={loadsPerCall:F1} evaluatorReplays/call={replaysPerCall:F1} " +
+            $"rehydrations/call={rehydrationsPerCall:F1}";
         TestContext.Current.TestOutputHelper?.WriteLine(report);
         Console.WriteLine(report);
 
-        // Phase 1 exit assertion — enable when 1.1–1.3 have landed:
-        // if (streamLength == 1000)
-        //     Assert.True(p95 < 50, $"Phase 1 exit: p95 {p95:F3}ms >= 50ms");
+        // Phase 1 exit assertion — ACTIVE since 1.1–1.3 landed:
+        if (streamLength == 1000)
+            Assert.True(p95 < 50, $"Phase 1 exit: p95 {p95:F3}ms >= 50ms");
     }
 
     [Theory]
@@ -84,6 +87,7 @@ public class ExecuteLatencyBench : PerfGraphBase
             _ = await service.GetProcessAsync(processId, CancellationToken.None);
 
         Counters.Reset();
+        Metrics.Reset();
         var timings = new double[Iterations];
         var sw = new Stopwatch();
         for (var i = 0; i < Iterations; i++)
@@ -100,7 +104,8 @@ public class ExecuteLatencyBench : PerfGraphBase
             $"p50={timings[(int)(Iterations * 0.50)]:F3}ms " +
             $"p95={timings[(int)(Iterations * 0.95)]:F3}ms " +
             $"max={timings[^1]:F3}ms | " +
-            $"evaluatorReplays/call={Counters.EvaluatorReplays / (double)Iterations:F1}";
+            $"evaluatorReplays/call={Counters.EvaluatorReplays / (double)Iterations:F1} " +
+            $"rehydrations/call={Metrics.AggregateRehydrations / (double)Iterations:F1}";
         TestContext.Current.TestOutputHelper?.WriteLine(report);
         Console.WriteLine(report);
         // After Phase 1.3 this becomes a cache hit: expect ~0 replays and sub-ms p95.

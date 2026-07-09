@@ -31,8 +31,23 @@ Numbers are only comparable to "after" runs from the same environment. "ev" = ev
 | 2026-07-09 | 1986041 (before Phase 1, 3-level full-coverage graph) | execute p95 | 7.811ms | 5.396ms | 16.586ms | 2.0 | 16.0 |
 | 2026-07-09 | 1986041 (before Phase 1, 3-level full-coverage graph) | get_process p95 | | | 6.047ms | — | 8.0 |
 | 2026-07-09 | after 1.1 (event capture) | execute p95 | 11.101ms | 5.817ms | 15.325ms | 1.0 | 16.0 |
-| | after 1.2 | execute p95 | | | | 1.0 | 0.0 |
-| | after 1.3 | get_process p95 | | | | — | 0.0 |
+| 2026-07-09 | after 1.2 (ReplayContext) | execute p95 | 11.849ms | 5.100ms | 16.177ms | 1.0 | **0.0** |
+| 2026-07-09 | after 1.3 (traversal cache) | execute p95 | 5.765ms | 1.822ms | 16.942ms | 1.0 | 0.0 |
+| 2026-07-09 | after 1.3 (traversal cache) | get_process p95 | | | **0.171ms** | — | 0.0 |
+
+**PHASE 1 COMPLETE (2026-07-09).** All four Phase1Contract tests green; the p95<50ms exit
+assertion in ExecuteLatencyBench is now ACTIVE. After-1.3 rehydrations/call: execute 2.0
+(only the post-dispatch synthesized traversal computes; the pre-dispatch availability
+check is a cache hit), get_process 0.0 (pure cache hit — was 4.885ms p95, now 0.171ms,
+~29x). Execute p50s also dropped (200 ev: 2.54→1.27ms; 50 ev: 3.27→1.80ms).
+
+After-1.2: new column of record — **rehydrations/call** (in-core IReplayMetrics): execute 4.0
+(2 aggregate types × 2 traversals; QuickAudit never rehydrates — its Else branch loses the
+conditional), get_process 2.0. Repository-seam replays are 0 everywhere. Latency at 1000 ev is
+~flat vs 1.1: profiling insight — the remaining hot cost is NOT replays but per-node
+`ContainsEvent`/`ContainsNodeEvent` scans over the full event list during traversal (LINQ name
+comparisons, once per node visit). That is exactly what 1.3's traversal cache eliminates for
+repeated same-version reads.
 
 After-1.1 note: loads/call hit the 1.0 target. Latency is statistically flat (in-memory
 store: a reload costs ~nothing here; the reload's real cost is a Postgres round-trip,

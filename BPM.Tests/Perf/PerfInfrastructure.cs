@@ -166,13 +166,17 @@ public abstract class PerfGraphBase : IDisposable
     protected readonly FakeDispatcher Dispatcher = new();
     protected readonly BpmAgentOptions Options = new();
     protected readonly ExecutionEventCapture Capture = new();
+    protected readonly ReplayMetrics Metrics = new();
+    protected readonly TraversalResultCache TraversalCache = new();
 
     protected PerfGraphBase()
     {
         ClearProcesses();
         Repository = new CountingBpmRepository(Registry, Counters);
         Store = new CountingInstanceStore(InnerStore, Counters);
-        EvaluatorFactory = new NodeEvaluatorFactory(Repository);
+        // Phase 1.2: evaluators consume the request-scoped ReplayContext; the
+        // counting repository seam should now stay silent during traversal.
+        EvaluatorFactory = new NodeEvaluatorFactory(Repository, new ReplayContext(Registry, Metrics));
 
         BuildDefinition<ComplianceReview, ComplianceReviewDefinition>();
         BuildDefinition<QuickAudit, QuickAuditDefinition>();
@@ -236,6 +240,20 @@ public abstract class PerfGraphBase : IDisposable
         Registry.RegisterAggregate(typeof(T));
     }
 
+    /// <summary>
+    /// Rebuilds the fixture graphs with a different evaluator factory (nodes
+    /// capture their factory at build time). Used by parity tests to compare
+    /// context-wired vs legacy evaluator behavior on identical graph shapes.
+    /// Aggregates stay registered; only the static graph config is rebuilt.
+    /// </summary>
+    protected void RebuildDefinitions(INodeEvaluatorFactory factory)
+    {
+        ClearProcesses();
+        new ComplianceReviewDefinition().DefineProcess(new ProcessRootBuilder<ComplianceReview>(factory));
+        new QuickAuditDefinition().DefineProcess(new ProcessRootBuilder<QuickAudit>(factory));
+        new KitchenSinkDefinition().DefineProcess(new ProcessRootBuilder<KitchenSink>(factory));
+    }
+
     protected AgentProcessService CreateService()
     {
         var catalog = CommandCatalog.FromRegisteredProcesses();
@@ -250,7 +268,8 @@ public abstract class PerfGraphBase : IDisposable
             Registry,
             Substitute.For<IServiceProvider>(),
             new CapturingLogger<AgentProcessService>(),
-            Capture);
+            Capture,
+            TraversalCache);
     }
 
     private static void ClearProcesses()

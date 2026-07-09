@@ -28,7 +28,8 @@ public sealed class AgentProcessService(
     ProcessRegistry registry,
     IServiceProvider services,
     ILogger<AgentProcessService> logger,
-    IExecutionEventCapture? eventCapture = null) : IAgentProcessService
+    IExecutionEventCapture? eventCapture = null,
+    ITraversalResultCache? traversalCache = null) : IAgentProcessService
 {
     private readonly CommandArgumentBinder _binder = new();
 
@@ -240,7 +241,9 @@ public sealed class AgentProcessService(
         events.AddRange(snapshot.Events);
         events.AddRange(appended.Select(e =>
             new ProcessEventEnvelope(e.GetType().Name, e, ++version, now)));
-        return snapshot with { Events = events };
+        // Versions above are synthesized — mark the snapshot so the Phase 1.3
+        // version-keyed traversal cache ignores it entirely.
+        return snapshot with { Events = events, VersionsAuthoritative = false };
     }
 
     // ---- dispatch preparation: policy gate → binding → identity population ----
@@ -392,6 +395,16 @@ public sealed class AgentProcessService(
 
     private IReadOnlyList<Type> AvailableNodeCommandTypes(ProcessInstanceSnapshot snapshot)
     {
+        // Phase 1.3: repeated reads of an unchanged process are a cache hit —
+        // zero traversal, zero rehydration. Only store-authoritative versions
+        // participate; any new event bumps the version and misses naturally.
+        var cacheable = traversalCache is not null
+                        && snapshot.VersionsAuthoritative
+                        && snapshot.Events.Count > 0;
+        var version = cacheable ? snapshot.Events[^1].Version : 0;
+        if (cacheable && traversalCache!.TryGet(snapshot.AggregateTypeName, snapshot.ProcessId, version, out var cached))
+            return cached;
+
         var process = BProcessGraphConfiguration.GetAllProcesses()
             ?.FirstOrDefault(p => p.ProcessType.Name == snapshot.AggregateTypeName);
         if (process is null)
@@ -400,7 +413,11 @@ public sealed class AgentProcessService(
         var events = snapshot.Events.Select(e => e.Data).ToList();
         var (_, availableNodes) = process.RootNode
             .GetCheckBranchCompletionAndGetAvailableNodesFromCache(events);
-        return availableNodes.Select(n => n.CommandType).Distinct().ToList();
+        var result = availableNodes.Select(n => n.CommandType).Distinct().ToList();
+
+        if (cacheable)
+            traversalCache!.Set(snapshot.AggregateTypeName, snapshot.ProcessId, version, result);
+        return result;
     }
 
     private CommandSummary Summarize(CatalogCommandDescriptor command, string? language = null)

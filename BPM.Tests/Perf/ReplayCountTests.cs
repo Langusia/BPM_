@@ -50,10 +50,9 @@ public class ReplayCountTests : PerfGraphBase
             processId, nameof(CloseCase), argsJson: null, caller: null, CancellationToken.None);
 
         Assert.True(result.Ok, result.Error?.Message);
-        // Phase 1.2 target: evaluators consume the request's shared ReplayContext,
-        // so the repository replay path is never hit during traversal.
-        // Today: >= 1 per conditional/guest evaluation, per traversal
-        // (execute traverses twice: availability check + post-dispatch NextSteps).
+        // Phase 1.2 target — GREEN since ReplayContext landed: evaluators consume
+        // the request's shared context, so the repository replay path is never
+        // hit during traversal (was: 16 replays/execute on this fixture).
         Assert.Equal(0, Counters.EvaluatorReplays);
     }
 
@@ -69,15 +68,21 @@ public class ReplayCountTests : PerfGraphBase
         _ = await service.GetProcessAsync(processId, CancellationToken.None);
 
         Counters.Reset();
+        Metrics.Reset();
         // …then repeated reads at the SAME version must be served from the
-        // version-keyed traversal cache (Phase 1.3): no evaluator replays.
+        // version-keyed traversal cache (Phase 1.3): no replay work at all.
+        // NOTE (post-1.2): this test counts IReplayMetrics.AggregateRehydrations,
+        // not the repository seam — 1.2's ReplayContext silenced the seam
+        // everywhere, but each fresh read still rehydrates each aggregate type
+        // once (3/read on this fixture). 1.3's cross-request cache takes it to 0.
         for (var i = 0; i < 5; i++)
         {
             var result = await service.GetProcessAsync(processId, CancellationToken.None);
             Assert.True(result.Ok, result.Error?.Message);
         }
 
-        Assert.Equal(0, Counters.EvaluatorReplays);
+        Assert.Equal(0, Counters.EvaluatorReplays); // 1.2: repository seam silent
+        Assert.Equal(0, Metrics.AggregateRehydrations); // 1.3 target: RED until then
     }
 
     /// <summary>

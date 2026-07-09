@@ -2,17 +2,17 @@ using BPM.Core.Persistence;
 
 namespace BPM.Core.Nodes.Evaluation;
 
-public class NodeEvaluatorFactory(IBpmRepository repository) : INodeEvaluatorFactory
+public class NodeEvaluatorFactory(IBpmRepository repository, IReplayContext? replayContext = null) : INodeEvaluatorFactory
 {
     public INodeStateEvaluator CreateEvaluator(INode node)
     {
         return node switch
         {
             GuestProcessNode conditionalNode =>
-                new GuestProcessNodeStateEvaluator(conditionalNode, repository),
+                new GuestProcessNodeStateEvaluator(conditionalNode, repository, replayContext),
 
             ConditionalNode conditionalNode =>
-                new ConditionalNodeStateEvaluator(conditionalNode, repository),
+                new ConditionalNodeStateEvaluator(conditionalNode, repository, replayContext),
 
             GroupNode groupNode =>
                 new GroupNodeStateEvaluator(groupNode),

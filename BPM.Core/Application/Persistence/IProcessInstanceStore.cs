@@ -26,7 +26,16 @@ public sealed record ProcessInstanceSnapshot(
     Guid ProcessId,
     string AggregateTypeName,
     IReadOnlyList<ProcessEventEnvelope> Events,
-    DateTimeOffset? StartedAt);
+    DateTimeOffset? StartedAt)
+{
+    /// <summary>
+    /// False when event versions were synthesized in memory (post-dispatch
+    /// SnapshotWith, Phase 1.1) rather than loaded from the store. Snapshots
+    /// with non-authoritative versions are invisible to the version-keyed
+    /// traversal cache (Phase 1.3) — they can neither serve nor populate it.
+    /// </summary>
+    public bool VersionsAuthoritative { get; init; } = true;
+}
 
 /// <summary>One stored event: deserialized event data plus stream position and timestamp.</summary>
 public sealed record ProcessEventEnvelope(

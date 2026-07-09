@@ -39,7 +39,13 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped(typeof(BpmRepository));
         services.TryAddScoped<IBpmRepository, BpmRepository>();
         services.TryAddScoped<IProcessStore, ProcessStore>();
-        services.AddScoped<INodeEvaluatorFactory, NodeEvaluatorFactory>();
+        // Phase 1.2: per-request replay context — shared aggregate rehydration +
+        // branch-traversal memo consumed by conditional/guest evaluators.
+        services.TryAddScoped<IReplayMetrics, ReplayMetrics>();
+        services.TryAddScoped<IReplayContext>(sp =>
+            new ReplayContext(sp.GetRequiredService<ProcessRegistry>(), sp.GetRequiredService<IReplayMetrics>()));
+        services.AddScoped<INodeEvaluatorFactory>(sp =>
+            new NodeEvaluatorFactory(sp.GetRequiredService<IBpmRepository>(), sp.GetRequiredService<IReplayContext>()));
         var registry = new ProcessRegistry();
         services.TryAddSingleton(registry);
         services.AddBpmApplicationLayer();
@@ -69,6 +75,8 @@ public static class ServiceCollectionExtensions
         // one instance per request — see IExecutionEventCapture docs.
         services.TryAddScoped<IExecutionEventCapture, ExecutionEventCapture>();
         services.TryAddScoped<ICommandDispatcher, MediatRCommandDispatcher>();
+        // Phase 1.3: cross-request version-keyed traversal cache (singleton by design).
+        services.TryAddSingleton<ITraversalResultCache>(new TraversalResultCache());
         services.TryAddScoped<IAgentProcessService, AgentProcessService>();
         return services;
     }
