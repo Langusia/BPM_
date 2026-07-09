@@ -36,6 +36,7 @@ public sealed class AgentProcessService(
     // contextually via GetNextSteps, so branchy processes don't bloat this listing.
     public IReadOnlyList<ProcessTypeSummary> ListProcessTypes(string? language = null) =>
         catalog.ProcessTypes
+            .Where(p => !p.AggregateType.IsDefined(typeof(BpmHiddenFromProcessListAttribute), inherit: false))
             .Select(p => new ProcessTypeSummary(
                 p.Name,
                 p.Description,

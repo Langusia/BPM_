@@ -15,6 +15,16 @@ public sealed class BpmPolicyAttribute(ExecutionPolicy policy) : Attribute
 }
 
 /// <summary>
+/// Marks a process aggregate as a helper / sub-process that should NOT appear in the
+/// agent-facing process list (bpm_list_process_types) — e.g. a shared OTP validation
+/// flow that is only ever reached from another process and serves nothing on its own.
+/// The process stays fully registered, resolvable, and executable; this only hides it
+/// from the listing.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+public sealed class BpmHiddenFromProcessListAttribute : Attribute;
+
+/// <summary>
 /// Hint for the agent about where a field's value should come from
 /// (e.g. "Customer's stated request; confirm before executing").
 /// Surfaces in the projected schema's field description.
