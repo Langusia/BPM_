@@ -32,7 +32,8 @@ public class ReplayCountTests : PerfGraphBase
             processId, nameof(CloseCase), argsJson: null, caller: null, CancellationToken.None);
 
         Assert.True(result.Ok, result.Error?.Message);
-        // Phase 1.1 target. Today: 2 (load before dispatch + reload after).
+        // Phase 1.1 target — GREEN since the scoped event capture landed
+        // (was 2: load before dispatch + reload after).
         Assert.Equal(1, Counters.StreamLoads);
     }
 

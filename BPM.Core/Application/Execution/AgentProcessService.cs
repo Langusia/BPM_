@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BPM.Contracts;
 using BPM.Core.Application.Catalog;
+using BPM.Core.Attributes;
 using BPM.Core.Application.Metadata;
 using BPM.Core.Application.Persistence;
 using BPM.Core.Application.Projection;
@@ -26,7 +27,8 @@ public sealed class AgentProcessService(
     BpmAgentOptions options,
     ProcessRegistry registry,
     IServiceProvider services,
-    ILogger<AgentProcessService> logger) : IAgentProcessService
+    ILogger<AgentProcessService> logger,
+    IExecutionEventCapture? eventCapture = null) : IAgentProcessService
 {
     private readonly CommandArgumentBinder _binder = new();
 
@@ -183,9 +185,62 @@ public sealed class AgentProcessService(
             return AgentResult<ExecutionResult>.Fail(ExecutionFailed(command.Name, ex));
         }
 
-        var updated = await store.LoadAsync(processId, ct);
+        var updated = await ResolveUpdatedSnapshotAsync(snapshot, command, ct);
         return AgentResult<ExecutionResult>.Success(
             BuildExecutionResult(processId, snapshot.AggregateTypeName, response, updated, language));
+    }
+
+    /// <summary>
+    /// Phase 1.1 (single-load execute): the post-dispatch state is derived from
+    /// the pre-dispatch snapshot plus the events the dispatch itself appended
+    /// (captured at the IProcessStore write seam) — not from a second stream load.
+    /// Legacy path: with no capture wired (null), reload as before.
+    /// Guard: if a capture IS wired but came back empty for a command whose
+    /// [BpmProducer] declares events, the write likely happened in a different
+    /// DI scope — log it and fall back to a reload rather than serving a stale result.
+    /// </summary>
+    private async Task<ProcessInstanceSnapshot?> ResolveUpdatedSnapshotAsync(
+        ProcessInstanceSnapshot snapshot, CatalogCommandDescriptor command, CancellationToken ct)
+    {
+        if (eventCapture is null)
+            return await store.LoadAsync(snapshot.ProcessId, ct);
+
+        var appended = eventCapture.TakeFor(snapshot.ProcessId);
+        if (appended.Count > 0)
+            return SnapshotWith(snapshot, appended);
+
+        var declaresEvents = command.CommandType
+            .GetCustomAttributes(typeof(BpmProducer), inherit: false)
+            .Cast<BpmProducer>()
+            .Any(a => a.EventTypes.Length > 0);
+        if (!declaresEvents)
+            return snapshot; // command legitimately appends nothing — state unchanged
+
+        logger.LogWarning(
+            "Command {Command} declares produced events but the execution event capture is empty. " +
+            "The write path likely resolved from a different DI scope than the capture. " +
+            "Falling back to a stream reload for correctness — fix the scope wiring to restore single-load execute.",
+            command.Name);
+        return await store.LoadAsync(snapshot.ProcessId, ct);
+    }
+
+    /// <summary>
+    /// Pre-dispatch snapshot + captured events = post-dispatch snapshot, in memory.
+    /// Versions are synthesized (last stored + 1..n) and timestamps are UtcNow: the
+    /// result object is transient and traversal operates on event Data only. If a
+    /// later phase keys caching on stream version (Phase 1.3), the version source
+    /// must become the store, not this synthesis.
+    /// </summary>
+    private static ProcessInstanceSnapshot SnapshotWith(
+        ProcessInstanceSnapshot snapshot, IReadOnlyList<object> appended)
+    {
+        var version = snapshot.Events.Count == 0 ? 0 : snapshot.Events[^1].Version;
+        var now = DateTimeOffset.UtcNow;
+        var events = new List<ProcessEventEnvelope>(snapshot.Events.Count + appended.Count);
+        events.AddRange(snapshot.Events);
+        events.AddRange(appended.Select(e =>
+            new ProcessEventEnvelope(e.GetType().Name, e, ++version, now)));
+        return snapshot with { Events = events };
     }
 
     // ---- dispatch preparation: policy gate → binding → identity population ----

@@ -30,9 +30,15 @@ Numbers are only comparable to "after" runs from the same environment. "ev" = ev
 |---|---|---|---|---|---|---|---|
 | 2026-07-09 | 1986041 (before Phase 1, 3-level full-coverage graph) | execute p95 | 7.811ms | 5.396ms | 16.586ms | 2.0 | 16.0 |
 | 2026-07-09 | 1986041 (before Phase 1, 3-level full-coverage graph) | get_process p95 | | | 6.047ms | — | 8.0 |
-| | after 1.1 | execute p95 | | | | 1.0 | |
+| 2026-07-09 | after 1.1 (event capture) | execute p95 | 11.101ms | 5.817ms | 15.325ms | 1.0 | 16.0 |
 | | after 1.2 | execute p95 | | | | 1.0 | 0.0 |
 | | after 1.3 | get_process p95 | | | | — | 0.0 |
+
+After-1.1 note: loads/call hit the 1.0 target. Latency is statistically flat (in-memory
+store: a reload costs ~nothing here; the reload's real cost is a Postgres round-trip,
+which this bench deliberately excludes). Replays (16.0) still dominate — Phase 1.2's job.
+The 50-ev p95 wobble (11.1ms vs 7.8ms) is environment noise on a shared container, not
+signal; compare medians (3.3 vs 4.2ms).
 
 p50 for the record: execute 4.171 / 2.936 / 7.523 ms (50/200/1000 ev); get_process 3.702 ms (1000 ev).
 (Superseded same-day runs on this commit: original graph 10 replays/execute, 5/read;

@@ -64,6 +64,10 @@ public static class ServiceCollectionExtensions
         });
         services.TryAddSingleton<CommandSchemaProjector>();
         services.TryAddScoped<IProcessInstanceStore, MartenProcessInstanceStore>();
+        // Phase 1.1: per-request capture of dispatched events. Scoped so the
+        // write seam (ProcessStore) and the reader (AgentProcessService) share
+        // one instance per request — see IExecutionEventCapture docs.
+        services.TryAddScoped<IExecutionEventCapture, ExecutionEventCapture>();
         services.TryAddScoped<ICommandDispatcher, MediatRCommandDispatcher>();
         services.TryAddScoped<IAgentProcessService, AgentProcessService>();
         return services;

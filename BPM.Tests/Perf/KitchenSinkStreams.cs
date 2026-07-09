@@ -77,7 +77,7 @@ public static class KitchenSinkStreams
     /// The kitchen-sink graph keeps commands inside those containers, so the
     /// stream generator needs its own exhaustive walk.
     /// </summary>
-    private static IEnumerable<INode> DeepNodes(INode node, HashSet<INode> seen)
+    internal static IEnumerable<INode> DeepNodes(INode node, HashSet<INode> seen)
     {
         if (node is null || !seen.Add(node))
             yield break;

@@ -1,5 +1,7 @@
 using System.Reflection;
 using System.Threading;
+using BPM.Contracts;
+using BPM.Core.Attributes;
 using BPM.Core.Application;
 using BPM.Core.Application.Catalog;
 using BPM.Core.Application.Execution;
@@ -8,6 +10,8 @@ using BPM.Core.Application.Persistence;
 using BPM.Core.Application.Projection;
 using BPM.Core.Configuration;
 using BPM.Core.Definition;
+using BPM.Core.Events;
+using BPM.Core.Nodes;
 using BPM.Core.Nodes.Evaluation;
 using BPM.Core.Persistence;
 using BPM.Core.Process;
@@ -161,6 +165,7 @@ public abstract class PerfGraphBase : IDisposable
     protected readonly INodeEvaluatorFactory EvaluatorFactory;
     protected readonly FakeDispatcher Dispatcher = new();
     protected readonly BpmAgentOptions Options = new();
+    protected readonly ExecutionEventCapture Capture = new();
 
     protected PerfGraphBase()
     {
@@ -172,6 +177,53 @@ public abstract class PerfGraphBase : IDisposable
         BuildDefinition<ComplianceReview, ComplianceReviewDefinition>();
         BuildDefinition<QuickAudit, QuickAuditDefinition>();
         BuildDefinition<KitchenSink, KitchenSinkDefinition>();
+
+        // Simulate the sanctioned write path (Phase 1.1): a dispatched command
+        // "appends" its [BpmProducer]-declared events, NodeId-stamped exactly as
+        // Process.AppendEvents would, and ProcessStore records them into the
+        // scoped capture. The in-memory store itself is deliberately NOT
+        // appended to: benches execute the same command repeatedly against a
+        // stable stream.
+        Dispatcher.OnDispatch = command =>
+        {
+            var processId = command.GetType().GetProperty("ProcessId")?.GetValue(command) as Guid?;
+            if (processId is null || processId == Guid.Empty)
+                return Task.FromResult<object?>(null);
+
+            var produced = new List<object>();
+            foreach (var attr in command.GetType().GetCustomAttributes(typeof(BpmProducer), false).Cast<BpmProducer>())
+            foreach (var eventType in attr.EventTypes)
+            {
+                if (eventType.GetConstructor(Type.EmptyTypes) is null)
+                    continue; // parameterized events aren't auto-instantiable; tests dispatching them record manually
+                var e = (BpmEvent)Activator.CreateInstance(eventType)!;
+                var level = TryLevelOf(command.GetType());
+                if (level is not null)
+                    e.NodeId = level.Value;
+                produced.Add(e);
+            }
+
+            if (produced.Count > 0)
+                Capture.Record(processId.Value, produced);
+            return Task.FromResult<object?>(null);
+        };
+    }
+
+    /// <summary>NodeLevel of the node producing for a command, across all fixture processes.</summary>
+    private static int? TryLevelOf(Type commandType)
+    {
+        foreach (var name in new[] { nameof(KitchenSink), nameof(ComplianceReview), nameof(QuickAudit) })
+        {
+            var config = BProcessGraphConfiguration.GetConfig(name);
+            if (config is null)
+                continue;
+            var node = KitchenSinkStreams.DeepNodes(config.RootNode, new HashSet<INode>())
+                .FirstOrDefault(n => n.CommandType == commandType);
+            if (node is not null)
+                return node.NodeLevel;
+        }
+
+        return null;
     }
 
     public void Dispose() => ClearProcesses();
@@ -197,7 +249,8 @@ public abstract class PerfGraphBase : IDisposable
             Options,
             Registry,
             Substitute.For<IServiceProvider>(),
-            new CapturingLogger<AgentProcessService>());
+            new CapturingLogger<AgentProcessService>(),
+            Capture);
     }
 
     private static void ClearProcesses()
