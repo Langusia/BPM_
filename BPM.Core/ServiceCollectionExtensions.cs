@@ -1,4 +1,10 @@
 using System;
+using BPM.Core.Application;
+using BPM.Core.Application.Catalog;
+using BPM.Core.Application.Execution;
+using BPM.Core.Application.Metadata;
+using BPM.Core.Application.Persistence;
+using BPM.Core.Application.Projection;
 using BPM.Core.Process;
 using BPM.Core.Definition;
 using BPM.Core.Nodes.Evaluation;
@@ -7,6 +13,7 @@ using JasperFx;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Weasel.Core;
 
 namespace BPM.Core;
@@ -35,7 +42,30 @@ public static class ServiceCollectionExtensions
         services.AddScoped<INodeEvaluatorFactory, NodeEvaluatorFactory>();
         var registry = new ProcessRegistry();
         services.TryAddSingleton(registry);
+        services.AddBpmApplicationLayer();
         configure?.Invoke(new BpmConfiguration(registry, services.BuildServiceProvider()));
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the transport-agnostic application layer (command catalog,
+    /// metadata resolution, schema projection, execute + next-steps flow) that
+    /// agent adapters such as BPM.Mcp build on. Called by AddBpm; safe to call again.
+    /// </summary>
+    public static IServiceCollection AddBpmApplicationLayer(this IServiceCollection services)
+    {
+        services.AddOptions();
+        services.TryAddSingleton(sp => sp.GetRequiredService<IOptions<BpmAgentOptions>>().Value);
+        services.TryAddSingleton<ICommandCatalog>(_ => CommandCatalog.FromRegisteredProcesses());
+        services.TryAddSingleton(sp =>
+        {
+            var options = sp.GetRequiredService<BpmAgentOptions>();
+            return new CommandMetadataResolver(options.Specs, options.Identity, options.DefaultPolicy);
+        });
+        services.TryAddSingleton<CommandSchemaProjector>();
+        services.TryAddScoped<IProcessInstanceStore, MartenProcessInstanceStore>();
+        services.TryAddScoped<ICommandDispatcher, MediatRCommandDispatcher>();
+        services.TryAddScoped<IAgentProcessService, AgentProcessService>();
         return services;
     }
 }

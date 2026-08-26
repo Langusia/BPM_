@@ -1,1 +1,2 @@
 CREATE DATABASE "BpmClient";
+CREATE DATABASE "bpm";
