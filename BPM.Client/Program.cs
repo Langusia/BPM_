@@ -16,6 +16,7 @@ using BPM.Client.Features.UserRegistration.VerifyEmail;
 using BPM.Client.Features.UserRegistration.SetupProfile;
 using BPM.Client.Features.UserRegistration.Completion;
 using BPM.Client.Features.XProcess;
+using Npgsql;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,12 +24,37 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddMediatR(c => { c.RegisterServicesFromAssembly(typeof(Program).Assembly); });
 
-builder.Services.AddBpm("bpm", builder.Configuration.GetConnectionString("Bpm")!,
+var bpmConnectionString = builder.Configuration.GetConnectionString("Bpm")!;
+
+builder.Services.AddBpm("bpm", bpmConnectionString,
     x =>
     {
         x.AddAggregateDefinition<OrderFulfillment, OrderFulfillmentDefinition>();
         x.AddAggregateDefinition<UserRegistration, UserRegistrationDefinition>();
         x.AddAggregateDefinition<XAggregate, XAggregateDefinition>();
+    },
+    store =>
+    {
+        // Local dev: create the target database automatically on launch if it
+        // doesn't exist yet, so a fresh clone connects on F5 with no manual
+        // "createdb" step. Marten still applies the schema (AutoCreate.CreateOrUpdate).
+        if (builder.Environment.IsDevelopment())
+        {
+            var maintenance = new NpgsqlConnectionStringBuilder(bpmConnectionString)
+            {
+                Database = "postgres"
+            }.ConnectionString;
+
+            store.CreateDatabasesForTenants(c =>
+            {
+                c.MaintenanceDatabase(maintenance);
+                c.ForTenant()
+                    .CheckAgainstPgDatabase()
+                    .WithOwner("postgres")
+                    .WithEncoding("UTF8")
+                    .ConnectionLimit(-1);
+            });
+        }
     }
 ).UseUi(ui =>
 {

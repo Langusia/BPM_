@@ -1,0 +1,3 @@
+﻿namespace MyCredo.Features.RecoveringPassword.ChallengingSecurityQuestion;
+
+public record SecurityQuestionValidated;

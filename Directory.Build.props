@@ -1,0 +1,12 @@
+<Project>
+    <PropertyGroup>
+        <!--
+          Prefix for the NuGet package IDs of all BPM libraries.
+          Default "BPM_"  ->  BPM_.Core, BPM_.Contracts, BPM_.Mcp, BPM_.UI   (nuget.org)
+          "BPM" (no underscore) ->  BPM.Core, BPM.Contracts, BPM.Mcp, BPM.UI (private/Azure feed):
+              dotnet pack -c Release -p:BpmPackagePrefix=BPM
+          Package-to-package dependencies follow the prefix automatically.
+        -->
+        <BpmPackagePrefix Condition="'$(BpmPackagePrefix)' == ''">BPM_</BpmPackagePrefix>
+    </PropertyGroup>
+</Project>

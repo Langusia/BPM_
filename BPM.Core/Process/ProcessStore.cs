@@ -4,12 +4,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BPM.Core.Events;
+using BPM.Core.Application.Persistence;
 using BPM.Core.Configuration;
 using BPM.Core.Persistence;
 
 namespace BPM.Core.Process;
 
-public class ProcessStore(IBpmRepository repository) : IProcessStore
+public class ProcessStore(IBpmRepository repository, IExecutionEventCapture? capture = null) : IProcessStore
 {
     private readonly Queue<IProcess> _processes = [];
 
@@ -47,7 +48,14 @@ public class ProcessStore(IBpmRepository repository) : IProcessStore
     {
         foreach (var process in _processes)
         {
-            await ((Process)process).AppendUncommittedToDb(token);
+            var p = (Process)process;
+            // Phase 1.1: hand the execution layer an in-memory copy of what is
+            // being appended (NodeIds already stamped), so it can build the
+            // execution result without reloading the stream. Recorded before
+            // AppendUncommittedToDb clears UncommittedEvents; if the commit
+            // below throws, the request fails and the capture dies with its scope.
+            capture?.Record(p.Id, p.UncommittedEvents.ToList());
+            await p.AppendUncommittedToDb(token);
         }
 
         await repository.SaveChangesAsync(token);

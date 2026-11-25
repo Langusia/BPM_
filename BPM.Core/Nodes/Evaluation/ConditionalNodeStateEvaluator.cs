@@ -4,37 +4,26 @@ using BPM.Core.Persistence;
 
 namespace BPM.Core.Nodes.Evaluation;
 
-public class ConditionalNodeStateEvaluator(INode node, IBpmRepository repository) : INodeStateEvaluator
+/// <summary>
+/// Phase 1.2: with an <see cref="IReplayContext"/> present, aggregate
+/// rehydration and branch traversals are shared per (request, stream) instead
+/// of replayed per node visit. The old per-instance memo fields are gone —
+/// they only lived for a single visit and would have served stale state if an
+/// instance were ever reused across streams. Without a context (legacy
+/// construction), behavior is exactly the pre-1.2 repository path.
+/// </summary>
+public class ConditionalNodeStateEvaluator(INode node, IBpmRepository repository, IReplayContext? context = null) : INodeStateEvaluator
 {
-    private List<(bool isComplete, List<INode> availableNodes)>? _ifNodeRootsCompletionStates;
-    private List<(bool isComplete, List<INode> availableNodes)>? _elseNodeRootsCompletionStates;
-
     public bool IsCompleted(List<object> storedEvents)
     {
         if (node is ConditionalNode conditionalNode)
         {
-            var aggregate = repository.AggregateOrDefaultStreamFromRegistry(conditionalNode.AggregateCondition.ConditionalAggregateType, storedEvents);
+            var aggregate = GetAggregate(conditionalNode, storedEvents);
             if (conditionalNode.AggregateCondition.EvaluateAggregateCondition(aggregate))
-            {
-                if (_ifNodeRootsCompletionStates is null)
-                {
-                    _ifNodeRootsCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
-                    conditionalNode.IfNodeRoots.ForEach(x => { _ifNodeRootsCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
-                }
-
-                return _ifNodeRootsCompletionStates.Any(x => x.isComplete);
-            }
+                return BranchStates(conditionalNode.IfNodeRoots, storedEvents).Any(x => x.isComplete);
 
             if (conditionalNode.ElseNodeRoots is not null)
-            {
-                if (_elseNodeRootsCompletionStates is null)
-                {
-                    _elseNodeRootsCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
-                    conditionalNode.ElseNodeRoots.ForEach(x => { _elseNodeRootsCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
-                }
-
-                return _elseNodeRootsCompletionStates.Any(x => x.isComplete);
-            }
+                return BranchStates(conditionalNode.ElseNodeRoots, storedEvents).Any(x => x.isComplete);
 
             return Helpers.FindFirstNonOptionalCompletion(node.PrevSteps, storedEvents) ?? true;
         }
@@ -55,28 +44,12 @@ public class ConditionalNodeStateEvaluator(INode node, IBpmRepository repository
 
             if (node is ConditionalNode conditionalNode)
             {
-                var aggregate = repository.AggregateOrDefaultStreamFromRegistry(conditionalNode.AggregateCondition.ConditionalAggregateType, storedEvents);
+                var aggregate = GetAggregate(conditionalNode, storedEvents);
                 if (conditionalNode.AggregateCondition.EvaluateAggregateCondition(aggregate))
-                {
-                    if (_ifNodeRootsCompletionStates is null)
-                    {
-                        _ifNodeRootsCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
-                        conditionalNode.IfNodeRoots.ForEach(x => { _ifNodeRootsCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
-                    }
-
-                    return (true, _ifNodeRootsCompletionStates.SelectMany(x => x.availableNodes).ToList());
-                }
+                    return (true, BranchStates(conditionalNode.IfNodeRoots, storedEvents).SelectMany(x => x.availableNodes).ToList());
 
                 if (conditionalNode.ElseNodeRoots is not null)
-                {
-                    if (_elseNodeRootsCompletionStates is null)
-                    {
-                        _elseNodeRootsCompletionStates = new List<(bool isComplete, List<INode> availableNodes)>();
-                        conditionalNode.ElseNodeRoots.ForEach(x => { _elseNodeRootsCompletionStates.Add(x.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)); });
-                    }
-
-                    return (true, _elseNodeRootsCompletionStates.SelectMany(x => x.availableNodes).ToList());
-                }
+                    return (true, BranchStates(conditionalNode.ElseNodeRoots, storedEvents).SelectMany(x => x.availableNodes).ToList());
             }
 
             return (false, []);
@@ -84,4 +57,15 @@ public class ConditionalNodeStateEvaluator(INode node, IBpmRepository repository
 
         return (false, []);
     }
+
+    private object GetAggregate(ConditionalNode conditionalNode, List<object> storedEvents) =>
+        context is null
+            ? repository.AggregateOrDefaultStreamFromRegistry(conditionalNode.AggregateCondition.ConditionalAggregateType, storedEvents)
+            : context.GetAggregate(conditionalNode.AggregateCondition.ConditionalAggregateType, storedEvents);
+
+    private List<(bool isComplete, List<INode> availableNodes)> BranchStates(List<INode> roots, List<object> storedEvents) =>
+        roots.Select(root => context is null
+                ? root.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)
+                : context.GetOrAddTraversal(root, storedEvents, () => root.GetCheckBranchCompletionAndGetAvailableNodesFromCache(storedEvents)))
+            .ToList();
 }
