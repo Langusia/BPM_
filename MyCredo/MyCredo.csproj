@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Marten" Version="8.21.0" />
+        <PackageReference Include="Marten" Version="8.38.2" />
         <PackageReference Include="MediatR" Version="12.5.0" />
         <!-- Previously arrived transitively through Core.BPM; BPM.Core no longer depends on it.
              Resolved from the credobank Azure Artifacts feed (see nuget.config in the Azure repo). -->
