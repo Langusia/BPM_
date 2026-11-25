@@ -14,7 +14,7 @@
         <!-- Previously arrived transitively through Core.BPM; BPM.Core no longer depends on it.
              Resolved from the credobank Azure Artifacts feed (see nuget.config in the Azure repo). -->
         <PackageReference Include="Credo.Core.Shared" Version="1.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.23"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
     </ItemGroup>
 
